@@ -1,0 +1,14 @@
+{
+	"ImportPath": "github.com/martinrusev/amonagent-go",
+	"GoVersion": "go1.5.1",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/shirou/gopsutil",
+			"Comment": "1.0.0-160-g82a76c0",
+			"Rev": "82a76c01e3af444ce144b30f228467976ef75864"
+		}
+	]
+}
