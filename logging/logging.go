@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -43,6 +44,7 @@ var logLevelConfigs = map[string]*logLevel{
 
 // GetLogger XXX
 func GetLogger(tag string) *Logger {
+	fmt.Printf("print something")
 	return &Logger{tag: tag}
 }
 
@@ -65,32 +67,32 @@ func (logger *Logger) log(logLevel *logLevel, message string, args ...interface{
 	}
 }
 
-// Criticalf XXX
+// Critical XXX
 func (logger *Logger) Critical(m string, args ...interface{}) {
 	logger.log(critical, m, args...)
 }
 
-// Errorf XXX
+// Error XXX
 func (logger *Logger) Error(m string, args ...interface{}) {
 	logger.log(error, m, args...)
 }
 
-// Warningf XXX
+// Warning XXX
 func (logger *Logger) Warning(m string, args ...interface{}) {
 	logger.log(warning, m, args...)
 }
 
-// Infof XXX
+// Info XXX
 func (logger *Logger) Info(m string, args ...interface{}) {
 	logger.log(info, m, args...)
 }
 
-// Debugf XXX
+// Debug XXX
 func (logger *Logger) Debug(m string, args ...interface{}) {
 	logger.log(debug, m, args...)
 }
 
-// Tracef XXX
+// Trace XXX
 func (logger *Logger) Trace(m string, args ...interface{}) {
 	logger.log(trace, m, args...)
 }

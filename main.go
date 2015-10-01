@@ -7,29 +7,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/martinrusev/amonagent/logging"
+	"github.com/martinrusev/amonagent/util"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
 )
 
-var logger = GetLogger("amonagent")
-
-// conversion units
-const (
-	BYTE     = 1.0
-	KILOBYTE = 1024 * BYTE
-	MEGABYTE = 1024 * KILOBYTE
-	GIGABYTE = 1024 * MEGABYTE
-	TERABYTE = 1024 * GIGABYTE
-)
-
-// ToMegabytes parses a string formatted by ByteSize as megabytes
-func ToMegabytes(s uint64) (uint64, error) {
-
-	bytes := s / MEGABYTE
-
-	return bytes, nil
-}
-
+var logger = logging.GetLogger("amonagent")
 var sdiskRE = regexp.MustCompile(`/dev/(sd[a-z])[0-9]?`)
 
 // removableFs checks if the volume is removable
@@ -47,7 +31,7 @@ func removableFs(name string) bool {
 
 // isPseudoFS checks if it is a valid volume
 func isPseudoFS(name string) (res bool) {
-	err := readLine("/proc/filesystems", func(s string) error {
+	err := util.ReadLine("/proc/filesystems", func(s string) error {
 		if strings.Contains(s, name) && strings.Contains(s, "nodev") {
 			res = true
 			return nil
@@ -55,7 +39,7 @@ func isPseudoFS(name string) (res bool) {
 		return nil
 	})
 	if err != nil {
-		logger.Errorf("can not read '/proc/filesystems': %v", err)
+		logger.Error("can not read '/proc/filesystems': %v", err)
 	}
 	return
 }
@@ -83,7 +67,7 @@ func main() {
 	v, _ := mem.VirtualMemory()
 	fmt.Println(v)
 
-	memoryTotalMB, _ := ToMegabytes(v.Total)
+	memoryTotalMB, _ := util.ToMegabytes(v.Total)
 	fmt.Println(memoryTotalMB)
 
 	fmt.Println(v.Total)

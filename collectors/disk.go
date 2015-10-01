@@ -3,7 +3,7 @@ package collectors
 import (
 	"fmt"
 
-	"github.com/martinrusev/amonagent-go/logging"
+	"github.com/martinrusev/amonagent/logging"
 )
 
 var diskLogger = logging.GetLogger("amonagent.disk")
