@@ -6,7 +6,47 @@
 	],
 	"Deps": [
 		{
-			"ImportPath": "github.com/shirou/gopsutil",
+			"ImportPath": "github.com/codegangsta/inject",
+			"Comment": "v1.0-rc1-10-g33e0aa1",
+			"Rev": "33e0aa1cb7c019ccc3fbe049a8262a6403d30504"
+		},
+		{
+			"ImportPath": "github.com/codeskyblue/go-sh",
+			"Comment": "v0.1-37-g3d593d4",
+			"Rev": "3d593d477915b4d2f2e74b2e041495345647a46b"
+		},
+		{
+			"ImportPath": "github.com/shirou/gopsutil/common",
+			"Comment": "1.0.0-160-g82a76c0",
+			"Rev": "82a76c01e3af444ce144b30f228467976ef75864"
+		},
+		{
+			"ImportPath": "github.com/shirou/gopsutil/cpu",
+			"Comment": "1.0.0-160-g82a76c0",
+			"Rev": "82a76c01e3af444ce144b30f228467976ef75864"
+		},
+		{
+			"ImportPath": "github.com/shirou/gopsutil/disk",
+			"Comment": "1.0.0-160-g82a76c0",
+			"Rev": "82a76c01e3af444ce144b30f228467976ef75864"
+		},
+		{
+			"ImportPath": "github.com/shirou/gopsutil/host",
+			"Comment": "1.0.0-160-g82a76c0",
+			"Rev": "82a76c01e3af444ce144b30f228467976ef75864"
+		},
+		{
+			"ImportPath": "github.com/shirou/gopsutil/mem",
+			"Comment": "1.0.0-160-g82a76c0",
+			"Rev": "82a76c01e3af444ce144b30f228467976ef75864"
+		},
+		{
+			"ImportPath": "github.com/shirou/gopsutil/net",
+			"Comment": "1.0.0-160-g82a76c0",
+			"Rev": "82a76c01e3af444ce144b30f228467976ef75864"
+		},
+		{
+			"ImportPath": "github.com/shirou/gopsutil/process",
 			"Comment": "1.0.0-160-g82a76c0",
 			"Rev": "82a76c01e3af444ce144b30f228467976ef75864"
 		}
