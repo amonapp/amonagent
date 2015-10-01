@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"regexp"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
 )
+
+var logger = GetLogger("amonagent")
 
 // conversion units
 const (
@@ -29,20 +30,34 @@ func ToMegabytes(s uint64) (uint64, error) {
 	return bytes, nil
 }
 
-// IsDigit returns true if s consists of decimal digits.
-func IsDigit(s string) bool {
-	r := strings.NewReader(s)
-	for {
-		ch, _, err := r.ReadRune()
-		if ch == 0 || err != nil {
-			break
-		} else if ch == utf8.RuneError {
-			return false
-		} else if !unicode.IsDigit(ch) {
+var sdiskRE = regexp.MustCompile(`/dev/(sd[a-z])[0-9]?`)
+
+// removableFs checks if the volume is removable
+func removableFs(name string) bool {
+	s := sdiskRE.FindStringSubmatch(name)
+	if len(s) > 1 {
+		b, err := ioutil.ReadFile("/sys/block/" + s[1] + "/removable")
+		if err != nil {
 			return false
 		}
+		return strings.Trim(string(b), "\n") == "1"
 	}
-	return true
+	return false
+}
+
+// isPseudoFS checks if it is a valid volume
+func isPseudoFS(name string) (res bool) {
+	err := readLine("/proc/filesystems", func(s string) error {
+		if strings.Contains(s, name) && strings.Contains(s, "nodev") {
+			res = true
+			return nil
+		}
+		return nil
+	})
+	if err != nil {
+		logger.Errorf("can not read '/proc/filesystems': %v", err)
+	}
+	return
 }
 
 // type SystemMemory struct {
@@ -103,7 +118,10 @@ func main() {
 			spaceFree := fields[4]
 			mount := fields[6]
 
-			fmt.Println(fs, fsType, spaceUsed, spaceTotal, spaceFree, mount)
+			if !isPseudoFS(fsType) && !removableFs(fs) {
+				fmt.Println(fs, fsType, spaceUsed, spaceTotal, spaceFree, mount)
+			}
+
 		}
 	}
 
