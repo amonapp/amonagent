@@ -1,9 +1,6 @@
 package logging
 
-import (
-	"fmt"
-	"log"
-)
+import "log"
 
 // Logger XXX
 type Logger struct {
@@ -44,7 +41,6 @@ var logLevelConfigs = map[string]*logLevel{
 
 // GetLogger XXX
 func GetLogger(tag string) *Logger {
-	fmt.Printf("print something")
 	return &Logger{tag: tag}
 }
 
@@ -72,8 +68,8 @@ func (logger *Logger) Critical(m string, args ...interface{}) {
 	logger.log(critical, m, args...)
 }
 
-// Error XXX
-func (logger *Logger) Error(m string, args ...interface{}) {
+// Errorf XXX
+func (logger *Logger) Errorf(m string, args ...interface{}) {
 	logger.log(error, m, args...)
 }
 
