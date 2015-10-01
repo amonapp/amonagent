@@ -5,8 +5,9 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
-	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
 )
@@ -26,6 +27,22 @@ func ToMegabytes(s uint64) (uint64, error) {
 	bytes := s / MEGABYTE
 
 	return bytes, nil
+}
+
+// IsDigit returns true if s consists of decimal digits.
+func IsDigit(s string) bool {
+	r := strings.NewReader(s)
+	for {
+		ch, _, err := r.ReadRune()
+		if ch == 0 || err != nil {
+			break
+		} else if ch == utf8.RuneError {
+			return false
+		} else if !unicode.IsDigit(ch) {
+			return false
+		}
+	}
+	return true
 }
 
 // type SystemMemory struct {
@@ -58,8 +75,50 @@ func main() {
 	s, _ := host.HostInfo()
 	fmt.Println(s)
 
-	d, _ := disk.DiskPartitions()
-	fmt.Println(d)
+	// d, _ := disk.DiskPartitions(false)
+	//
+	// for _, partition := range d {
+	// 	// fmt.Println(partition)
+	// 	diskUsage, _ := disk.DiskUsage(partition.Device)
+	//
+	// 	fmt.Println(diskUsage)
+	//
+	// }
+
+	disk, _ := exec.Command("df", "-lPT", "--block-size", "1").Output()
+	diskString := string(disk)
+	diskLines := strings.Split(diskString, "\n")
+
+	for _, diskLine := range diskLines {
+		fields := strings.Fields(diskLine)
+
+		if len(fields) == 7 {
+			// fmt.Println(fields)
+
+			// /dev/mapper/vg0-usr ext4 13384816 9996920 2815784 79% /usr
+			fs := fields[0]
+			fsType := fields[1]
+			spaceTotal := fields[2]
+			spaceUsed := fields[3]
+			spaceFree := fields[4]
+			mount := fields[6]
+
+			fmt.Println(fs, fsType, spaceUsed, spaceTotal, spaceFree, mount)
+		}
+	}
+
+	// TODO: support mount points with spaces in them. They mess up the field order
+	// currently due to df's columnar output.
+	// if len(fields) != 7 || !IsDigit(fields[2]) {
+	// 	return nil
+	// }
+	//
+	// fs := fields[0]
+	// fsType := fields[1]
+	// spaceTotal := fields[2]
+	// spaceUsed := fields[3]
+	// spaceFree := fields[4]
+	// mount := fields[6]
 
 	c1, _ := exec.Command("pidstat", "-ruhtd").Output()
 
