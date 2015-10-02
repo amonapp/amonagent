@@ -73,6 +73,11 @@ func (g *Group) String() ([]byte, error) {
 // Block is a group of multiple groups.
 type Block []Group
 
+// MarshalJSON verifies d is valid and converts it to JSON.
+func (b *Block) String() ([]byte, error) {
+	return json.Marshal(b)
+}
+
 // Add creates a new datapoint
 func (md *MultiDataPoint) Add(metric string, value interface{}) {
 	e := DataPoint{
