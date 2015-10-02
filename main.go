@@ -24,7 +24,13 @@ func main() {
 	s, _ := host.HostInfo()
 	fmt.Println(s)
 
-	collectors.DiskSpace()
+	d, _ := collectors.DiskSpace()
+	// fmt.Println(d)
+	for _, volume := range d {
+		fmt.Println(volume)
+
+	}
+
 	collectors.Processes()
 
 }

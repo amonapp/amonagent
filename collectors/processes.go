@@ -12,7 +12,6 @@ var processLogger = logging.GetLogger("amonagent.processes")
 
 // Processes get process usage
 func Processes() {
-
 	c1, _ := exec.Command("pidstat", "-ruhtd").Output()
 
 	// Find header and ignore
