@@ -30,13 +30,12 @@ type ProcessStruct struct {
 	Command string  `json:"command"`
 }
 
-type ProcessesList []*ProcessStruct
+type ProcessesList []ProcessStruct
 
 func Processes() {
 	c1, _ := exec.Command("pidstat", "-ruhtd").Output()
 
-	ps := ProcessesList{}
-
+	var ps ProcessesList
 	v, _ := mem.VirtualMemory()
 	memoryTotalMB, _ := util.ConvertBytesTo(float64(v.Total), "mb")
 
@@ -95,8 +94,7 @@ func Processes() {
 						KBWrite: processWriteKB,
 					}
 
-					append(*ps, c)
-					fmt.Println(c)
+					ps = append(ps, c)
 
 				}
 
