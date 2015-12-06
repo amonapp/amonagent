@@ -32,7 +32,7 @@ func ConvertBytesTo(s interface{}, convert string, precision int) (float64, erro
 	}
 
 	bytes, err := ConvertBytesFloatTo(bytes, convert)
-	bytes = FloatDecimalPoint(bytes, precision)
+	bytes, err = FloatDecimalPoint(bytes, precision)
 
 	return bytes, err
 }
@@ -59,7 +59,10 @@ func round(num float64) int {
 }
 
 // FloatDecimalPoint parses a float64
-func FloatDecimalPoint(num float64, precision int) float64 {
+func FloatDecimalPoint(num float64, precision int) (float64, error) {
+	var decimal float64
 	output := math.Pow(10, float64(precision))
-	return float64(round(num*output)) / output
+	decimal = float64(round(num*output)) / output
+
+	return decimal, nil
 }

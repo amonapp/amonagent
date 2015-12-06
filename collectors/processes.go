@@ -33,12 +33,12 @@ type ProcessStruct struct {
 type ProcessesList []ProcessStruct
 
 // Processes - get data from sysstat, format and return the result
-func Processes() ProcessesList {
+func Processes() (ProcessesList, error) {
 	c1, _ := exec.Command("pidstat", "-ruhtd").Output()
 
 	var ps ProcessesList
 	v, _ := mem.VirtualMemory()
-	memoryTotalMB, _ := util.ConvertBytesTo(float64(v.Total), "mb")
+	memoryTotalMB, _ := util.ConvertBytesTo(float64(v.Total), "mb", 0)
 
 	// Find header and ignore
 	headerRegex, _ := regexp.Compile("d+")
@@ -77,15 +77,15 @@ func Processes() ProcessesList {
 						}
 					}
 
-					var processMemoryMB = util.FloatDecimalPoint(memoryTotalMB/100*memoryPercenttoINT, 2)
+					var processMemoryMB, _ = util.FloatDecimalPoint(memoryTotalMB/100*memoryPercenttoINT, 2)
 
 					ReadBytesInt, _ := strconv.Atoi(io[4])
 					ReadBytesFloat := float64(ReadBytesInt)
-					processReadKB, _ := util.ConvertBytesTo(ReadBytesFloat, "kb")
+					processReadKB, _ := util.ConvertBytesTo(ReadBytesFloat, "kb", 0)
 
 					WriteBytesInt, _ := strconv.Atoi(io[5])
 					WriteBytesFloat := float64(WriteBytesInt)
-					processWriteKB, _ := util.ConvertBytesTo(WriteBytesFloat, "kb")
+					processWriteKB, _ := util.ConvertBytesTo(WriteBytesFloat, "kb", 0)
 
 					c := ProcessStruct{
 						CPU:     cpuPercenttoINT,
@@ -105,5 +105,5 @@ func Processes() ProcessesList {
 
 	}
 
-	return ps
+	return ps, nil
 }
