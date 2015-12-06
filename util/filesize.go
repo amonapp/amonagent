@@ -1,6 +1,9 @@
 package util
 
-import "math"
+import (
+	"math"
+	"strconv"
+)
 
 // conversion units
 const (
@@ -10,8 +13,32 @@ const (
 	GIGABYTE = 1024 * MEGABYTE
 )
 
-// ConvertBytesTo parses a string formatted by ByteSize as kb
-func ConvertBytesTo(s float64, convert string) (float64, error) {
+// ConvertBytesTo and converts bytes to ..
+func ConvertBytesTo(s interface{}, convert string, precision int) (float64, error) {
+	var bytes float64
+
+	switch v := s.(type) {
+	case string:
+		if f, err := strconv.ParseFloat(v, 64); err == nil {
+			bytes = f
+		}
+	case uint64:
+		bytes = float64(v)
+	case int64:
+		bytes = float64(v)
+	case float64:
+		bytes = v
+
+	}
+
+	bytes, err := ConvertBytesFloatTo(bytes, convert)
+	bytes = FloatDecimalPoint(bytes, precision)
+
+	return bytes, err
+}
+
+// ConvertBytesFloatTo converts bytes to ...
+func ConvertBytesFloatTo(s float64, convert string) (float64, error) {
 	var bytes float64
 	switch convert {
 	case "kb":

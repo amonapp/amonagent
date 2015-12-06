@@ -20,6 +20,7 @@ func (p ProcessStruct) String() string {
 	return string(s)
 }
 
+// ProcessStruct - individual process data
 type ProcessStruct struct {
 	CPU     float64 `json:"cpu"`
 	Memory  float64 `json:"memory_mb"`
@@ -28,8 +29,10 @@ type ProcessStruct struct {
 	Command string  `json:"command"`
 }
 
+// ProcessesList - list of individual process data
 type ProcessesList []ProcessStruct
 
+// Processes - get data from sysstat, format and return the result
 func Processes() ProcessesList {
 	c1, _ := exec.Command("pidstat", "-ruhtd").Output()
 

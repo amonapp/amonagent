@@ -4,150 +4,109 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os/exec"
+	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/martinrusev/amonagent/logging"
 	"github.com/martinrusev/amonagent/util"
-	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/disk"
 )
 
 // AmonAgentLogger for the main file
 var AmonAgentLogger = logging.GetLogger("amonagent")
 
-func (p ProcessStruct) String() string {
+func (p DiskUsageStruct) String() string {
 	s, _ := json.Marshal(p)
 	return string(s)
 }
 
-type ProcessStruct struct {
-	CPU     float64 `json:"cpu"`
-	Memory  float64 `json:"memory_mb"`
-	KBRead  float64 `json:"kb_read"`
-	KBWrite float64 `json:"kb_write"`
-	Command string  `json:"command"`
+// DiskUsageStruct - individual process data
+type DiskUsageStruct struct {
+	Name        string  `json:"name"`
+	Path        string  `json:"path"`
+	Fstype      string  `json:"fstype"`
+	Total       float64 `json:"total_mb"`
+	Free        float64 `json:"free_mb"`
+	Used        float64 `json:"used_mb"`
+	UsedPercent float64 `json:"used_percent"`
 }
 
-type ProcessesList []ProcessStruct
+// DiskUsageList - list of individual process data
+type DiskUsageList []DiskUsageStruct
 
-func Processes() {
-	c1, _ := exec.Command("pidstat", "-ruhtd").Output()
+var sdiskRE = regexp.MustCompile(`/dev/(sd[a-z])[0-9]?`)
 
-	var ps ProcessesList
-	v, _ := mem.VirtualMemory()
-	memoryTotalMB, _ := util.ConvertBytesTo(float64(v.Total), "mb")
-
-	// Find header and ignore
-	headerRegex, _ := regexp.Compile("d+")
-
-	pidstatOutput := string(c1)
-	pidstatLines := strings.Split(pidstatOutput, "\n")
-	// var err error
-	for _, processLine := range pidstatLines {
-
-		if len(headerRegex.FindString(processLine)) == 0 {
-			processData := strings.Fields(processLine)
-
-			// Helper
-			// Time(0)   UID(1)      TGID(2)       TID(3)
-			// %usr{4} %system{5}  %guest{6}    %CPU{7}   CPU{8}
-			// minflt/s{9}  majflt/s{10}     VSZ{11}    RSS{12}
-			// %MEM{13}   kB_rd/s{14}   kB_wr/s{15} kB_ccwr/s{16}  Command{17}
-			if len(processData) == 18 {
-				pid, masterthreadID, cpuPercent, memoryPercent, processName := processData[2], processData[3], processData[7], processData[13], processData[17]
-
-				masterthreadIDtoINT, _ := strconv.Atoi(masterthreadID)
-				cpuPercenttoINT, _ := strconv.ParseFloat(cpuPercent, 64)
-				memoryPercenttoINT, _ := strconv.ParseFloat(memoryPercent, 64)
-
-				if masterthreadIDtoINT == 0 {
-
-					ioFile, e := ioutil.ReadFile("/proc/" + pid + "/io")
-					if e != nil {
-						continue
-					}
-					var io []string
-					for _, line := range strings.Split(string(ioFile), "\n") {
-						f := strings.Fields(line)
-						if len(f) == 2 {
-							io = append(io, f[1])
-						}
-					}
-
-					var processMemoryMB = util.FloatDecimalPoint(memoryTotalMB/100*memoryPercenttoINT, 2)
-
-					ReadBytesInt, _ := strconv.Atoi(io[4])
-					ReadBytesFloat := float64(ReadBytesInt)
-					processReadKB, _ := util.ConvertBytesTo(ReadBytesFloat, "kb")
-
-					WriteBytesInt, _ := strconv.Atoi(io[5])
-					WriteBytesFloat := float64(WriteBytesInt)
-					processWriteKB, _ := util.ConvertBytesTo(WriteBytesFloat, "kb")
-
-					c := ProcessStruct{
-						CPU:     cpuPercenttoINT,
-						Memory:  processMemoryMB,
-						Command: processName,
-						KBRead:  processReadKB,
-						KBWrite: processWriteKB,
-					}
-
-					ps = append(ps, c)
-
-				}
-
-			}
-
+// removableFs checks if the volume is removable
+func removableFs(name string) bool {
+	s := sdiskRE.FindStringSubmatch(name)
+	if len(s) > 1 {
+		b, err := ioutil.ReadFile("/sys/block/" + s[1] + "/removable")
+		if err != nil {
+			return false
 		}
+		return strings.Trim(string(b), "\n") == "1"
+	}
+	return false
+}
 
+// isPseudoFS checks if it is a valid volume
+func isPseudoFS(name string) (res bool) {
+	err := util.ReadLine("/proc/filesystems", func(s string) error {
+		if strings.Contains(s, name) && strings.Contains(s, "nodev") {
+			res = true
+			return nil
+		}
+		return nil
+	})
+	if err != nil {
+		// diskLogger.Errorf("can not read '/proc/filesystems': %v", err)
+	}
+	return
+}
+
+// DiskUsage - return a list with disk usage structs
+func DiskUsage() (DiskUsageList, error) {
+
+	parts, err := disk.DiskPartitions(false)
+	if err != nil {
+		return nil, err
 	}
 
-	fmt.Print(ps)
+	var usage DiskUsageList
+
+	for _, p := range parts {
+		if _, err := os.Stat(p.Mountpoint); err == nil {
+			du, err := disk.DiskUsage(p.Mountpoint)
+			if err != nil {
+				return nil, err
+			}
+
+			if !isPseudoFS(du.Fstype) && !removableFs(du.Path) {
+
+				TotalMB, _ := util.ConvertBytesTo(du.Total, "mb", 0)
+				FreeMB, _ := util.ConvertBytesTo(du.Free, "mb", 0)
+				UsedMB, _ := util.ConvertBytesTo(du.Used, "mb", 0)
+
+				d := DiskUsageStruct{
+					Name:        p.Device,
+					Path:        du.Path,
+					Fstype:      du.Fstype,
+					Total:       TotalMB,
+					Free:        FreeMB,
+					Used:        UsedMB,
+					UsedPercent: du.UsedPercent,
+				}
+				usage = append(usage, d)
+			}
+		}
+	}
+
+	return usage, err
 }
+
+// Just for testing
 func main() {
-
-	// lps, _ := getLinuxProccesses()
-	//
-	// for _, w := range lps {
-	// 	p, err := process.NewProcess(int32(w.Pid))
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	//
-	// 	fmt.Println(p.IOCounters())
-	// 	duration := time.Duration(1000) * time.Microsecond
-	// 	fmt.Println(p.CPUPercent(duration))
-	// 	fmt.Println(p.MemoryInfo())
-	//
-	// 	fmt.Println(w.Command)
-	// }
-
-	// v, _ := mem.VirtualMemory()
-	// fmt.Println(v)
-	//
-	// n, _ := net.NetIOCounters(true)
-	// fmt.Println(n)
-	//
-	// memoryTotalMB, _ := util.ToMegabytes(v.Total)
-	// fmt.Println(memoryTotalMB)
-
-	// l, _ := load.LoadAvg()
-	// fmt.Println(l)
-	//
-	// fmt.Println(v.Total)
-	// s, _ := host.HostInfo()
-	// fmt.Println(s)
-	//
-	// d, _ := collectors.DiskSpace()
-	// fmt.Println(d)
-	// for _, volume := range d {
-	// 	fmt.Println(volume)
-	//
-	// }
-
-	Processes()
-	// collectors.Processes()
-
+	dl, _ := DiskUsage()
+	fmt.Println(dl)
 }
