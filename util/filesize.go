@@ -62,6 +62,7 @@ func round(num float64) int {
 func FloatDecimalPoint(num float64, precision int) (float64, error) {
 	var decimal float64
 	output := math.Pow(10, float64(precision))
+
 	decimal = float64(round(num*output)) / output
 
 	return decimal, nil

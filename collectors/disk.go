@@ -109,17 +109,25 @@ func DiskUsage() (DiskUsageList, error) {
 				FreeMB, _ := util.ConvertBytesTo(du.Free, "mb", 0)
 				UsedMB, _ := util.ConvertBytesTo(du.Used, "mb", 0)
 
-				d := DiskUsageStruct{
-					Name:        p.Device,
-					Path:        du.Path,
-					Fstype:      du.Fstype,
-					Total:       TotalMB,
-					Free:        FreeMB,
-					Used:        UsedMB,
-					UsedPercent: du.UsedPercent,
+				UsedPercent := 0.0
+				if TotalMB > 0 && UsedMB > 0 {
+					UsedPercent = (float64(du.Used) / float64(du.Total)) * 100.0
+					UsedPercent, _ = util.FloatDecimalPoint(UsedPercent, 2)
+
+					d := DiskUsageStruct{
+						Name:        p.Device,
+						Path:        du.Path,
+						Fstype:      du.Fstype,
+						Total:       TotalMB,
+						Free:        FreeMB,
+						Used:        UsedMB,
+						UsedPercent: UsedPercent,
+					}
+
+					usage = append(usage, d)
+
 				}
 
-				usage = append(usage, d)
 			}
 		}
 	}
