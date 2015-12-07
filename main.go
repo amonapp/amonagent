@@ -13,7 +13,7 @@ var AmonAgentLogger = logging.GetLogger("amonagent")
 // Just for testing
 func main() {
 
-	n, _ := collectors.NetworkUsage()
+	n := collectors.Distro()
 
 	fmt.Println(n)
 
