@@ -5,6 +5,7 @@ import (
 
 	"github.com/martinrusev/amonagent/collectors"
 	"github.com/martinrusev/amonagent/logging"
+	"github.com/shirou/gopsutil/net"
 )
 
 // AmonAgentLogger for the main file
@@ -15,4 +16,12 @@ func main() {
 
 	l := collectors.LoadAverage()
 	fmt.Println(l)
+
+	n, _ := net.NetIOCounters(true)
+
+	fmt.Println(n)
+
+	ifaces, _ := net.NetInterfaces()
+	fmt.Print(ifaces)
+
 }
