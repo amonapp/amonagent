@@ -13,9 +13,6 @@ var AmonAgentLogger = logging.GetLogger("amonagent")
 // Just for testing
 func main() {
 
-	cpu := collectors.CPUUsage()
-	fmt.Println(cpu)
-	// if err != nil {
-	// 	return fmt.Errorf("error getting CPU info: %s", err)
-	// }
+	l := collectors.LoadAverage()
+	fmt.Println(l)
 }
