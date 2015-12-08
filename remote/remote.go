@@ -1,4 +1,4 @@
-package core
+package remote
 
 import (
 	"bytes"
@@ -7,20 +7,23 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/martinrusev/amonagent/core"
 )
 
 // DefaultTimeOut - 10 seconds
 var DefaultTimeOut = 10 * time.Second
 
 // SendData - XXX
-func SendData() {
-	url := settings.Host + "/api/system/golang"
+func SendData(data interface{}) {
+	settings := core.Settings()
+	url := settings.Host + "/api/system/" + settings.ServerKey
 
 	fmt.Println("URL:>", url)
 
-	metricsBytes, err := json.Marshal(c)
+	JSONBytes, err := json.Marshal(data)
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(metricsBytes))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(JSONBytes))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: DefaultTimeOut}
@@ -31,7 +34,6 @@ func SendData() {
 	defer resp.Body.Close()
 
 	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println("response Body:", string(body))
 }
