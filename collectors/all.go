@@ -25,7 +25,7 @@ type SystemDataStruct struct {
 	CPU     CPUUsageStruct   `json:"cpu"`
 	Network NetworkUsageList `json:"network"`
 	Disk    DiskUsageList    `json:"disk"`
-	Load    LoadStruct       `json:"load"`
+	Load    LoadStruct       `json:"loadavg"`
 	Uptime  UptimeStruct     `json:"uptime"`
 	Memory  MemoryStruct     `json:"memory"`
 }

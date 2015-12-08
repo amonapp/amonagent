@@ -3,8 +3,6 @@ package remote
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -19,8 +17,6 @@ func SendData(data interface{}) {
 	settings := core.Settings()
 	url := settings.Host + "/api/system/" + settings.ServerKey
 
-	fmt.Println("URL:>", url)
-
 	JSONBytes, err := json.Marshal(data)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(JSONBytes))
@@ -33,7 +29,4 @@ func SendData(data interface{}) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
 }
