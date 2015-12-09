@@ -12,12 +12,25 @@ func (p SystemDataStruct) String() string {
 func (p AllMetricsStruct) String() string {
 	s, _ := json.Marshal(p)
 	return string(s)
+
+}
+
+func (p HostDataStruct) String() string {
+	s, _ := json.Marshal(p)
+	return string(s)
 }
 
 // AllMetricsStruct -XXX
 type AllMetricsStruct struct {
 	System    SystemDataStruct `json:"system"`
 	Processes ProcessesList    `json:"processes"`
+	Host      HostDataStruct   `json:"host"`
+}
+
+// HostDataStruct -XXX
+type HostDataStruct struct {
+	Host      string `json:"host"`
+	MachineID string `json:"machineid"`
 }
 
 // SystemDataStruct - collect all system metrics
@@ -49,9 +62,16 @@ func CollectSystem() AllMetricsStruct {
 		Memory:  Memory,
 	}
 
+	host := Host()
+	machineID := MachineID()
+	hoststruct := HostDataStruct{
+		Host:      host,
+		MachineID: machineID,
+	}
 	allMetrics := AllMetricsStruct{
 		System:    System,
 		Processes: Processes,
+		Host:      hoststruct,
 	}
 
 	return allMetrics

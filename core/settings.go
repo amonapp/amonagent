@@ -8,9 +8,9 @@ import (
 
 // SettingsStruct -XXX
 type SettingsStruct struct {
-	Host        string `json:"host"`
-	CheckPeriod int    `json:"system_check_period"`
-	ServerKey   string `json:"server_key"`
+	AmonInstance string `json:"amon_instance"`
+	Interval     int    `json:"interval"`
+	APIKey       string `json:"api_key"`
 }
 
 // Settings -XXX
@@ -18,7 +18,7 @@ func Settings() SettingsStruct {
 
 	var settings SettingsStruct
 
-	configFile, err := os.Open("/etc/amon-agent.conf")
+	configFile, err := os.Open("/etc/opt/amonagent/amonagent.conf")
 	if err != nil {
 		fmt.Print("opening config file", err.Error())
 	}

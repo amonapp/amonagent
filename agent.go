@@ -1,7 +1,6 @@
 package amonagent
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -21,7 +20,6 @@ type Agent struct {
 func (a *Agent) GatherAndSend() error {
 
 	allMetrics := collectors.CollectSystem()
-	fmt.Println(allMetrics)
 	remote.SendData(allMetrics)
 	return nil
 }

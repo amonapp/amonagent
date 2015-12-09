@@ -1,4 +1,4 @@
-package util 
+package util
 
 import (
 	"bufio"
@@ -23,19 +23,3 @@ func ReadLine(fname string, line func(string) error) error {
 	}
 	return scanner.Err()
 }
-
-// IsDigit returns true if s consists of decimal digits.
-// func IsDigit(s string) bool {
-// 	r := strings.NewReader(s)
-// 	for {
-// 		ch, _, err := r.ReadRune()
-// 		if ch == 0 || err != nil {
-// 			break
-// 		} else if ch == utf8.RuneError {
-// 			return false
-// 		} else if !unicode.IsDigit(ch) {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }

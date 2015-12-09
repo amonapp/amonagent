@@ -11,9 +11,6 @@ import (
 // {'docker0': {'inbound': '0.00', 'outbound': '0.00'}, 'eth0': {'inbound': '0.12', 'outbound': '0.00'}}
 var networkLogger = logging.GetLogger("amonagent.net")
 
-// NetworkUsageList struct
-type NetworkUsageList []NetworkStruct
-
 func stringInSlice(str string, list []string) bool {
 	for _, v := range list {
 		if v == str {
@@ -26,6 +23,9 @@ func (p NetworkStruct) String() string {
 	s, _ := json.Marshal(p)
 	return string(s)
 }
+
+// NetworkUsageList struct
+type NetworkUsageList []NetworkStruct
 
 // NetworkStruct - net interfaces data
 type NetworkStruct struct {

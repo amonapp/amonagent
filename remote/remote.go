@@ -15,7 +15,7 @@ var DefaultTimeOut = 10 * time.Second
 // SendData - XXX
 func SendData(data interface{}) {
 	settings := core.Settings()
-	url := settings.Host + "/api/system/" + settings.ServerKey
+	url := settings.AmonInstance + "/api/system/v2/?api_key=" + settings.APIKey
 
 	JSONBytes, err := json.Marshal(data)
 
