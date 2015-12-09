@@ -2,7 +2,6 @@ package amonagent
 
 import (
 	"log"
-	"sync"
 	"time"
 
 	"github.com/martinrusev/amonagent/collectors"
@@ -35,25 +34,16 @@ func NewAgent(config core.SettingsStruct) (*Agent, error) {
 
 // Run runs the agent daemon, gathering every Interval
 func (a *Agent) Run(shutdown chan struct{}) error {
-	var wg sync.WaitGroup
 
 	log.Printf("Agent Config: Interval:%s\n", a.Interval)
 
 	ticker := time.NewTicker(a.Interval)
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err := a.GatherAndSend(); err != nil {
-			log.Printf("Flusher routine failed, exiting: %s\n", err.Error())
-			close(shutdown)
-		}
-	}()
-
-	defer wg.Wait()
-
 	for {
 
+		if err := a.GatherAndSend(); err != nil {
+			log.Printf("Flusher routine failed, exiting: %s\n", err.Error())
+		}
 		select {
 		case <-shutdown:
 			return nil
