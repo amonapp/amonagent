@@ -29,6 +29,7 @@ type CPUUsageStruct struct {
 	Nice   float64 `json:"nice"`
 	Steal  float64 `json:"steal"`
 	System float64 `json:"system"`
+	IOWait float64 `json:"iowait"`
 }
 
 // CPUUsage - return a map with CPU usage stats
@@ -84,6 +85,7 @@ func CPUUsage() CPUUsageStruct {
 		Nice:   result["nice"],
 		Steal:  result["steal"],
 		System: result["system"],
+		IOWait: result["iowait"],
 	}
 
 	return c
