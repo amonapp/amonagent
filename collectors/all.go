@@ -2,6 +2,8 @@ package collectors
 
 import (
 	"encoding/json"
+
+	"github.com/martinrusev/amonagent/settings"
 )
 
 func (p SystemDataStruct) String() string {
@@ -29,8 +31,11 @@ type AllMetricsStruct struct {
 
 // HostDataStruct -XXX
 type HostDataStruct struct {
-	Host      string `json:"host"`
-	MachineID string `json:"machineid"`
+	Host      string       `json:"host"`
+	MachineID string       `json:"machineid"`
+	ServerKey string       `json:"server_key"`
+	Distro    DistroStruct `json:"distro"`
+	IPAddress string       `json:"ip_address"`
 }
 
 // SystemDataStruct - collect all system metrics
@@ -62,12 +67,22 @@ func CollectSystem() AllMetricsStruct {
 		Memory:  Memory,
 	}
 
+	// Load settings
+	settings := settings.Settings()
+
 	host := Host()
 	machineID := MachineID()
+	distro := Distro()
+	ip := IPAddress()
+
 	hoststruct := HostDataStruct{
 		Host:      host,
 		MachineID: machineID,
+		Distro:    distro,
+		IPAddress: ip,
+		ServerKey: settings.ServerKey,
 	}
+
 	allMetrics := AllMetricsStruct{
 		System:    System,
 		Processes: Processes,

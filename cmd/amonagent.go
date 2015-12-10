@@ -8,7 +8,8 @@ import (
 	"os/signal"
 
 	"github.com/martinrusev/amonagent"
-	"github.com/martinrusev/amonagent/core"
+	"github.com/martinrusev/amonagent/collectors"
+	"github.com/martinrusev/amonagent/settings"
 )
 
 var fTest = flag.Bool("test", false, "gather metrics, print them out, and exit")
@@ -27,7 +28,16 @@ func main() {
 		fmt.Println(v)
 		return
 	}
-	config := core.Settings()
+	config := settings.Settings()
+
+	// Detect Machine ID or ask for a valid Server Key in Settings
+	machineID := collectors.MachineID()
+	serverKey := config.ServerKey
+
+	if len(machineID) == 0 && len(serverKey) == 0 {
+		log.Fatal("Can't detect Machine ID. Please define `server_key` in /etc/amonagent/amonagent.conf ")
+	}
+
 	ag, err := amonagent.NewAgent(config)
 	if err != nil {
 		log.Fatal(err)
@@ -62,5 +72,5 @@ func main() {
 		f.Close()
 	}
 
-	ag.Run(shutdown)
+	// ag.Run(shutdown)
 }

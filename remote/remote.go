@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/martinrusev/amonagent/core"
+	"github.com/martinrusev/amonagent/settings"
 )
 
 // DefaultTimeOut - 10 seconds
@@ -15,7 +15,7 @@ var DefaultTimeOut = 10 * time.Second
 
 // SendData - XXX
 func SendData(data interface{}) error {
-	settings := core.Settings()
+	settings := settings.Settings()
 	url := settings.AmonInstance + "/api/system/v2/?api_key=" + settings.APIKey
 
 	JSONBytes, err := json.Marshal(data)

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/martinrusev/amonagent/collectors"
-	"github.com/martinrusev/amonagent/core"
 	"github.com/martinrusev/amonagent/remote"
+	"github.com/martinrusev/amonagent/settings"
 )
 
 // Agent - XXX
@@ -33,9 +33,9 @@ func (a *Agent) GatherAndSend() error {
 }
 
 // NewAgent - XXX
-func NewAgent(config core.SettingsStruct) (*Agent, error) {
+func NewAgent(config settings.Struct) (*Agent, error) {
 	agent := &Agent{
-		Interval: 10 * time.Second,
+		Interval: time.Duration(config.Interval) * time.Second,
 	}
 
 	return agent, nil

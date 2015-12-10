@@ -1,4 +1,4 @@
-package core
+package settings
 
 import (
 	"encoding/json"
@@ -6,17 +6,18 @@ import (
 	"os"
 )
 
-// SettingsStruct -XXX
-type SettingsStruct struct {
+// Struct -XXX
+type Struct struct {
 	AmonInstance string `json:"amon_instance"`
 	Interval     int    `json:"interval"`
 	APIKey       string `json:"api_key"`
+	ServerKey    string `json:"server_key"`
 }
 
 // Settings -XXX
-func Settings() SettingsStruct {
+func Settings() Struct {
 
-	var settings SettingsStruct
+	var settings Struct
 
 	configFile, err := os.Open("/etc/opt/amonagent/amonagent.conf")
 	if err != nil {
