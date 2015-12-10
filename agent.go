@@ -43,6 +43,8 @@ func (a *Agent) Run(shutdown chan struct{}) error {
 
 		if err := a.GatherAndSend(); err != nil {
 			log.Printf("Flusher routine failed, exiting: %s\n", err.Error())
+		} else {
+			log.Printf("Collecting and sending data:%s\n", a.Interval)
 		}
 		select {
 		case <-shutdown:

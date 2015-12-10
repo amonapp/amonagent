@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/martinrusev/amonagent/core"
+	"github.com/prometheus/common/log"
 )
 
 // DefaultTimeOut - 10 seconds
@@ -25,7 +26,7 @@ func SendData(data interface{}) {
 	client := &http.Client{Timeout: DefaultTimeOut}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		log.Error("Can't connect to the Amon API on %s" + url)
 	}
 	defer resp.Body.Close()
 
