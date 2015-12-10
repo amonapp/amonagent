@@ -2,7 +2,6 @@ package collectors
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -57,42 +56,30 @@ func Processes() (ProcessesList, error) {
 			// minflt/s{9}  majflt/s{10}     VSZ{11}    RSS{12}
 			// %MEM{13}   kB_rd/s{14}   kB_wr/s{15} kB_ccwr/s{16}  Command{17}
 			if len(processData) == 18 {
-				pid, masterthreadID, cpuPercent, memoryPercent, processName := processData[2], processData[3], processData[7], processData[13], processData[17]
+				masterthreadID, cpuPercent, memoryPercent, ReadPerSecond, WritePerSecond, processName := processData[3], processData[7], processData[13], processData[14], processData[15], processData[17]
 
 				masterthreadIDtoINT, _ := strconv.Atoi(masterthreadID)
-				cpuPercenttoINT, _ := strconv.ParseFloat(cpuPercent, 64)
-				memoryPercenttoINT, _ := strconv.ParseFloat(memoryPercent, 64)
 
 				if masterthreadIDtoINT == 0 {
-
-					ioFile, e := ioutil.ReadFile("/proc/" + pid + "/io")
-					if e != nil {
-						continue
-					}
-					var io []string
-					for _, line := range strings.Split(string(ioFile), "\n") {
-						f := strings.Fields(line)
-						if len(f) == 2 {
-							io = append(io, f[1])
-						}
-					}
+					cpuPercenttoINT, _ := strconv.ParseFloat(cpuPercent, 64)
+					memoryPercenttoINT, _ := strconv.ParseFloat(memoryPercent, 64)
 
 					var processMemoryMB, _ = util.FloatDecimalPoint(memoryTotalMB/100*memoryPercenttoINT, 2)
 
-					ReadBytesInt, _ := strconv.Atoi(io[4])
-					ReadBytesFloat := float64(ReadBytesInt)
-					processReadKB, _ := util.ConvertBytesTo(ReadBytesFloat, "kb", 0)
+					ReadKBytes, _ := strconv.ParseFloat(ReadPerSecond, 64)
+					WriteKBytes, _ := strconv.ParseFloat(WritePerSecond, 64)
 
-					WriteBytesInt, _ := strconv.Atoi(io[5])
-					WriteBytesFloat := float64(WriteBytesInt)
-					processWriteKB, _ := util.ConvertBytesTo(WriteBytesFloat, "kb", 0)
+					if ReadKBytes == -1.0 && WriteKBytes == -1.0 {
+						ReadKBytes = 0.0
+						WriteKBytes = 0.0
+					}
 
 					c := ProcessStruct{
 						CPU:     cpuPercenttoINT,
 						Memory:  processMemoryMB,
 						Name:    processName,
-						KBRead:  processReadKB,
-						KBWrite: processWriteKB,
+						KBRead:  ReadKBytes,
+						KBWrite: WriteKBytes,
 					}
 
 					ps = append(ps, c)
