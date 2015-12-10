@@ -26,7 +26,7 @@ type ProcessStruct struct {
 	Memory  float64 `json:"memory_mb"`
 	KBRead  float64 `json:"kb_read"`
 	KBWrite float64 `json:"kb_write"`
-	Command string  `json:"command"`
+	Name    string  `json:"name"`
 }
 
 // ProcessesList - list of individual process data
@@ -90,7 +90,7 @@ func Processes() (ProcessesList, error) {
 					c := ProcessStruct{
 						CPU:     cpuPercenttoINT,
 						Memory:  processMemoryMB,
-						Command: processName,
+						Name:    processName,
 						KBRead:  processReadKB,
 						KBWrite: processWriteKB,
 					}
