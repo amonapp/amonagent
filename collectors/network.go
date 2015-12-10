@@ -39,7 +39,7 @@ type NetworkStruct struct {
 func NetworkUsage() (NetworkUsageList, error) {
 
 	netio, _ := net.NetIOCounters(true)
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond) // Sleep 1 second to get kb/s
 	netioSecondRun, _ := net.NetIOCounters(true)
 	ifaces, _ := net.NetInterfaces()
 	var usage NetworkUsageList

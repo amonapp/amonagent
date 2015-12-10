@@ -43,8 +43,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = ag.Test()
-
 	if *fTest {
 		err = ag.Test()
 		if err != nil {
@@ -74,5 +72,5 @@ func main() {
 		f.Close()
 	}
 
-	// ag.Run(shutdown)
+	ag.Run(shutdown)
 }
