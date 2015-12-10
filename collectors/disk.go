@@ -113,9 +113,10 @@ func DiskUsage() (DiskUsageList, error) {
 				if TotalMB > 0 && UsedMB > 0 {
 					UsedPercent = (float64(du.Used) / float64(du.Total)) * 100.0
 					UsedPercent, _ = util.FloatDecimalPoint(UsedPercent, 2)
+					DeviceName := strings.Replace(p.Device, "/dev/", "", -1)
 
 					d := DiskUsageStruct{
-						Name:        p.Device,
+						Name:        DeviceName,
 						Path:        du.Path,
 						Fstype:      du.Fstype,
 						Total:       TotalMB,

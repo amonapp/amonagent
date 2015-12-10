@@ -33,18 +33,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// if *fTest {
-	// 	err = ag.Test()
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	return
-	// }
-	//
-	// err = ag.Connect()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	if *fTest {
+		err = ag.Test()
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	shutdown := make(chan struct{})
 	signals := make(chan os.Signal)

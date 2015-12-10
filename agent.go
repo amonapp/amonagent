@@ -1,6 +1,7 @@
 package amonagent
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -13,6 +14,14 @@ import (
 type Agent struct {
 	// Interval at which to gather information
 	Interval time.Duration
+}
+
+// Test - XXX
+func (a *Agent) Test() error {
+
+	allMetrics := collectors.CollectSystem()
+	fmt.Println(allMetrics)
+	return nil
 }
 
 // GatherAndSend - XXX
