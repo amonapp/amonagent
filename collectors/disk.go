@@ -30,10 +30,10 @@ type DiskUsageStruct struct {
 	Name        string  `json:"name"`
 	Path        string  `json:"path"`
 	Fstype      string  `json:"fstype"`
-	Total       float64 `json:"total_mb"`
-	Free        float64 `json:"free_mb"`
-	Used        float64 `json:"used_mb"`
-	UsedPercent float64 `json:"used_percent"`
+	Total       float64 `json:"total"`
+	Free        float64 `json:"free"`
+	Used        float64 `json:"used"`
+	UsedPercent float64 `json:"percent"`
 }
 
 // DiskIOtruct - volume io data

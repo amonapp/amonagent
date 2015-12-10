@@ -72,5 +72,5 @@ func main() {
 		f.Close()
 	}
 
-	// ag.Run(shutdown)
+	ag.Run(shutdown)
 }
