@@ -2,6 +2,7 @@ package collectors
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/martinrusev/amonagent/logging"
 	"github.com/martinrusev/amonagent/util"
@@ -38,6 +39,8 @@ type NetworkStruct struct {
 func NetworkUsage() (NetworkUsageList, error) {
 
 	netio, _ := net.NetIOCounters(true)
+	time.Sleep(100 * time.Millisecond)
+	netioSecondRun, _ := net.NetIOCounters(true)
 	ifaces, _ := net.NetInterfaces()
 	var usage NetworkUsageList
 
@@ -52,15 +55,24 @@ func NetworkUsage() (NetworkUsageList, error) {
 	for _, io := range netio {
 		if stringInSlice(io.Name, validInterfaces) {
 
-			InboundKB, _ := util.ConvertBytesTo(io.BytesRecv, "kb", 0)
-			OutboundKB, _ := util.ConvertBytesTo(io.BytesSent, "kb", 0)
-			n := NetworkStruct{
-				Name:     io.Name,
-				Inbound:  InboundKB,
-				Outbound: OutboundKB,
+			for _, lastio := range netioSecondRun {
+				if lastio.Name == io.Name {
+					Inbound := lastio.BytesRecv - io.BytesRecv
+					InboundKB, _ := util.ConvertBytesTo(Inbound, "kb", 0)
+
+					Outbound := lastio.BytesSent - io.BytesSent
+					OutboundKB, _ := util.ConvertBytesTo(Outbound, "kb", 0)
+
+					n := NetworkStruct{
+						Name:     io.Name,
+						Inbound:  InboundKB,
+						Outbound: OutboundKB,
+					}
+
+					usage = append(usage, n)
+				}
 			}
 
-			usage = append(usage, n)
 		}
 
 	}
