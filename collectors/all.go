@@ -39,7 +39,7 @@ type SystemDataStruct struct {
 	Network NetworkUsageList `json:"network"`
 	Disk    DiskUsageList    `json:"disk"`
 	Load    LoadStruct       `json:"loadavg"`
-	Uptime  UptimeStruct     `json:"uptime"`
+	Uptime  string           `json:"uptime"`
 	Memory  MemoryStruct     `json:"memory"`
 }
 

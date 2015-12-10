@@ -18,16 +18,11 @@ const (
 	DAY    = HOUR * 24
 )
 
-// UptimeStruct - returns uptime struct
-type UptimeStruct struct {
-	Uptime string
-}
-
 var systemLogger = logging.GetLogger("amonagent.system")
 
 // Uptime - returns uptime string
 // uptime = "{0} days {1} hours {2} minutes".format(days, hours, minutes)
-func Uptime() UptimeStruct {
+func Uptime() string {
 	boot, _ := pshost.BootTime()
 	secondsFromBoot := uint64(time.Now().Unix()) - boot
 
@@ -37,10 +32,7 @@ func Uptime() UptimeStruct {
 
 	s := fmt.Sprintf("%v days %v hours %v minutes", days, hours, minutes)
 
-	uptime := UptimeStruct{
-		Uptime: s,
-	}
-	return uptime
+	return s
 }
 
 // IPAddress - returns machine IP
