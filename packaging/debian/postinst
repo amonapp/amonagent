@@ -1,0 +1,41 @@
+#! /bin/bash
+LOG_DIR=/var/log/amonagent
+
+set -e
+
+case "$1" in
+    configure)
+
+        update-rc.d amonagent defaults
+        getent group amonagent >/dev/null || groupadd amonagent -f
+        getent passwd amonagent >/dev/null || \
+            useradd -r -M -g amonagent -s /bin/sh -c "Amon Agent" amonagent
+
+
+        chown amonagent:amonagent /etc/init.d/amonagent
+        chown amonagent:amonagent /var/run/amonagent
+
+
+        if [ ! -d "$LOG_DIR" ]; then
+            mkdir $LOG_DIR
+        fi
+
+        chown -R amonagent:amonagent $LOG_DIR
+
+        chown -R amonagent:amonagent /etc/amonagent
+        set +e
+
+
+        /etc/init.d/amonagent restart
+
+    ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

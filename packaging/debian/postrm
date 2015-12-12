@@ -1,0 +1,18 @@
+#! /bin/sh
+
+case "$*" in
+  0)
+    # We're uninstalling.
+   	  getent passwd amonagent >/dev/null && userdel  amonagent
+	    getent group  amonagent >/dev/null && groupdel amonagent
+    ;;
+  1)
+    # We're upgrading.
+    ;;
+  *)
+    ;;
+esac
+
+/usr/bin/yes | pip uninstall amonagent || true
+
+exit 0

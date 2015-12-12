@@ -1,0 +1,5 @@
+Amon Monitoring Agent
+ The Amon Monitoring Agent is a lightweight process that monitors system
+ processes and services and sends information back to your Amon account.
+ .
+ See http://amon.cx/ for more information
