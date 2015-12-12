@@ -46,7 +46,6 @@ install_base: build
 
 	chmod 755 $(BUILD)/var/log/amonagent
 
-
 	mkdir -p $(BUILD)/etc/init.d
 	cp -r $(PACKAGING)/amonagent.init.sh $(BUILD)/etc/init.d/amonagent
 	chmod 755 $(BUILD)/etc/init.d/amonagent
@@ -63,7 +62,31 @@ $(FPM_BUILD) -t deb \
 -n amon-agent \
 -d "adduser" \
 -d "sysstat" \
---post-install   $(DEBIAN_REPO_PATH)debian/postinst \
---post-uninstall $(DEBIAN_REPO_PATH)debian/postrm \
---pre-uninstall  $(DEBIAN_REPO_PATH)debian/prerm \
+--post-install $(PACKAGING)/debian/postinst \
+--post-uninstall $(PACKAGING)/debian/postrm \
+--pre-uninstall  $(PACKAGING)/debian/prerm \
 .
+
+
+# =====================
+# CentOS/Fedora
+# =====================
+build_rpm: clean install_base
+	rm -f *.rpm
+	FPM_EDITOR="echo ''>>"  \
+$(FPM_BUILD) -t rpm \
+-n "amonagent" \
+-d "sysstat" \
+--conflicts "amonagent < $(VERSION)" \
+--post-install	    $(PACKAGING)/rpm/postinst \
+--pre-uninstall	    $(PACKAGING)/rpm/prerm \
+--post-uninstall    $(PACKAGING)/rpm/postrm \
+.
+
+
+
+test_debian:
+	cp $(PACKAGING)/debian/Dockerfile Dockerfile
+	sed -i s/AMON_DEB_FILE/"$(DEBIAN_PACKAGE_NAME)"/g Dockerfile
+	docker build --rm=true --no-cache .
+	rm Dockerfile

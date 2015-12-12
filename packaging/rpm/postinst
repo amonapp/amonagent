@@ -1,0 +1,27 @@
+# start
+LOG_DIR=/var/log/amonagent
+
+
+getent group amonagent >/dev/null || groupadd -r amonagent
+getent passwd amonagent >/dev/null || \
+    useradd -r -M -g amonagent -s /bin/sh \
+    -c "Amon Agent" amonagent
+
+
+chown amonagent:amonagent /etc/init.d/amonagent
+chown amonagent:amonagent /var/run/amonagent
+
+if [ ! -d "$LOG_DIR" ]; then
+    mkdir $LOG_DIR
+fi
+
+chown -R amonagent:amonagent $LOG_DIR
+
+chkconfig --add amonagent
+
+
+chown -R amonagent:amonagent /opt/amonagent
+
+/etc/init.d/amonagent restart
+
+exit 0

@@ -22,7 +22,7 @@ case "$1" in
 
         chown -R amonagent:amonagent $LOG_DIR
 
-        chown -R amonagent:amonagent /etc/amonagent
+        chown -R amonagent:amonagent /opt/amonagent
         set +e
 
 

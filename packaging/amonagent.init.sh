@@ -18,9 +18,9 @@
 ### END INIT INFO
 
 AGENTPATH='/opt/amonagent/amonagent'
-AGENTUSER="amonagent"
+AGENTUSER="root"
 PIDPATH="/var/run/amonagent/"
-
+PIDFILE "/var/run/amonagent/amonagent.pid"
 
 [ -f $AGENTPATH ] || echo "$AGENTPATH not found"
 
@@ -36,7 +36,7 @@ case $action in
         fi
 
         su $AGENTUSER -c "$AGENTPATH stop"
-        su $AGENTUSER -c "$AGENTPATH start"
+        su $AGENTUSER -c "$AGENTPATH --pidfile $PIDFILE"
         ;;
 
     stop)
