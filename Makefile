@@ -2,6 +2,8 @@ BUILD=packaging/build
 PACKAGING=packaging
 AGENT=$(BUILD)/amonagent
 VERSION := $(shell sh -c 'git describe --always --tags')
+INITD_SCRIPT=packaging/init.sh
+SYSTEMD_SCRIPT=packaging/amonagent.service
 
 PACKAGES_PATH=/home/martin/amon-packages
 DEBIAN_REPO_PATH=$(PACKAGES_PATH)/debian/
@@ -26,7 +28,7 @@ install_repo_base:
 
 
 build:
-	go build -o amonagent -ldflags \
+	godep go build -o amonagent -ldflags \
 		"-X main.Version=$(VERSION)" \
 		./cmd/amonagent.go
 
@@ -46,10 +48,9 @@ install_base: build
 
 	chmod 755 $(BUILD)/var/log/amonagent
 
-	mkdir -p $(BUILD)/etc/init.d
-	cp -r $(PACKAGING)/amonagent.init.sh $(BUILD)/etc/init.d/amonagent
-	chmod +x $(BUILD)/etc/init.d/amonagent
-	chmod 755 $(BUILD)/etc/init.d/amonagent
+	mkdir -p $(BUILD)/opt/amonagent/scripts
+	cp $(INITD_SCRIPT) $(BUILD)/opt/amonagent/scripts/init.sh
+	cp $(SYSTEMD_SCRIPT) $(BUILD)/opt/amonagent/scripts/amonagent.service
 
 	@echo $(VERSION)
 
@@ -63,9 +64,8 @@ $(FPM_BUILD) -t deb \
 -n amonagent \
 -d "adduser" \
 -d "sysstat" \
---post-install $(PACKAGING)/debian/postinst \
---post-uninstall $(PACKAGING)/debian/postrm \
---pre-uninstall  $(PACKAGING)/debian/prerm \
+--post-install $(PACKAGING)/postinst \
+--post-uninstall $(PACKAGING)/postrm \
 .
 
 
@@ -79,13 +79,21 @@ $(FPM_BUILD) -t rpm \
 -n "amonagent" \
 -d "sysstat" \
 --conflicts "amonagent < $(VERSION)" \
---post-install	    $(PACKAGING)/rpm/postinst \
---pre-uninstall	    $(PACKAGING)/rpm/prerm \
---post-uninstall    $(PACKAGING)/rpm/postrm \
+--post-install	    $(PACKAGING)/postinst \
+--post-uninstall    $(PACKAGING)/postrm \
 .
+
+build_all: build_deb build_rpm
+
+build_test_debian_container:
+	cp $(PACKAGING)/debian/Dockerfile.base Dockerfile
+	docker build --force-rm=true --rm=true --no-cache -t=amonagent/ubuntu-base .
+	rm Dockerfile
+	docker rmi $$(docker images -q --filter dangling=true)
 
 test_debian: build_deb
 	cp $(PACKAGING)/debian/Dockerfile Dockerfile
 	sed -i s/AMON_DEB_FILE/"$(DEBIAN_PACKAGE_NAME)"/g Dockerfile
-	docker build --rm=true --no-cache .
+	docker build --rm=true --no-cache -t=amonagent-$(VERSION) .
 	rm Dockerfile
+	docker rmi $$(docker images -q --filter dangling=true)

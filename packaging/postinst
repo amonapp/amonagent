@@ -1,0 +1,67 @@
+if ! id amonagent >/dev/null 2>&1; then
+    useradd --help 2>&1| grep -- --system > /dev/null 2>&1
+    old_useradd=$?
+    if [ $old_useradd -eq 0 ]
+    then
+        useradd --system -U -M amonagent
+    else
+        groupadd amonagent && useradd -M -g amonagent amonagent
+    fi
+fi
+
+# Create default file
+if [ ! -f /etc/default/amonagent ]; then
+    touch /etc/default/amonagent
+fi
+
+# Systemd
+if which systemctl > /dev/null 2>&1 ; then
+    cp /opt/amonagent/scripts/amonagent.service   /lib/systemd/system/amonagent.service
+    systemctl enable amonagent
+    systemctl start amonagent
+    #  restart on upgrade of package
+    if [ "1" -eq 2 ]; then
+        systemctl restart amonagent
+    fi
+
+    echo "### You can start amonagent by executing"
+    echo ""
+    echo " sudo systemctl start amonagent"
+    echo ""
+    echo "### "
+
+# Sysv
+else
+    ln -sfn /opt/amonagent/scripts/init.sh         /opt/amonagent/init.sh
+    rm -f /etc/init.d/amonagent
+    ln -sfn /opt/amonagent/init.sh /etc/init.d/amonagent
+    chmod +x /etc/init.d/amonagent
+    # update-rc.d sysv service:
+    if which update-rc.d > /dev/null 2>&1 ; then
+        update-rc.d -f amonagent remove
+        update-rc.d amonagent defaults
+    # CentOS-style sysv:
+    else
+        chkconfig --add amonagent
+    fi
+
+    service amonagent start
+
+    #  restart on upgrade of package
+    if [ "1" -eq 2 ]; then
+        /etc/init.d/amonagent restart
+    fi
+
+    echo "### You can start amonagent by executing"
+    echo ""
+    echo " sudo service amonagent start"
+    echo ""
+    echo "###"
+
+
+    mkdir -p /var/log/amonagent
+    chown -R -L amonagent:amonagent /var/log/amonagent
+fi
+
+chown -R -L amonagent:amonagent /opt/amonagent
+chmod -R a+rX /opt/amonagent

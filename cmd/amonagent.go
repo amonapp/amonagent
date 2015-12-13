@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 
 	"github.com/martinrusev/amonagent"
 	"github.com/martinrusev/amonagent/collectors"
@@ -62,6 +63,12 @@ func main() {
 	log.Printf("Starting Amon Agent (version %s)\n", Version)
 
 	if *fPidfile != "" {
+		// Ensure the required directory structure exists.
+		err := os.MkdirAll(filepath.Dir(*fPidfile), 0700)
+		if err != nil {
+			log.Fatal(3, "Failed to verify pid directory", err)
+		}
+
 		f, err := os.Create(*fPidfile)
 		if err != nil {
 			log.Fatalf("Unable to create pidfile: %s", err)

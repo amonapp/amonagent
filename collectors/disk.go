@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"bosun.org/slog"
+
 	"github.com/martinrusev/amonagent/logging"
 	"github.com/martinrusev/amonagent/util"
 	"github.com/shirou/gopsutil/disk"
@@ -71,27 +73,24 @@ func removableFs(name string) bool {
 
 // isPseudoFS checks if it is a valid volume
 func isPseudoFS(name string) (res bool) {
-	res = false
 	err := util.ReadLine("/proc/filesystems", func(s string) error {
-
-		if strings.Contains(s, name) && strings.Contains(s, "nodev") {
+		ss := strings.Split(s, "\t")
+		if len(ss) == 2 && ss[1] == name && ss[0] == "nodev" {
 			res = true
-			return nil
 		}
 		return nil
 	})
 	if err != nil {
-		diskLogger.Errorf("can not read '/proc/filesystems': %v", err)
+		slog.Errorf("can not read '/proc/filesystems': %v", err)
 	}
-
-	return res
+	return
 }
 
 // DiskUsage - return a list with disk usage structs
 func DiskUsage() (DiskUsageList, error) {
 	parts, err := disk.DiskPartitions(false)
 	if err != nil {
-		return nil, err
+		diskLogger.Errorf("Error getting disk usage info: %v", err)
 	}
 
 	var usage DiskUsageList
@@ -100,7 +99,7 @@ func DiskUsage() (DiskUsageList, error) {
 		if _, err := os.Stat(p.Mountpoint); err == nil {
 			du, err := disk.DiskUsage(p.Mountpoint)
 			if err != nil {
-				return nil, err
+				diskLogger.Errorf("Error getting disk usage for Mount: %v", err)
 			}
 
 			if !isPseudoFS(du.Fstype) && !removableFs(du.Path) {
