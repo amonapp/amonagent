@@ -72,27 +72,34 @@ func Distro() DistroStruct {
 
 //MachineID - XXX
 func MachineID() string {
-	var machineidPath = "/var/lib/dbus/machine-id"
+	var machineidPath = "/var/lib/dbus/machine-id" // Default machine id path
 	var MachineID string
 	if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
 		machineidPath = "/etc/machine-id"
-	}
-	file, err := os.Open(machineidPath)
-	if err != nil {
-		fmt.Printf(err.Error())
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	var lines []string
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		// Does not exists, probably an older distro or docker container
+		if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
+			machineidPath = ""
+		}
 	}
 
-	if len(lines) > 0 {
-		MachineID = lines[0]
+	if len(machineidPath) > 0 {
+		file, err := os.Open(machineidPath)
+		if err != nil {
+			fmt.Printf(err.Error())
+		}
+		defer file.Close()
+		scanner := bufio.NewScanner(file)
+		var lines []string
+		for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+		}
+
+		if len(lines) > 0 {
+			MachineID = lines[0]
+		}
 	}
 
-	// Can't detect, return an empty string and fallback to server key
+	// Can't detect, return an empty string and ask for a server key
 	if len(MachineID) != 32 {
 		MachineID = ""
 	}

@@ -1,5 +1,4 @@
-#!/usr/bin/env sh
-
+#!/usr/bin/env bash
 
 # chkconfig: 2345 95 05
 # description: Amon agent - collects system and process information.

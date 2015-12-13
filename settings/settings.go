@@ -19,7 +19,9 @@ func Settings() Struct {
 
 	var settings Struct
 
-	configFile, err := os.Open("/etc/opt/amonagent/amonagent.conf")
+	var configPath = "/etc/opt/amonagent/amonagent.conf"
+
+	configFile, err := os.Open(configPath)
 	if err != nil {
 		fmt.Print("opening config file", err.Error())
 	}
@@ -27,7 +29,12 @@ func Settings() Struct {
 	jsonParser := json.NewDecoder(configFile)
 
 	if err = jsonParser.Decode(&settings); err != nil {
-		fmt.Print("parsing config file", err.Error())
+		fmt.Print("Error while parsing /etc/opt/amonagent/amonagent.conf", err.Error())
+	}
+
+	// Set defaults
+	if settings.Interval == 0 {
+		settings.Interval = 60
 	}
 
 	return settings
