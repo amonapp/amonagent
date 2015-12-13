@@ -48,6 +48,7 @@ install_base: build
 
 	mkdir -p $(BUILD)/etc/init.d
 	cp -r $(PACKAGING)/amonagent.init.sh $(BUILD)/etc/init.d/amonagent
+	chmod +x $(BUILD)/etc/init.d/amonagent
 	chmod 755 $(BUILD)/etc/init.d/amonagent
 
 	@echo $(VERSION)
@@ -59,7 +60,7 @@ build_deb: clean install_base
 	rm -f *.deb
 	FPM_EDITOR="echo 'Replaces: amonagent (<= $(VERSION))' >>" \
 $(FPM_BUILD) -t deb \
--n amon-agent \
+-n amonagent \
 -d "adduser" \
 -d "sysstat" \
 --post-install $(PACKAGING)/debian/postinst \
@@ -83,9 +84,7 @@ $(FPM_BUILD) -t rpm \
 --post-uninstall    $(PACKAGING)/rpm/postrm \
 .
 
-
-
-test_debian:
+test_debian: build_deb
 	cp $(PACKAGING)/debian/Dockerfile Dockerfile
 	sed -i s/AMON_DEB_FILE/"$(DEBIAN_PACKAGE_NAME)"/g Dockerfile
 	docker build --rm=true --no-cache .

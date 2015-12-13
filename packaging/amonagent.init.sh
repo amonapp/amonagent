@@ -20,11 +20,14 @@
 AGENTPATH='/opt/amonagent/amonagent'
 AGENTUSER="root"
 PIDPATH="/var/run/amonagent/"
-PIDFILE "/var/run/amonagent/amonagent.pid"
+PIDFILE="/var/run/amonagent/amonagent.pid"
 
 [ -f $AGENTPATH ] || echo "$AGENTPATH not found"
 
-. /etc/rc.d/init.d/functions
+
+if [ -r /lib/lsb/init-functions ]; then
+    source /lib/lsb/init-functions
+fi
 
 action=$1
 
