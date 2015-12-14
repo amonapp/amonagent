@@ -16,6 +16,7 @@ import (
 var fTest = flag.Bool("test", false, "gather metrics, print them out, and exit")
 var fVersion = flag.Bool("version", false, "display the version")
 var fPidfile = flag.String("pidfile", "", "file to write our pid to")
+var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value is used in the Salt minion config")
 
 // Amonagent version
 //	-ldflags "-X main.Version=`git describe --always --tags`"
@@ -49,6 +50,11 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		return
+	}
+
+	if *fMachineID {
+		fmt.Print(machineID)
 		return
 	}
 

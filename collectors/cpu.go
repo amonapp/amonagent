@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/martinrusev/amonagent/logging"
+	"github.com/martinrusev/amonagent/util"
 )
 
 var cpuLogger = logging.GetLogger("amonagent.cpu")
@@ -64,7 +65,8 @@ func CPUUsage() CPUUsageStruct {
 			for _, m := range matches {
 				if len(m) == 1 {
 					valueFloat, _ := strconv.ParseFloat(m[0], 64)
-					values = append(values, valueFloat)
+					valueDecimal, _ := util.FloatDecimalPoint(valueFloat, 2)
+					values = append(values, valueDecimal)
 				}
 
 			}
