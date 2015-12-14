@@ -68,7 +68,6 @@ $(FPM_BUILD) -t deb \
 --post-uninstall $(PACKAGING)/postrm \
 .
 
-
 # =====================
 # CentOS/Fedora
 # =====================
@@ -84,6 +83,20 @@ $(FPM_BUILD) -t rpm \
 .
 
 build_all: build_deb build_rpm
+
+update_debian_repo:
+	cp "amonagent_$(VERSION)_all.deb" $(DEBIAN_REPO_PATH)
+	find $(DEBIAN_REPO_PATH)  -name \*.deb -exec reprepro --ask-passphrase -Vb $(DEBIAN_REPO_PATH)repo includedeb amon {} \;
+
+update_rpm_repo:
+	cp "amonagent-$(VERSION)-1.noarch.rpm" $(RPM_REPO_PATH)
+	createrepo --update $(RPM_REPO_PATH)
+
+
+deploy: update_debian_repo update_rpm_repo
+	sudo ntpdate -u pool.ntp.org
+	aws s3 sync $(PACKAGES_PATH)/debian s3://beta.packages.amon.cx/repo --region=eu-west-1
+	aws s3 sync $(PACKAGES_PATH)/centos s3://beta.packages.amon.cx/rpm --region=eu-west-1
 
 build_test_debian_container:
 	cp $(PACKAGING)/debian/Dockerfile.base Dockerfile
