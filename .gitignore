@@ -26,4 +26,4 @@ _testmain.go
 *.deb
 *.rpm
 amonagent
-packaging/build
+packaging/build/
