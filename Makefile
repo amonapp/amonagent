@@ -98,6 +98,8 @@ deploy: update_debian_repo update_rpm_repo
 	aws s3 sync $(PACKAGES_PATH)/debian s3://beta.packages.amon.cx/repo --region=eu-west-1
 	aws s3 sync $(PACKAGES_PATH)/centos s3://beta.packages.amon.cx/rpm --region=eu-west-1
 
+build_all_and_deploy: build_all deploy
+
 build_test_debian_container:
 	cp $(PACKAGING)/debian/Dockerfile.base Dockerfile
 	docker build --force-rm=true --rm=true --no-cache -t=amonagent/ubuntu-base .
