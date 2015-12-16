@@ -95,7 +95,7 @@ func Processes() (ProcessesList, error) {
 							cpuPercent := processData[CPUIndex]
 							cpuPercenttoINT, _ := strconv.ParseFloat(cpuPercent, 64)
 
-							memPercent := processData[CPUIndex]
+							memPercent := processData[MEMIndex]
 							memPercenttoINT, _ := strconv.ParseFloat(memPercent, 64)
 
 							var processMemoryMB, _ = util.FloatDecimalPoint(memoryTotalMB/100*memPercenttoINT, 2)
