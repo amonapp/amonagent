@@ -2,7 +2,7 @@ BUILD=packaging/build
 PACKAGING=packaging
 AGENT=$(BUILD)/amonagent
 VERSION = $(shell sh -c 'git describe --always --tags')
-VERSION = "0.2.1"
+# VERSION = "0.2.1"
 INITD_SCRIPT=packaging/init.sh
 SYSTEMD_SCRIPT=packaging/amonagent.service
 

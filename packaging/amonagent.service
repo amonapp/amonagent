@@ -8,6 +8,7 @@ After=network-online.target
 EnvironmentFile=/etc/default/amonagent
 ExecStart=/opt/amonagent/amonagent -pidfile /var/run/amonagent/amonagent.pid
 Restart=on-failure
+User=root
 KillMode=process
 
 [Install]

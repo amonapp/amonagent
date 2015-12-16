@@ -49,7 +49,7 @@ else
 
     #  restart on upgrade of package
     if [ "1" -eq 2 ]; then
-        /etc/init.d/amonagent restart
+        service amonagent restart
     fi
 
     echo "### You can start amonagent by executing"
