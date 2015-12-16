@@ -20,6 +20,7 @@ type Agent struct {
 func (a *Agent) Test() error {
 
 	allMetrics := collectors.CollectSystem()
+
 	fmt.Println(allMetrics)
 	return nil
 }

@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"bosun.org/slog"
-
 	"github.com/martinrusev/amonagent/logging"
 	"github.com/martinrusev/amonagent/util"
 	"github.com/shirou/gopsutil/disk"
@@ -81,7 +79,7 @@ func isPseudoFS(name string) (res bool) {
 		return nil
 	})
 	if err != nil {
-		slog.Errorf("can not read '/proc/filesystems': %v", err)
+		diskLogger.Errorf("can not read '/proc/filesystems': %v", err)
 	}
 	return
 }

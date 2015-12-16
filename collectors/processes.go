@@ -31,6 +31,17 @@ type ProcessStruct struct {
 // ProcessesList - list of individual process data
 type ProcessesList []ProcessStruct
 
+// SliceFindStringIndex - XXX
+func SliceFindStringIndex(s []string, e string) int {
+	for v, a := range s {
+		// match, ignore case
+		if strings.EqualFold(a, e) {
+			return v
+		}
+	}
+	return -1
+}
+
 // Processes - get data from sysstat, format and return the result
 func Processes() (ProcessesList, error) {
 	c1, _ := exec.Command("pidstat", "-ruhtd").Output()
@@ -41,52 +52,101 @@ func Processes() (ProcessesList, error) {
 
 	// Find header and ignore
 	headerRegex, _ := regexp.Compile("d+")
-
 	pidstatOutput := string(c1)
 	pidstatLines := strings.Split(pidstatOutput, "\n")
-	// var err error
-	for _, processLine := range pidstatLines {
 
+	// Helper
+	// Time(0)   UID(1)      TGID(2)       TID(3)
+	// %usr{4} %system{5}  %guest{6}    %CPU{7}   CPU{8}
+	// minflt/s{9}  majflt/s{10}     VSZ{11}    RSS{12}
+	// %MEM{13}   kB_rd/s{14}   kB_wr/s{15} kB_ccwr/s{16}  Command{17}
+	var headerData []string
+	for _, processLine := range pidstatLines {
+		// Get the header
+		if strings.Contains(processLine, "%CPU") || strings.Contains(processLine, "%Command") {
+			headerData = strings.Fields(processLine)
+			if len(headerData) > 0 {
+				// remove the first column, if it has the # sign
+				if headerData[0] == "#" {
+					headerData = append(headerData[:0], headerData[0+1:]...)
+				}
+			}
+			break
+		}
+
+	}
+	for _, processLine := range pidstatLines {
 		if len(headerRegex.FindString(processLine)) == 0 {
 			processData := strings.Fields(processLine)
 
-			// Helper
-			// Time(0)   UID(1)      TGID(2)       TID(3)
-			// %usr{4} %system{5}  %guest{6}    %CPU{7}   CPU{8}
-			// minflt/s{9}  majflt/s{10}     VSZ{11}    RSS{12}
-			// %MEM{13}   kB_rd/s{14}   kB_wr/s{15} kB_ccwr/s{16}  Command{17}
-			if len(processData) == 18 {
-				masterthreadID, cpuPercent, memoryPercent, ReadPerSecond, WritePerSecond, processName := processData[3], processData[7], processData[13], processData[14], processData[15], processData[17]
+			if len(processData) == len(headerData) {
+				masterthreadIDIndex := SliceFindStringIndex(headerData, "TID")
+				if masterthreadIDIndex != -1 {
+					masterthreadID := processData[masterthreadIDIndex]
+					masterthreadIDtoINT, _ := strconv.Atoi(masterthreadID)
 
-				masterthreadIDtoINT, _ := strconv.Atoi(masterthreadID)
+					// It is a master thread, proceed with the actual data
+					if masterthreadIDtoINT == 0 {
 
-				if masterthreadIDtoINT == 0 {
-					cpuPercenttoINT, _ := strconv.ParseFloat(cpuPercent, 64)
-					memoryPercenttoINT, _ := strconv.ParseFloat(memoryPercent, 64)
+						CPUIndex := SliceFindStringIndex(headerData, "%CPU")
+						MEMIndex := SliceFindStringIndex(headerData, "%MEM")
 
-					var processMemoryMB, _ = util.FloatDecimalPoint(memoryTotalMB/100*memoryPercenttoINT, 2)
+						if CPUIndex != -1 && MEMIndex != -1 {
+							cpuPercent := processData[CPUIndex]
+							cpuPercenttoINT, _ := strconv.ParseFloat(cpuPercent, 64)
 
-					ReadKBytes, _ := strconv.ParseFloat(ReadPerSecond, 64)
-					WriteKBytes, _ := strconv.ParseFloat(WritePerSecond, 64)
+							memPercent := processData[CPUIndex]
+							memPercenttoINT, _ := strconv.ParseFloat(memPercent, 64)
 
-					if ReadKBytes == -1.0 && WriteKBytes == -1.0 {
-						ReadKBytes = 0.0
-						WriteKBytes = 0.0
+							var processMemoryMB, _ = util.FloatDecimalPoint(memoryTotalMB/100*memPercenttoINT, 2)
+
+							ReadKBIndex := SliceFindStringIndex(headerData, "kB_rd/s")
+							WriteKBIndex := SliceFindStringIndex(headerData, "kB_wr/s")
+							var ReadKBytes = 0.0
+							var WriteKBytes = 0.0
+
+							if ReadKBIndex != -1 && WriteKBIndex != -1 {
+								ReadPerSecond := processData[ReadKBIndex]
+								ReadKBytes, _ = strconv.ParseFloat(ReadPerSecond, 64)
+
+								WritePerSecond := processData[WriteKBIndex]
+								WriteKBytes, _ = strconv.ParseFloat(WritePerSecond, 64)
+
+								if ReadKBytes == -1.0 && WriteKBytes == -1.0 {
+									ReadKBytes = 0.0
+									WriteKBytes = 0.0
+								}
+
+							}
+
+							processNameIndex := SliceFindStringIndex(headerData, "command")
+
+							// Everything is find up to this point, append
+							if processNameIndex != -1 {
+								processName := processData[processNameIndex]
+
+								c := ProcessStruct{
+									CPU:     cpuPercenttoINT,
+									Memory:  processMemoryMB,
+									Name:    processName,
+									KBRead:  ReadKBytes,
+									KBWrite: WriteKBytes,
+								}
+
+								ps = append(ps, c)
+
+							}
+
+						} else {
+							processLogger.Info("Can't find mem/cpu data")
+						}
+
 					}
-
-					c := ProcessStruct{
-						CPU:     cpuPercenttoINT,
-						Memory:  processMemoryMB,
-						Name:    processName,
-						KBRead:  ReadKBytes,
-						KBWrite: WriteKBytes,
-					}
-
-					ps = append(ps, c)
-
 				}
 
 			}
+
+			//fmt.Print(headerData)
 
 		}
 
