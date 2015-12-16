@@ -17,7 +17,7 @@
 ### END INIT INFO
 
 DAEMON='/opt/amonagent/amonagent'
-USER="root"
+USER="amonagent"
 NAME="amonagent"
 GROUP="amonagent"
 PIDFILE="/var/run/amonagent/amonagent.pid"
