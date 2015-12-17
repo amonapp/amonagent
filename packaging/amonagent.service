@@ -10,6 +10,7 @@ ExecStart=/opt/amonagent/amonagent -pidfile /var/run/amonagent/amonagent.pid
 Restart=on-failure
 User=amonagent
 Group=amonagent
+PermissionsStartOnly=true
 ExecStartPre=-/usr/bin/mkdir -p /var/run/amonagent
 ExecStartPre=/usr/bin/chown -R amonagent:amonagent /var/run/amonagent/
 KillMode=process
