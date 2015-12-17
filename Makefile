@@ -96,13 +96,13 @@ update_rpm_repo:
 
 deploy: update_debian_repo update_rpm_repo
 	sudo ntpdate -u pool.ntp.org
-	aws s3 sync $(PACKAGES_PATH)/debian/repo s3://beta.packages.amon.cx/repo --region=eu-west-1
-	aws s3 sync $(PACKAGES_PATH)/centos s3://beta.packages.amon.cx/rpm --region=eu-west-1
+	aws s3 sync $(PACKAGES_PATH)/debian/repo s3://packages.amon.cx/repo --region=eu-west-1
+	aws s3 sync $(PACKAGES_PATH)/centos s3://packages.amon.cx/rpm --region=eu-west-1
 
 upload:
 	sudo ntpdate -u pool.ntp.org
-	aws s3 sync $(PACKAGES_PATH)/debian s3://beta.packages.amon.cx/repo/ --region=eu-west-1
-	aws s3 sync $(PACKAGES_PATH)/centos s3://beta.packages.amon.cx/rpm/ --region=eu-west-1
+	aws s3 sync $(PACKAGES_PATH)/debian s3://packages.amon.cx/repo/ --region=eu-west-1
+	aws s3 sync $(PACKAGES_PATH)/centos s3://packages.amon.cx/rpm/ --region=eu-west-1
 
 
 build_all_and_deploy: build_all deploy

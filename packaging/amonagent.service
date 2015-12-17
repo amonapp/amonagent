@@ -9,6 +9,9 @@ EnvironmentFile=/etc/default/amonagent
 ExecStart=/opt/amonagent/amonagent -pidfile /var/run/amonagent/amonagent.pid
 Restart=on-failure
 User=amonagent
+Group=amonagent
+ExecStartPre=-/usr/bin/mkdir -p /var/run/amonagent
+ExecStartPre=/usr/bin/chown -R amonagent:amonagent /var/run/amonagent/
 KillMode=process
 
 [Install]
