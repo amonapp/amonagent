@@ -67,6 +67,7 @@ $(FPM_BUILD) -t deb \
 -d "sysstat" \
 --post-install $(PACKAGING)/postinst \
 --post-uninstall $(PACKAGING)/postrm \
+--pre-uninstall  $(PACKAGING)/prerm \
 .
 
 # =====================
@@ -81,6 +82,7 @@ $(FPM_BUILD) -t rpm \
 --conflicts "amonagent < $(VERSION)" \
 --post-install	    $(PACKAGING)/postinst \
 --post-uninstall    $(PACKAGING)/postrm \
+--pre-uninstall  $(PACKAGING)/prerm \
 .
 
 build_all: build_deb build_rpm

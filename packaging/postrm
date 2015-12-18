@@ -5,7 +5,6 @@ case "$*" in
     # We're uninstalling.
     # Systemd
     if which systemctl > /dev/null 2>&1 ; then
-        systemctl stop amonagent
         systemctl disable amonagent
     # Sysv
     else
@@ -18,16 +17,8 @@ case "$*" in
         else
             chkconfig --del amonagent
         fi
-
-        service amonagent stop
-
     fi
 
-      # kill all of the user processes
-      ps -u amonagent | grep -v PID | awk '{print $1}' | xargs -i kill {}
-      sleep 2
-      ps -u amonagent | grep -v PID | awk '{print $1}' | xargs -i kill {}
-      
    	  getent passwd amonagent >/dev/null && userdel  amonagent
 	  getent group  amonagent >/dev/null && groupdel amonagent
 

@@ -2,4 +2,5 @@ FROM centos:centos6
 
 ADD AMON_RPM_FILE var/agent.rpm
 
-RUN yum -t -y install /var/agent.rpm
+RUN yum -y install /var/agent.rpm
+RUN yum remove -y amonagent
