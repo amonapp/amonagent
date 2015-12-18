@@ -105,13 +105,22 @@ upload:
 	aws s3 sync $(PACKAGES_PATH)/centos s3://packages.amon.cx/rpm/ --region=eu-west-1
 
 
-build_all_and_deploy: build_all deploy
+build_and_deploy: build_all deploy
 
 build_test_debian_container:
 	cp $(PACKAGING)/debian/Dockerfile.base Dockerfile
 	docker build --force-rm=true --rm=true --no-cache -t=amonagent/ubuntu-base .
 	rm Dockerfile
 	docker rmi $$(docker images -q --filter dangling=true)
+
+build_centos6_container: build_rpm
+	cp $(PACKAGING)/containers/Dockerfile.centos6 Dockerfile
+	sed -i s/AMON_RPM_FILE/"$(CENTOS_PACKAGE_NAME)"/g Dockerfile
+	docker build --force-rm=true --rm=true --no-cache .
+	rm Dockerfile
+	docker rmi $$(docker images -q --filter dangling=true)
+
+
 
 test_debian: build_deb
 	cp $(PACKAGING)/debian/Dockerfile Dockerfile
