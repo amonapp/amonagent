@@ -44,7 +44,7 @@ else
     else
         chkconfig --add amonagent
     fi
-
+    
     service amonagent start
 
     #  restart on upgrade of package
@@ -54,13 +54,14 @@ else
 
     echo "### You can start amonagent by executing"
     echo ""
-    echo " sudo service amonagent start"
+    echo "sudo service amonagent start"
     echo ""
     echo "###"
 
 
     mkdir -p /var/log/amonagent
     chown -R -L amonagent:amonagent /var/log/amonagent
+
 fi
 
 chown -R -L amonagent:amonagent /opt/amonagent

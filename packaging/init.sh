@@ -30,7 +30,7 @@ CONFING="/etc/opt/amonagent/amonagent.conf"
 # pid file for the daemon
 if [ ! -d "$PIDPATH" ]; then
     mkdir -p $PIDPATH
-    chown $USER:$GROUP $PIDPATH
+    chown -R $USER:$GROUP $PIDPATH
 fi
 
 
