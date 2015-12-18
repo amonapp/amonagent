@@ -44,12 +44,12 @@ else
     else
         chkconfig --add amonagent
     fi
-    
-    service amonagent start
 
     #  restart on upgrade of package
     if [ "1" -eq 2 ]; then
         service amonagent restart
+    else
+        service amonagent start
     fi
 
     echo "### You can start amonagent by executing"
