@@ -36,10 +36,6 @@ func main() {
 	machineID := collectors.MachineID()
 	serverKey := config.ServerKey
 
-	if len(machineID) == 0 && len(serverKey) == 0 {
-		log.Fatal("Can't detect Machine ID. Please define `server_key` in /etc/opt/amonagent/amonagent.conf ")
-	}
-
 	ag, err := amonagent.NewAgent(config)
 	if err != nil {
 		log.Fatal(err)
@@ -56,6 +52,10 @@ func main() {
 	if *fMachineID {
 		fmt.Print(machineID)
 		return
+	}
+
+	if len(machineID) == 0 && len(serverKey) == 0 {
+		log.Fatal("Can't detect Machine ID. Please define `server_key` in /etc/opt/amonagent/amonagent.conf ")
 	}
 
 	shutdown := make(chan struct{})
