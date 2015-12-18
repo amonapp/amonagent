@@ -30,9 +30,10 @@ CONFING="/etc/opt/amonagent/amonagent.conf"
 # pid file for the daemon
 if [ ! -d "$PIDPATH" ]; then
     mkdir -p $PIDPATH
-    chown -R $USER:$GROUP $PIDPATH
 fi
 
+# always set the permissions on start
+chown -R $USER:$GROUP $PIDPATH
 
 DEFAULT=/etc/default/amonagent
 
