@@ -18,11 +18,7 @@ fi
 if which systemctl > /dev/null 2>&1 ; then
     cp /opt/amonagent/scripts/amonagent.service   /lib/systemd/system/amonagent.service
     systemctl enable amonagent
-    systemctl start amonagent
-    #  restart on upgrade of package
-    if [ "1" -eq 2 ]; then
-        systemctl restart amonagent
-    fi
+    systemctl restart amonagent
 
     echo "### You can start amonagent by executing"
     echo ""
@@ -45,11 +41,9 @@ else
         chkconfig --add amonagent
     fi
 
-    service amonagent start
-    #  restart on upgrade of package
-    if [ "1" -eq 2 ]; then
-        service amonagent restart
-    fi
+
+    service amonagent restart
+
 
     echo "### You can start amonagent by executing"
     echo ""
