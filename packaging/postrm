@@ -3,8 +3,38 @@
 case "$*" in
   0)
     # We're uninstalling.
+    # Systemd
+    if which systemctl > /dev/null 2>&1 ; then
+        systemctl stop amonagent
+        systemctl disable amonagent
+    # Sysv
+    else
+
+        # update-rc.d sysv service:
+        if which update-rc.d > /dev/null 2>&1 ; then
+            update-rc.d -f amonagent remove
+            update-rc.d amonagent stop
+        # CentOS-style sysv:
+        else
+            chkconfig --del amonagent
+        fi
+
+        service amonagent stop
+
+    fi
+
+      # kill all of the user processes
+      ps -u amonagent | grep -v PID | awk '{print $1}' | xargs -i kill {}
+      sleep 2
+      ps -u amonagent | grep -v PID | awk '{print $1}' | xargs -i kill {}
+      
    	  getent passwd amonagent >/dev/null && userdel  amonagent
-	    getent group  amonagent >/dev/null && groupdel amonagent
+	  getent group  amonagent >/dev/null && groupdel amonagent
+
+      # Remove config
+      rm -rf /etc/opt/amonagent
+      # Remove binary
+      rm -rf /opt/amonagent
     ;;
   1)
     # We're upgrading.

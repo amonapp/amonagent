@@ -14,6 +14,12 @@ if [ ! -f /etc/default/amonagent ]; then
     touch /etc/default/amonagent
 fi
 
+# Make sure the config directory exists
+if [ ! -d /etc/opt/amonagent ]; then
+    mkdir -p /etc/opt/amonagent
+fi
+
+
 # Systemd
 if which systemctl > /dev/null 2>&1 ; then
     cp /opt/amonagent/scripts/amonagent.service   /lib/systemd/system/amonagent.service
