@@ -23,25 +23,28 @@ func (a *Agent) Test(config settings.Struct) error {
 
 	allMetrics := collectors.CollectSystem()
 
-	fmt.Println("Collected Metrics: ")
+	fmt.Println("\n------------------")
+	fmt.Println("\033[92mCollecting Metrics: \033[0m")
+	fmt.Println("")
 	fmt.Println(allMetrics)
 	fmt.Println("\n------------------")
 
-	fmt.Println("Testing settings: ")
+	fmt.Println("\033[92mTesting settings: \033[0m")
+	fmt.Println("")
 	machineID := collectors.MachineID()
 
 	if len(machineID) == 0 && len(config.ServerKey) == 0 {
 		fmt.Println("Can't find Machine ID (looking in /etc/machine-id and /var/lib/dbus/machine-id).")
 		fmt.Println("This usually means D-bus is missing on this server. To solve this problem")
-
+		fmt.Println("---")
 		fmt.Println("On RPM distros:")
 		fmt.Println("rpm install dbus")
 		fmt.Println("dbus-uuidgen > /var/lib/dbus/machine-id")
-
+		fmt.Println("---")
 		fmt.Println("On Debian distros:")
 		fmt.Println("apt-get install dbus")
 		fmt.Println("dbus-uuidgen > /var/lib/dbus/machine-id")
-
+		fmt.Println("---")
 		fmt.Println("Or alternatively, you can 'Add Server' from the Amon Interface and paste the Server Key value")
 		fmt.Println("as server_key in /etc/opt/amonagent.conf")
 
@@ -50,7 +53,7 @@ func (a *Agent) Test(config settings.Struct) error {
 	fmt.Println("\n------------------")
 
 	url := remote.SystemURL()
-	fmt.Printf("\nSending data to %s ", url)
+	fmt.Printf("\033[92m\nSending data to %s \033[0m", url)
 
 	err := remote.SendData(allMetrics)
 	if err != nil {
