@@ -1,3 +1,9 @@
+0.3 - 20.12.2015
+==============
+
+* More detailed error messages
+* Improve testing command
+
 0.2.5 - 17.12.2015
 ==============
 
