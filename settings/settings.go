@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Struct -XXX
@@ -35,6 +36,12 @@ func Settings() Struct {
 	// Set defaults
 	if settings.Interval == 0 {
 		settings.Interval = 60
+	}
+
+	// Remote trailing slash from the url
+	if strings.HasSuffix(settings.AmonInstance, "/") {
+		cutOffLastCharLen := len(settings.AmonInstance) - 1
+		settings.AmonInstance = settings.AmonInstance[:cutOffLastCharLen]
 	}
 
 	return settings

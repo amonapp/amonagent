@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"path/filepath"
 
-	"github.com/martinrusev/amonagent"
-	"github.com/martinrusev/amonagent/collectors"
-	"github.com/martinrusev/amonagent/settings"
+	"github.com/amonapp/amonagent"
+	"github.com/amonapp/amonagent/collectors"
+	"github.com/amonapp/amonagent/settings"
 )
 
 var fTest = flag.Bool("test", false, "gather metrics, print them out, and exit")
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	if *fTest {
-		err = ag.Test()
+		err = ag.Test(config)
 		if err != nil {
 			log.Fatal(err)
 		}

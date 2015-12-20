@@ -2,13 +2,15 @@ package amonagent
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/martinrusev/amonagent/collectors"
-	"github.com/martinrusev/amonagent/remote"
-	"github.com/martinrusev/amonagent/settings"
+	"github.com/amonapp/amonagent/collectors"
+	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/remote"
+	"github.com/amonapp/amonagent/settings"
 )
+
+var agentLogger = logging.GetLogger("amonagent.log")
 
 // Agent - XXX
 type Agent struct {
@@ -17,11 +19,22 @@ type Agent struct {
 }
 
 // Test - XXX
-func (a *Agent) Test() error {
+func (a *Agent) Test(config settings.Struct) error {
 
 	allMetrics := collectors.CollectSystem()
 
+	fmt.Println("Collected Metrics: ")
 	fmt.Println(allMetrics)
+	fmt.Println("\n------------------")
+
+	url := remote.SystemURL()
+	fmt.Printf("\nSending data to %s ", url)
+
+	err := remote.SendData(allMetrics)
+	if err != nil {
+		return fmt.Errorf("Can't connect to the Amon API on %s\n", err.Error())
+	}
+
 	return nil
 }
 
@@ -29,7 +42,10 @@ func (a *Agent) Test() error {
 func (a *Agent) GatherAndSend() error {
 
 	allMetrics := collectors.CollectSystem()
-	remote.SendData(allMetrics)
+	err := remote.SendData(allMetrics)
+	if err != nil {
+		return fmt.Errorf("Can't connect to the Amon API on %s\n", err.Error())
+	}
 	return nil
 }
 
@@ -45,16 +61,16 @@ func NewAgent(config settings.Struct) (*Agent, error) {
 // Run runs the agent daemon, gathering every Interval
 func (a *Agent) Run(shutdown chan struct{}) error {
 
-	log.Printf("Agent Config: Interval:%s\n", a.Interval)
+	agentLogger.Info("Agent Config: Interval:%s\n", a.Interval)
 
 	ticker := time.NewTicker(a.Interval)
 
 	for {
 
 		if err := a.GatherAndSend(); err != nil {
-			log.Printf("Flusher routine failed, exiting: %s\n", err.Error())
+			agentLogger.Info("Flusher routine failed, exiting: %s\n", err.Error())
 		} else {
-			log.Printf("Collecting and sending data:%s\n", a.Interval)
+			agentLogger.Info("Collecting and sending data:%s\n", a.Interval)
 		}
 		select {
 		case <-shutdown:

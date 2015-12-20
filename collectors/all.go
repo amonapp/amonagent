@@ -3,7 +3,7 @@ package collectors
 import (
 	"encoding/json"
 
-	"github.com/martinrusev/amonagent/settings"
+	"github.com/amonapp/amonagent/settings"
 )
 
 func (p SystemDataStruct) String() string {

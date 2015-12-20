@@ -3,7 +3,7 @@ package collectors
 import (
 	"encoding/json"
 
-	"github.com/martinrusev/amonagent/logging"
+	"github.com/amonapp/amonagent/logging"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/load"
 )
