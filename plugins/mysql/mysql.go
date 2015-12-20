@@ -10,6 +10,62 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// Counters - XXX
+var Counters = map[string]string{
+	"Connections":              "net.connections",
+	"Innodb_data_reads":        "innodb.data_reads",
+	"Innodb_data_writes":       "innodb.data_writes",
+	"Innodb_os_log_fsyncs":     "innodb.os_log_fsyncs",
+	"Innodb_row_lock_waits":    "innodb.row_lock_waits",
+	"Innodb_row_lock_time":     "innodb.row_lock_time",
+	"Innodb_mutex_spin_waits":  "innodb.mutex_spin_waits",
+	"Innodb_mutex_spin_rounds": "innodb.mutex_spin_rounds",
+	"Innodb_mutex_os_waits":    "innodb.mutex_os_waits",
+	"Slow_queries":             "performance.slow_queries",
+	"Questions":                "performance.questions",
+	"Queries":                  "performance.queries",
+	"Com_select":               "performance.com_select",
+	"Com_insert":               "performance.com_insert",
+	"Com_update":               "performance.com_update",
+	"Com_delete":               "performance.com_delete",
+	"Com_insert_select":        "performance.com_insert_select",
+	"Com_update_multi":         "performance.com_update_multi",
+	"Com_delete_multi":         "performance.com_delete_multi",
+	"Com_replace_select":       "performance.com_replace_select",
+	"Qcache_hits":              "performance.qcache_hits",
+	"Created_tmp_tables":       "performance.created_tmp_tables",
+	"Created_tmp_disk_tables":  "performance.created_tmp_disk_tables",
+	"Created_tmp_files":        "performance.created_tmp_files",
+}
+
+// Gauges - XXX
+var Gauges = map[string]string{
+	"Max_used_connections":     "net.max_connections",
+	"Open_tables":              "performance.open_tables",
+	"Open_files":               "performance.open_files",
+	"Table_locks_waited":       "performance.table_locks_waited",
+	"Threads_connected":        "performance.threads_connected",
+	"Innodb_current_row_locks": "innodb.current_row_locks",
+}
+
+// SlowQueriesSQL - XXX
+var SlowQueriesSQL = `SELECT
+	mysql.slow_log.query_time,
+	mysql.slow_log.rows_sent,
+	mysql.slow_log.rows_examined,
+	mysql.slow_log.lock_time,
+	mysql.slow_log.db,
+	mysql.slow_log.sql_text AS query,
+	mysql.slow_log.start_time
+FROM
+	mysql.slow_log
+WHERE
+	mysql.slow_log.query_time > 1
+ORDER BY
+	start_time DESC
+LIMIT 30
+`
+
 // TablesSizeSQL - XXX
 var TablesSizeSQL = `
 SELECT table_name as 'table',
@@ -59,36 +115,28 @@ func Collect() error {
 			return err
 		}
 
-		var found bool
-
-		// for _, mapped := range mappings {
-		// 	if strings.HasPrefix(name, mapped.onServer) {
-		// 		i, _ := strconv.Atoi(string(val.([]byte)))
-		// 		fields[mapped.inExport+name[len(mapped.onServer):]] = i
-		// 		found = true
-		// 	}
-		// }
-
-		if found {
-			continue
-		}
-
-		switch name {
-		case "Queries":
-			i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
-			if err != nil {
-				return err
+		for RawKey, FormatedKey := range Gauges {
+			if name == RawKey {
+				i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
+				if err != nil {
+					return err
+				}
+				fields[FormatedKey] = i
 			}
 
-			fields["queries"] = i
-		case "Slow_queries":
-			i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
-			if err != nil {
-				return err
+		}
+
+		for RawKey, FormatedKey := range Counters {
+			if name == RawKey {
+				i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
+				if err != nil {
+					return err
+				}
+				fields[FormatedKey] = i
 			}
 
-			fields["slow_queries"] = i
 		}
+
 	}
 
 	ConnRows, err := db.Query("SELECT user, sum(1) FROM INFORMATION_SCHEMA.PROCESSLIST GROUP BY user")
