@@ -254,7 +254,6 @@ func Collect() error {
 
 	}
 	PerformanceStruct.SlowQueriesData = SlowQueriesData
-	// MySQLPerformanceStructJSON, _ := json.Marshal(&MySQLPerformanceStruct)
 	fmt.Print(PerformanceStruct)
 
 	return nil
