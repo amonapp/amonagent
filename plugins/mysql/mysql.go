@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -81,6 +82,31 @@ WHERE table_schema NOT IN ('information_schema', 'performance_schema', 'mysql')
 ORDER  BY data_length + index_length DESC;
 `
 
+// TableSizeData - XXX
+type TableSizeData struct {
+	Headers []string      `json:"headers"`
+	Data    []interface{} `json:"data"`
+}
+
+// SlowQueriesData - XXX
+type SlowQueriesData struct {
+	Headers []string      `json:"headers"`
+	Data    []interface{} `json:"data"`
+}
+
+func (p PerformanceStruct) String() string {
+	s, _ := json.Marshal(p)
+	return string(s)
+}
+
+// PerformanceStruct - XXX
+type PerformanceStruct struct {
+	TableSizeData   `json:"tables_size"`
+	SlowQueriesData `json:"slow_queries"`
+	Gauges          map[string]interface{} `json:"gauges"`
+	Counters        map[string]interface{} `json:"counters"`
+}
+
 // Collect - XXX
 func Collect() error {
 	serv := "root:123456@tcp/employees"
@@ -99,13 +125,16 @@ func Collect() error {
 
 	defer db.Close()
 
+	PerformanceStruct := PerformanceStruct{}
+
 	rows, err := db.Query(`SHOW /*!50002 GLOBAL */ STATUS`)
 	defer rows.Close()
 	if err != nil {
 		return err
 	}
 
-	fields := make(map[string]interface{})
+	counters := make(map[string]interface{})
+	gauges := make(map[string]interface{})
 	for rows.Next() {
 		var name string
 		var val interface{}
@@ -121,7 +150,7 @@ func Collect() error {
 				if err != nil {
 					return err
 				}
-				fields[FormatedKey] = i
+				gauges[FormatedKey] = i
 			}
 
 		}
@@ -132,7 +161,7 @@ func Collect() error {
 				if err != nil {
 					return err
 				}
-				fields[FormatedKey] = i
+				counters[FormatedKey] = i
 			}
 
 		}
@@ -150,16 +179,16 @@ func Collect() error {
 			return err
 		}
 
-		fields := make(map[string]interface{})
-
-		if err != nil {
-			return err
-		}
-		fields["connections"] = connections
+		gauges["connections.active_connections"] = connections
 
 	}
+	PerformanceStruct.Gauges = gauges
+	PerformanceStruct.Counters = counters
 
 	TableSizeRows, err := db.Query(TablesSizeSQL)
+	TableSizeHeaders := []string{"table", "database", "rows", "full_name", "size", "indexes", "total", "index_fraction"}
+	TableSizeData := TableSizeData{Headers: TableSizeHeaders}
+
 	defer TableSizeRows.Close()
 	for TableSizeRows.Next() {
 		// TABLES_SIZE_ROWS = ['table', 'database', 'rows',
@@ -174,15 +203,59 @@ func Collect() error {
 		var total int64
 		var indexFraction float64
 
-		// var val interface{}
 		err = TableSizeRows.Scan(&table, &database, &rows, &fullName, &size, &indexes, &total, &indexFraction)
 		if err != nil {
 			return err
 		}
+		fields := []interface{}{}
+		fields = append(fields, table)
+		fields = append(fields, database)
+		fields = append(fields, rows)
+		fields = append(fields, size)
+		fields = append(fields, indexes)
+		fields = append(fields, total)
+		fields = append(fields, indexFraction)
+
+		TableSizeData.Data = append(TableSizeData.Data, fields)
 
 	}
+	PerformanceStruct.TableSizeData = TableSizeData
 
-	fmt.Print(fields)
+	SlowQueriesRows, err := db.Query(SlowQueriesSQL)
+	SlowQueriesHeader := []string{"query_time", "rows_sent", "rows_examined", "lock_time", "db", "query", "start_time"}
+	SlowQueriesData := SlowQueriesData{Headers: SlowQueriesHeader}
+
+	defer SlowQueriesRows.Close()
+	for SlowQueriesRows.Next() {
+
+		var queryTime string
+		var rowsSent int64
+		var rowsExamined int64
+		var lockTime string
+		var db string
+		var query string
+		var startTime string
+
+		err = SlowQueriesRows.Scan(&queryTime, &rowsSent, &rowsExamined, &lockTime, &db, &query, &startTime)
+		if err != nil {
+			return err
+		}
+
+		fields := []interface{}{}
+		fields = append(fields, queryTime)
+		fields = append(fields, rowsSent)
+		fields = append(fields, rowsExamined)
+		fields = append(fields, lockTime)
+		fields = append(fields, db)
+		fields = append(fields, query)
+		fields = append(fields, startTime)
+
+		SlowQueriesData.Data = append(SlowQueriesData.Data, fields)
+
+	}
+	PerformanceStruct.SlowQueriesData = SlowQueriesData
+	// MySQLPerformanceStructJSON, _ := json.Marshal(&MySQLPerformanceStruct)
+	fmt.Print(PerformanceStruct)
 
 	return nil
 }
