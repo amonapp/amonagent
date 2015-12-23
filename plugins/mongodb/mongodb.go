@@ -1,19 +1,24 @@
 package mongodb
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/influxdb/telegraf/plugins/mongodb"
+	"github.com/amonapp/amonagent/plugins/mongodb"
+	"github.com/mitchellh/mapstructure"
 
 	// MongoDB Driver
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
+
+var localhost = &url.URL{Host: "127.0.0.1:27017"}
 
 // Server - XXX
 type Server struct {
@@ -22,56 +27,29 @@ type Server struct {
 	lastResult *mongodb.ServerStatus
 }
 
-var localhost = &url.URL{Host: "127.0.0.1:27017"}
+// TableSizeData - XXX
+type TableSizeData struct {
+	Headers []string      `json:"headers"`
+	Data    []interface{} `json:"data"`
+}
 
-// // Connect - XXX
-// func Connect(server *Server) error {
-// 	if server.Session == nil {
-// 		var dialAddrs []string
-// 		if server.Url.User != nil {
-// 			dialAddrs = []string{server.URL.String()}
-// 		} else {
-// 			dialAddrs = []string{server.URL.Host}
-// 		}
-// 		dialInfo, err := mgo.ParseURL(dialAddrs[0])
-// 		if err != nil {
-// 			return fmt.Errorf("Unable to parse URL (%s), %s\n", dialAddrs[0], err.Error())
-// 		}
-// 		dialInfo.Direct = true
-// 		dialInfo.Timeout = time.Duration(10) * time.Second
-//
-// 		if m.Ssl.Enabled {
-// 			tlsConfig := &tls.Config{}
-// 			if len(m.Ssl.CaCerts) > 0 {
-// 				roots := x509.NewCertPool()
-// 				for _, caCert := range m.Ssl.CaCerts {
-// 					ok := roots.AppendCertsFromPEM([]byte(caCert))
-// 					if !ok {
-// 						return fmt.Errorf("failed to parse root certificate")
-// 					}
-// 				}
-// 				tlsConfig.RootCAs = roots
-// 			} else {
-// 				tlsConfig.InsecureSkipVerify = true
-// 			}
-// 			dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
-// 				conn, err := tls.Dial("tcp", addr.String(), tlsConfig)
-// 				if err != nil {
-// 					fmt.Printf("error in Dial, %s\n", err.Error())
-// 				}
-// 				return conn, err
-// 			}
-// 		}
-//
-// 		sess, err := mgo.DialWithInfo(dialInfo)
-// 		if err != nil {
-// 			fmt.Printf("error dialing over ssl, %s\n", err.Error())
-// 			return fmt.Errorf("Unable to connect to MongoDB, %s\n", err.Error())
-// 		}
-// 		server.Session = sess
-// 	}
-//
-// }
+// SlowQueriesData - XXX
+type SlowQueriesData struct {
+	Headers []string      `json:"headers"`
+	Data    []interface{} `json:"data"`
+}
+
+func (p PerformanceStruct) String() string {
+	s, _ := json.Marshal(p)
+	return string(s)
+}
+
+// PerformanceStruct - XXX
+type PerformanceStruct struct {
+	TableSizeData   `json:"tables_size"`
+	SlowQueriesData `json:"slow_queries"`
+	Gauges          map[string]interface{} `json:"gauges"`
+}
 
 // DefaultStats - XXX
 var DefaultStats = map[string]string{
@@ -101,14 +79,13 @@ var DefaultReplStats = map[string]string{
 	"replica.deletes_per_sec":  "DeleteR",
 	"replica.getmores_per_sec": "GetMoreR",
 	"replica.commands_per_sec": "CommandR",
-	// "member_status":            "NodeType",
 }
 
 // MmapStats - XXX
 var MmapStats = map[string]string{
-	"mapped_megabytes":     "Mapped",
-	"non-mapped_megabytes": "NonMapped",
-	"page_faults_per_sec":  "Faults",
+	"mapped_megabytes":               "Mapped",
+	"non-mapped_megabytes":           "NonMapped",
+	"operations.page_faults_per_sec": "Faults",
 }
 
 // WiredTigerStats - XXX
@@ -117,17 +94,90 @@ var WiredTigerStats = map[string]string{
 	"percent_cache_used":  "CacheUsedPercent",
 }
 
-// Collect - XXX
-func Collect(server *Server) error {
+// CollectionStats - XXX
+// COLLECTION_ROWS = ['count','ns','avgObjSize', 'totalIndexSize', 'indexSizes', 'size']
+type CollectionStats struct {
+	Count          int64            `json:"number_of_documents"`
+	Ns             string           `json:"ns"`
+	AvgObjSize     int64            `json:"avgObjSize"`
+	TotalIndexSize int64            `json:"total_index_size"`
+	StorageSize    int64            `json:"storage_size"`
+	IndexSizes     map[string]int64 `json:"index_sizes"`
+	Size           int64            `json:"size"`
+}
 
-	if server.Session == nil {
-		mongoDBDialInfo := &mgo.DialInfo{
-			Addrs:    []string{server.URL.Host},
-			Timeout:  10 * time.Second,
-			Database: "amon",
+// CollectSlowQueries - XXX
+func CollectSlowQueries(server *Server, perf *PerformanceStruct) error {
+	//
+	// params = {"millis": { "$gt" : slowms }}
+	// 	performance = db['system.profile']\
+	// 	.find(params)\
+	// 	.sort("ts", pymongo.DESCENDING)\
+	// 	.limit(10)
+	db := strings.Replace(server.URL.Path, "/", "", -1) // remove slash from Path
+	result := []bson.M{}
+
+	params := bson.M{"millis": bson.M{"$gt": 10}}
+	c := server.Session.DB(db).C("system.profile")
+	err := c.Find(params).All(&result)
+	if err != nil {
+		return err
+	}
+	for _, r := range result {
+		fmt.Println(r)
+		fmt.Println("-----")
+	}
+	// fmt.Println(result)
+	return nil
+}
+
+// CollectCollectionSize - XXX
+func CollectCollectionSize(server *Server, perf *PerformanceStruct) error {
+	TableSizeHeaders := []string{"count", "ns", "avgObjSize", "totalIndexSize", "storageSize", "indexSizes", "size"}
+	TableSizeData := TableSizeData{Headers: TableSizeHeaders}
+
+	db := strings.Replace(server.URL.Path, "/", "", -1) // remove slash from Path
+	collections, err := server.Session.DB(db).CollectionNames()
+	if err != nil {
+		return err
+	}
+	for _, col := range collections {
+
+		result := bson.M{}
+		err := server.Session.DB(db).Run(bson.D{{"collstats", col}}, &result)
+
+		if err != nil {
+			fmt.Print("Can't get stats for collection", err.Error())
+		}
+		var CollectionResult CollectionStats
+		decodeError := mapstructure.Decode(result, &CollectionResult)
+		if decodeError != nil {
+			fmt.Print("Can't decode collection stats", decodeError.Error())
 		}
 
-		session, connectionError := mgo.DialWithInfo(mongoDBDialInfo)
+		TableSizeData.Data = append(TableSizeData.Data, CollectionResult)
+	}
+
+	perf.TableSizeData = TableSizeData
+
+	return nil
+}
+
+// GetSession - XXX
+func GetSession(server *Server) error {
+	if server.Session == nil {
+		dialInfo := &mgo.DialInfo{
+			Addrs:    []string{server.URL.Host},
+			Database: server.URL.Path,
+		}
+		dialInfo.Timeout = 10 * time.Second
+		if server.URL.User != nil {
+			password, _ := server.URL.User.Password()
+			dialInfo.Username = server.URL.User.Username()
+			dialInfo.Password = password
+		}
+
+		session, connectionError := mgo.DialWithInfo(dialInfo)
 		if connectionError != nil {
 			return fmt.Errorf("Unable to connect to URL (%s), %s\n", server.URL.Host, connectionError.Error())
 		}
@@ -138,8 +188,14 @@ func Collect(server *Server) error {
 		server.Session.SetSocketTimeout(0)
 	}
 
+	return nil
+}
+
+// CollectGauges - XXX
+func CollectGauges(server *Server, perf *PerformanceStruct) error {
+	db := strings.Replace(server.URL.Path, "/", "", -1) // remove slash from Path
 	result := &mongodb.ServerStatus{}
-	err := server.Session.DB("amon").Run(bson.D{{"serverStatus", 1}, {"recordStats", 0}}, result)
+	err := server.Session.DB(db).Run(bson.D{{"serverStatus", 1}, {"recordStats", 0}}, result)
 	if err != nil {
 		return err
 	}
@@ -157,88 +213,59 @@ func Collect(server *Server) error {
 		}
 
 		data := mongodb.NewStatLine(*server.lastResult, *result, server.URL.Host, true, durationInSeconds)
-		fmt.Print(data.NodeType)
 
 		statLine := reflect.ValueOf(data).Elem()
 		storageEngine := statLine.FieldByName("StorageEngine").Interface()
+		// nodeType := statLine.FieldByName("NodeType").Interface()
 
+		gauges := make(map[string]interface{})
 		for key, value := range DefaultStats {
 			val := statLine.FieldByName(value).Interface()
-			fmt.Print(key + ":")
-			fmt.Print(val)
-			fmt.Println("\n-----")
+			gauges[key] = val
 		}
 
 		if storageEngine == "mmapv1" {
 			for key, value := range MmapStats {
 				val := statLine.FieldByName(value).Interface()
-				fmt.Print(key + ":")
-				fmt.Print(val)
-				fmt.Println("\n-----")
+				gauges[key] = val
 			}
 		} else if storageEngine == "wiredTiger" {
 			for key, value := range WiredTigerStats {
 				val := statLine.FieldByName(value).Interface()
 				percentVal := fmt.Sprintf("%.1f", val.(float64)*100)
 				floatVal, _ := strconv.ParseFloat(percentVal, 64)
-				fmt.Print(key + ":")
-				fmt.Print(floatVal)
-				fmt.Println("\n-----")
+				gauges[key] = floatVal
 			}
 		}
-		// for key, value := range data {
-		// 	val := statLine.FieldByName(value).Interface()
-		// 	fmt.Print(key)
-		// }
+
+		perf.Gauges = gauges
 
 	}
-
-	// Optional. Switch the session to a monotonic behavior.
-	// session.SetMode(mgo.Monotonic, true)
-	// result := &ServerStatus{}
-	// if err := session.DB(mongoDBDialInfo.Database).Run(bson.D{{"serverStatus", 1}}, &result); err != nil {
-	// 	return fmt.Errorf("Unable to collect Mongo Stats from URL (%s), %s\n", localhost.Host, err.Error())
-	// }
-	//
-	// fmt.Print(result)
-
-	// for k, v := range result {
-	// 	if k == "connections" {
-	// 		var conn ConnectionStats
-	// 		err := mapstructure.Decode(v, &conn)
-	// 		if err != nil {
-	// 			return fmt.Errorf("Unable to collect connection stats %s\n", err.Error())
-	// 		}
-	//
-	// 	}
-	// 	if k == "cursors" {
-	// 		fmt.Print(v)
-	// 	}
-	//
-	// 	if k == "mem" {
-	// 		var mem MemStats
-	// 		err := mapstructure.Decode(v, &mem)
-	// 		if err != nil {
-	// 			return fmt.Errorf("Unable to collect mem stats %s\n", err.Error())
-	// 		}
-	// 	}
-	//
-	// 	// fmt.Print(k)
-	// 	// fmt.Print(v)
-	// 	// fmt.Println("--")
-	//
-	// }
-	// fmt.Print(result)
 
 	return nil
 }
 
-//
-// func main() {
-// 	server := Server{URL: localhost}
-// 	f := Collect(&server)
-// 	time.Sleep(time.Duration(1) * time.Second)
-// 	f = Collect(&server)
-// 	fmt.Print(f)
-// 	defer server.Session.Close()
-// }
+func main() {
+	s := "mongodb://127.0.0.1:27017/amon"
+
+	url, err := url.Parse(s)
+	if err != nil {
+		panic(err)
+	}
+
+	server := Server{URL: url}
+	GetSession(&server)
+	PerformanceStruct := PerformanceStruct{}
+	// f := CollectGauges(&server, &PerformanceStruct)
+	// time.Sleep(time.Duration(1) * time.Second)
+	// f = CollectGauges(&server, &PerformanceStruct)
+	// fmt.Print(f)
+
+	CollectCollectionSize(&server, &PerformanceStruct)
+	CollectSlowQueries(&server, &PerformanceStruct)
+	// fmt.Print(PerformanceStruct)
+	if server.Session != nil {
+		defer server.Session.Close()
+	}
+
+}
