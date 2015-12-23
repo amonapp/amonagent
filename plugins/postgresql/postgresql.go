@@ -1,6 +1,14 @@
 package postgresql
 
-import "encoding/json"
+import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	// Postgres Driver
+	_ "github.com/lib/pq"
+)
 
 // Counters - XXX
 var Counters = map[string]string{
@@ -157,4 +165,158 @@ type PerformanceStruct struct {
 	SlowQueriesData  `json:"slow_queries"`
 	Gauges           map[string]interface{} `json:"gauges"`
 	Counters         map[string]interface{} `json:"counters"`
+}
+
+// Collect - XXX
+func Collect() error {
+	var serv string
+	serv = "postgres://postgres:123456@localhost/amon"
+
+	// If user forgot the '/', add it
+	if strings.HasSuffix(serv, ")") {
+		serv = serv + "/"
+	} else if serv == "localhost" {
+		serv = ""
+	}
+
+	db, err := sql.Open("postgres", serv)
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+	PerformanceStruct := PerformanceStruct{}
+
+	rawResult := make([][]byte, len(Counters))
+	counters := make(map[string]interface{})
+	dest := make([]interface{}, len(Counters)) // A temporary interface{} slice
+	for i := range rawResult {
+		dest[i] = &rawResult[i] // Put pointers to each string in the interface slice
+	}
+	var counterColumns []string
+	for key := range Counters {
+		counterColumns = append(counterColumns, key)
+	}
+	CountersQuery := fmt.Sprintf(DatabaseStatsSQL, strings.Join(counterColumns, ", "), "amon")
+	CounterRows, err := db.Query(CountersQuery)
+	defer CounterRows.Close()
+	for CounterRows.Next() {
+		err = CounterRows.Scan(dest...)
+		if err != nil {
+			return err
+		}
+
+		for i, val := range rawResult {
+			key := counterColumns[i]
+			counters[key] = string(val)
+		}
+	}
+
+	gauges := make(map[string]interface{})
+	GaugesQuery := fmt.Sprintf(DatabaseStatsSQL, "numbackends", "amon")
+	GaugeRows, err := db.Query(GaugesQuery)
+	defer GaugeRows.Close()
+	for GaugeRows.Next() {
+		var connections int
+		err = GaugeRows.Scan(&connections)
+		if err != nil {
+			return err
+		}
+		gauges["connections"] = connections
+
+	}
+
+	TableSizeRows, err := db.Query(TableSizeSQL)
+	TableSizeHeaders := []string{"name", "type", "size"}
+	TableSizeData := TableSizeData{Headers: TableSizeHeaders}
+
+	defer TableSizeRows.Close()
+	for TableSizeRows.Next() {
+		// TABLES_SIZE_ROWS = ['name','type','size']
+		var name string
+		var Type string
+		var size int64
+
+		err = TableSizeRows.Scan(&name, &Type, &size)
+		if err != nil {
+			return err
+		}
+		fields := []interface{}{}
+		fields = append(fields, name)
+		fields = append(fields, Type)
+		fields = append(fields, size)
+
+		TableSizeData.Data = append(TableSizeData.Data, fields)
+
+	}
+
+	PerformanceStruct.TableSizeData = TableSizeData
+
+	IndexHitRows, err := db.Query(IndexCacheHitRateSQL)
+	IndexHitHeaders := []string{"table_name", "size", "reads",
+		"cumulative_pct_reads", "index_hit_rate", "cache_hit_rate"}
+	IndexHitData := IndexHitRateData{Headers: IndexHitHeaders}
+	defer IndexHitRows.Close()
+
+	for IndexHitRows.Next() {
+		// INDEX_CACHE_HIT_RATE_ROWS = ['table_name','size','reads',
+		// 'cumulative_pct_reads', 'index_hit_rate', 'cache_hit_rate']
+
+		var TableName string
+		var Size string
+		var Read int64
+		var CumulativeReads float64
+		var IndexHitRate float64
+		var CacheHitRate float64
+
+		err = IndexHitRows.Scan(&TableName, &Size, &Read, &CumulativeReads, &IndexHitRate, &CacheHitRate)
+		if err != nil {
+			return err
+		}
+		fields := []interface{}{}
+		fields = append(fields, TableName)
+		fields = append(fields, Size)
+		fields = append(fields, Read)
+		fields = append(fields, CumulativeReads)
+		fields = append(fields, IndexHitRate)
+		fields = append(fields, CacheHitRate)
+
+		IndexHitData.Data = append(IndexHitData.Data, fields)
+
+	}
+	PerformanceStruct.IndexHitRateData = IndexHitData
+
+	SlowQueriesRows, err := db.Query(SlowQueriesSQL)
+	SlowQueriesHeaders := []string{"calls", "total", "per_call", "query"}
+	SlowQueriesData := SlowQueriesData{Headers: SlowQueriesHeaders}
+
+	defer SlowQueriesRows.Close()
+	for SlowQueriesRows.Next() {
+
+		var Calls int64
+		var Total int64
+		var PerCall float64
+		var Query string
+
+		err = SlowQueriesRows.Scan(&Calls, &Total, &PerCall, &Query)
+		if err != nil {
+			return err
+		}
+		fields := []interface{}{}
+		fields = append(fields, Calls)
+		fields = append(fields, Total)
+		fields = append(fields, PerCall)
+		fields = append(fields, Query)
+
+		SlowQueriesData.Data = append(SlowQueriesData.Data, fields)
+
+	}
+	PerformanceStruct.SlowQueriesData = SlowQueriesData
+
+	PerformanceStruct.Counters = counters
+	PerformanceStruct.Gauges = gauges
+
+	fmt.Print(PerformanceStruct)
+
+	return nil
 }
