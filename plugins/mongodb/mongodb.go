@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amonapp/amonagent/plugins/mongodb"
+	"github.com/influxdb/telegraf/plugins/mongodb"
 	"github.com/mitchellh/mapstructure"
 
 	// MongoDB Driver
