@@ -147,6 +147,13 @@ func ParseCSVResult(r io.Reader, host string) error {
 					gauges[GaugeKey] = ival
 				}
 
+			case HF_TTIME:
+				ival, err := strconv.ParseUint(v, 10, 64)
+				if err == nil {
+					GaugeKey := fmt.Sprintf("session_time.%s", Key)
+					gauges[GaugeKey] = ival
+				}
+
 			case HF_BIN:
 				ival, err := strconv.ParseUint(v, 10, 64)
 				if err == nil {
