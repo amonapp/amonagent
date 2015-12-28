@@ -28,7 +28,6 @@ var Version string
 
 func main() {
 	var wg sync.WaitGroup
-	wg.Add(len(plugins.Plugins))
 
 	result := make(map[string]interface{})
 	for name := range plugins.Plugins {
@@ -37,7 +36,7 @@ func main() {
 		if !ok {
 			fmt.Printf("Undefined but requested plugin: %s", name)
 		}
-
+		wg.Add(1)
 		plugin := creator()
 		go func(name string) {
 			defer wg.Done()

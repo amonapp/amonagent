@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/amonapp/amonagent/plugins"
+
 	"gopkg.in/redis.v3"
 )
 
@@ -66,8 +68,17 @@ var RedisPerformanceFields = map[string]string{
 	"master_sync_left_bytes":     "replication.sync_left_bytes",
 }
 
+// Description - XXX
+func (r *Redis) Description() string {
+	return "Read metrics from a Redis server"
+}
+
+// Redis - XXX
+type Redis struct {
+}
+
 // Collect - XXX
-func Collect() error {
+func (r *Redis) Collect() (interface{}, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr: "127.0.0.1:6379",
 	})
@@ -76,7 +87,6 @@ func Collect() error {
 
 	val, err := client.Info().Result()
 	if err != nil {
-		// fmt.Print("test")
 		fmt.Print(err.Error())
 	}
 	PerformanceStruct := PerformanceStruct{}
@@ -95,14 +105,17 @@ func Collect() error {
 			continue
 		}
 		val := strings.TrimSpace(parts[1])
-		// ival, err := strconv.ParseUint(val, 10, 64)
 
 		gauges[metric] = val
 
 	}
 	PerformanceStruct.Gauges = gauges
 
-	fmt.Print(PerformanceStruct)
+	return PerformanceStruct, nil
+}
 
-	return nil
+func init() {
+	plugins.Add("redis", func() plugins.Plugin {
+		return &Redis{}
+	})
 }

@@ -9,22 +9,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/influxdb/telegraf/plugins/mongodb"
+	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/plugins"
+
 	"github.com/mitchellh/mapstructure"
 
 	// MongoDB Driver
-
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
+var pluginLogger = logging.GetLogger("amonagent.mongodb")
 var localhost = &url.URL{Host: "127.0.0.1:27017"}
 
 // Server - XXX
 type Server struct {
 	URL        *url.URL
 	Session    *mgo.Session
-	lastResult *mongodb.ServerStatus
+	lastResult *ServerStatus
 }
 
 // TableSizeData - XXX
@@ -194,7 +196,7 @@ func GetSession(server *Server) error {
 // CollectGauges - XXX
 func CollectGauges(server *Server, perf *PerformanceStruct) error {
 	db := strings.Replace(server.URL.Path, "/", "", -1) // remove slash from Path
-	result := &mongodb.ServerStatus{}
+	result := &ServerStatus{}
 	err := server.Session.DB(db).Run(bson.D{{"serverStatus", 1}, {"recordStats", 0}}, result)
 	if err != nil {
 		return err
@@ -212,7 +214,7 @@ func CollectGauges(server *Server, perf *PerformanceStruct) error {
 			durationInSeconds = 1
 		}
 
-		data := mongodb.NewStatLine(*server.lastResult, *result, server.URL.Host, true, durationInSeconds)
+		data := NewStatLine(*server.lastResult, *result, server.URL.Host, true, durationInSeconds)
 
 		statLine := reflect.ValueOf(data).Elem()
 		storageEngine := statLine.FieldByName("StorageEngine").Interface()
@@ -245,7 +247,17 @@ func CollectGauges(server *Server, perf *PerformanceStruct) error {
 	return nil
 }
 
-func main() {
+// MongoDB - XXX
+type MongoDB struct {
+}
+
+// Description - XXX
+func (m *MongoDB) Description() string {
+	return "Read metrics from a MongoDB server"
+}
+
+// Collect - XXX
+func (m *MongoDB) Collect() (interface{}, error) {
 	s := "mongodb://127.0.0.1:27017/amon"
 
 	url, err := url.Parse(s)
@@ -256,16 +268,19 @@ func main() {
 	server := Server{URL: url}
 	GetSession(&server)
 	PerformanceStruct := PerformanceStruct{}
-	// f := CollectGauges(&server, &PerformanceStruct)
-	// time.Sleep(time.Duration(1) * time.Second)
-	// f = CollectGauges(&server, &PerformanceStruct)
-	// fmt.Print(f)
 
 	CollectCollectionSize(&server, &PerformanceStruct)
 	CollectSlowQueries(&server, &PerformanceStruct)
-	// fmt.Print(PerformanceStruct)
+
 	if server.Session != nil {
 		defer server.Session.Close()
 	}
 
+	return PerformanceStruct, nil
+}
+
+func init() {
+	plugins.Add("mongodb", func() plugins.Plugin {
+		return &MongoDB{}
+	})
 }

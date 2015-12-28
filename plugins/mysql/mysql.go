@@ -6,10 +6,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
 	// Mysql Driver
 	_ "github.com/go-sql-driver/mysql"
 )
+
+var pluginLogger = logging.GetLogger("amonagent.mysql")
 
 // MySQL - XXX
 type MySQL struct {
@@ -149,6 +152,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 
 		err = rows.Scan(&name, &val)
 		if err != nil {
+			pluginLogger.Errorf("Can't scan stat rows': %v", err)
 			return PerformanceStruct, err
 		}
 
@@ -156,7 +160,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 			if name == RawKey {
 				i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
 				if err != nil {
-					return PerformanceStruct, err
+					pluginLogger.Errorf("Can't parse value': %v", err)
 				}
 				gauges[FormatedKey] = i
 			}
@@ -167,7 +171,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 			if name == RawKey {
 				i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
 				if err != nil {
-					return PerformanceStruct, err
+					pluginLogger.Errorf("Can't parse value': %v", err)
 				}
 				counters[FormatedKey] = i
 			}
@@ -184,7 +188,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 
 		err = ConnRows.Scan(&user, &connections)
 		if err != nil {
-			return PerformanceStruct, err
+			pluginLogger.Errorf("Can't retrieve active connection stats': %v", err)
 		}
 
 		gauges["connections.active_connections"] = connections
@@ -213,18 +217,19 @@ func (m *MySQL) Collect() (interface{}, error) {
 
 		err = TableSizeRows.Scan(&table, &database, &rows, &fullName, &size, &indexes, &total, &indexFraction)
 		if err != nil {
-			return PerformanceStruct, err
-		}
-		fields := []interface{}{}
-		fields = append(fields, table)
-		fields = append(fields, database)
-		fields = append(fields, rows)
-		fields = append(fields, size)
-		fields = append(fields, indexes)
-		fields = append(fields, total)
-		fields = append(fields, indexFraction)
+			pluginLogger.Errorf("Can't retrieve table size stats': %v", err)
+		} else {
+			fields := []interface{}{}
+			fields = append(fields, table)
+			fields = append(fields, database)
+			fields = append(fields, rows)
+			fields = append(fields, size)
+			fields = append(fields, indexes)
+			fields = append(fields, total)
+			fields = append(fields, indexFraction)
 
-		TableSizeData.Data = append(TableSizeData.Data, fields)
+			TableSizeData.Data = append(TableSizeData.Data, fields)
+		}
 
 	}
 	PerformanceStruct.TableSizeData = TableSizeData
@@ -246,19 +251,20 @@ func (m *MySQL) Collect() (interface{}, error) {
 
 		err = SlowQueriesRows.Scan(&queryTime, &rowsSent, &rowsExamined, &lockTime, &db, &query, &startTime)
 		if err != nil {
-			return PerformanceStruct, err
+			pluginLogger.Errorf("Can't retrieve slow queries stats': %v", err)
+		} else {
+
+			fields := []interface{}{}
+			fields = append(fields, queryTime)
+			fields = append(fields, rowsSent)
+			fields = append(fields, rowsExamined)
+			fields = append(fields, lockTime)
+			fields = append(fields, db)
+			fields = append(fields, query)
+			fields = append(fields, startTime)
+
+			SlowQueriesData.Data = append(SlowQueriesData.Data, fields)
 		}
-
-		fields := []interface{}{}
-		fields = append(fields, queryTime)
-		fields = append(fields, rowsSent)
-		fields = append(fields, rowsExamined)
-		fields = append(fields, lockTime)
-		fields = append(fields, db)
-		fields = append(fields, query)
-		fields = append(fields, startTime)
-
-		SlowQueriesData.Data = append(SlowQueriesData.Data, fields)
 
 	}
 	PerformanceStruct.SlowQueriesData = SlowQueriesData

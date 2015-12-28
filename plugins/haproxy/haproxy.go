@@ -7,7 +7,12 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/amonapp/amonagent/logging"
+	"github.com/influxdb/telegraf/plugins"
 )
+
+var pluginLogger = logging.GetLogger("amonagent.haproxy")
 
 var haproxyType = map[string]string{
 	"0": "frontend",
@@ -275,8 +280,17 @@ func ParseCSVResult(r io.Reader, host string) error {
 	return nil
 }
 
+// Haproxy - XXX
+type Haproxy struct {
+}
+
+// Description - XXX
+func (h *Haproxy) Description() string {
+	return "Read metrics from a haproxy stats page"
+}
+
 // Collect - XXX
-func Collect() error {
+func (h *Haproxy) Collect() (interface{}, error) {
 	addr := "http://127.0.0.1:1936"
 	client := &http.Client{}
 
@@ -303,4 +317,10 @@ func Collect() error {
 	ParseCSVResult(res.Body, u.Host)
 
 	return nil
+}
+
+func init() {
+	plugins.Add("haproxy", func() plugins.Plugin {
+		return &Haproxy{}
+	})
 }
