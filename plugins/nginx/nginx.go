@@ -9,6 +9,7 @@ package nginx
 import (
 	"bufio"
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -17,13 +18,14 @@ import (
 
 	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
+	"github.com/mitchellh/mapstructure"
 )
 
 var pluginLogger = logging.GetLogger("amonagent.nginx")
 
 var tr = &http.Transport{
 	ResponseHeaderTimeout: time.Duration(3 * time.Second),
-	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // remove that from the final plugin
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // move this to a config option
 }
 
 var client = &http.Client{Transport: tr}
@@ -33,8 +35,44 @@ type PerformanceStruct struct {
 	Gauges map[string]interface{} `json:"gauges"`
 }
 
+// Config - XXX
+type Config struct {
+	StatusURL string `mapstructure:"status_url"`
+}
+
+var sampleConfig = `
+#   Available config options:
+#
+#    {"status_url": "http://127.0.0.1/nginx_status"}
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/nginx.conf
+`
+
+// SampleConfig - XXX
+func (n *Nginx) SampleConfig() string {
+	return sampleConfig
+}
+
+// SetConfigDefaults - XXX
+func (n *Nginx) SetConfigDefaults(configPath string) error {
+	c, err := plugins.ReadConfigPath(configPath)
+	if err != nil {
+		fmt.Printf("Can't read config file: %v\n", err)
+	}
+	var config Config
+	decodeError := mapstructure.Decode(c, &config)
+	if decodeError != nil {
+		fmt.Print("Can't decode config file", decodeError.Error())
+	}
+
+	n.Config = config
+
+	return nil
+}
+
 // Nginx - XXX
 type Nginx struct {
+	Config Config
 }
 
 // Description - XXX
@@ -43,16 +81,17 @@ func (n *Nginx) Description() string {
 }
 
 // Collect - XXX
-func (n *Nginx) Collect() (interface{}, error) {
+func (n *Nginx) Collect(configPath string) (interface{}, error) {
+	n.SetConfigDefaults(configPath)
 	PerformanceStruct := PerformanceStruct{}
 	// 	Active connections: 8
 	// 	server accepts handled requests
 	// 	 1156958 1156958 4491319
 	// 	Reading: 0 Writing: 2 Waiting: 6
-	u := "https://www.localhost/nginx_status"
-	addr, err := url.Parse(u)
+
+	addr, err := url.Parse(n.Config.StatusURL)
 	if err != nil {
-		pluginLogger.Errorf("Unable to parse address '%s': %s", u, err)
+		pluginLogger.Errorf("Unable to parse address '%s': %s", n.Config.StatusURL, err)
 		return PerformanceStruct, err
 
 	}
@@ -128,7 +167,7 @@ func (n *Nginx) Collect() (interface{}, error) {
 
 	requestPerSecond := requests / handled
 
-	fields := map[string]interface{}{
+	gauges := map[string]interface{}{
 		"connections.active":        active,
 		"connections_total.accepts": accepts,
 		"connections_total.handled": handled,
@@ -137,7 +176,7 @@ func (n *Nginx) Collect() (interface{}, error) {
 		"connections.writing":       writing,
 		"connections.waiting":       waiting,
 	}
-	PerformanceStruct.Gauges = fields
+	PerformanceStruct.Gauges = gauges
 
 	return PerformanceStruct, nil
 

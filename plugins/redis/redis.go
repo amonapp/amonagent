@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
+	"github.com/mitchellh/mapstructure"
 
 	"gopkg.in/redis.v3"
 )
+
+var pluginLogger = logging.GetLogger("amonagent.redis")
 
 func (p PerformanceStruct) String() string {
 	s, _ := json.Marshal(p)
@@ -68,6 +72,50 @@ var RedisPerformanceFields = map[string]string{
 	"master_sync_left_bytes":     "replication.sync_left_bytes",
 }
 
+// Config - XXX
+type Config struct {
+	Host     string
+	DB       int64
+	Password string
+}
+
+var sampleConfig = `
+#   Available config options for Redis plugin:
+#
+#  host: [protocol://][:password]@address[:port]
+#
+#  If the config file is empty, fallback to the following default options:
+#
+#    {"host": "tcp://localhost:6379", "db": 0, "password": ""}
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/redis.conf
+`
+
+// SampleConfig - XXX
+func (r *Redis) SampleConfig() string {
+	return sampleConfig
+}
+
+// SetConfigDefaults - XXX
+func (r *Redis) SetConfigDefaults(configPath string) error {
+	c, err := plugins.ReadConfigPath(configPath)
+	if err != nil {
+		fmt.Printf("Can't read config file: %v\n", err)
+	}
+	var config Config
+	decodeError := mapstructure.Decode(c, &config)
+	if decodeError != nil {
+		fmt.Print("Can't decode config file", decodeError.Error())
+	}
+
+	if len(config.Host) == 0 {
+		config.Host = "127.0.0.1:6379"
+	}
+	r.Config = config
+
+	return nil
+}
+
 // Description - XXX
 func (r *Redis) Description() string {
 	return "Read metrics from a Redis server"
@@ -75,21 +123,27 @@ func (r *Redis) Description() string {
 
 // Redis - XXX
 type Redis struct {
+	Config Config
 }
 
 // Collect - XXX
-func (r *Redis) Collect() (interface{}, error) {
+func (r *Redis) Collect(configPath string) (interface{}, error) {
+	r.SetConfigDefaults(configPath)
+	PerformanceStruct := PerformanceStruct{}
+
 	client := redis.NewClient(&redis.Options{
-		Addr: "127.0.0.1:6379",
+		Addr:     r.Config.Host,
+		DB:       r.Config.DB,
+		Password: r.Config.Password,
 	})
 
 	defer client.Close()
 
 	val, err := client.Info().Result()
 	if err != nil {
-		fmt.Print(err.Error())
+		pluginLogger.Errorf("Can't get Redis INFO': %v", err)
+		return PerformanceStruct, err
 	}
-	PerformanceStruct := PerformanceStruct{}
 
 	gauges := make(map[string]interface{})
 	split := strings.Split(val, "\n")

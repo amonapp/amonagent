@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"sync"
 
 	"github.com/amonapp/amonagent"
 	"github.com/amonapp/amonagent/collectors"
@@ -27,27 +26,51 @@ var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value i
 var Version string
 
 func main() {
-	var wg sync.WaitGroup
+	// var wg sync.WaitGroup
 
-	result := make(map[string]interface{})
-	for name := range plugins.Plugins {
-		fmt.Println(name)
-		creator, ok := plugins.Plugins[name]
+	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
+	for _, p := range EnabledPlugins {
+		fmt.Print(p.Name)
+		creator, ok := plugins.Plugins[p.Name]
 		if !ok {
-			fmt.Printf("Undefined but requested plugin: %s", name)
+
+			fmt.Println("Non existing plugin:", p.Name)
+
+		} else {
+			plugin := creator()
+
+			PluginResult, err := plugin.Collect(p.Path)
+			if err != nil {
+
+				fmt.Println("\n-----------")
+				fmt.Printf("Can't get stats for plugin: %s", err)
+				fmt.Println("\n-----------")
+			}
+			fmt.Print(plugin.SampleConfig())
+
+			fmt.Println(PluginResult)
 		}
-		wg.Add(1)
-		plugin := creator()
-		go func(name string) {
-			defer wg.Done()
-			PluginResult, _ := plugin.Collect()
-			result[name] = PluginResult
-		}(name)
 
 	}
-	wg.Wait()
-
-	fmt.Println(result)
+	// result := make(map[string]interface{})
+	// for name := range plugins.Plugins {
+	// 	fmt.Println(name)
+	// 	creator, ok := plugins.Plugins[name]
+	// 	if !ok {
+	// 		fmt.Printf("Undefined but requested plugin: %s", name)
+	// 	}
+	// 	wg.Add(1)
+	// 	plugin := creator()
+	// 	go func(name string) {
+	// 		defer wg.Done()
+	// 		PluginResult, _ := plugin.Collect()
+	// 		result[name] = PluginResult
+	// 	}(name)
+	//
+	// }
+	// wg.Wait()
+	//
+	// fmt.Println(result)
 
 	return
 

@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/amonapp/amonagent/logging"
-	"github.com/influxdb/telegraf/plugins"
+	"github.com/amonapp/amonagent/plugins"
 )
 
 var pluginLogger = logging.GetLogger("amonagent.haproxy")
@@ -88,7 +88,7 @@ const (
 )
 
 // ParseCSVResult - XXX
-func ParseCSVResult(r io.Reader, host string) error {
+func ParseCSVResult(r io.Reader, host string, perf *PerformanceStruct) error {
 	csv := csv.NewReader(r)
 	result, err := csv.ReadAll()
 	if err != nil {
@@ -277,11 +277,20 @@ func ParseCSVResult(r io.Reader, host string) error {
 		}
 
 	}
+	perf.Gauges = gauges
+	perf.Counters = counters
+
 	return nil
 }
 
 // Haproxy - XXX
 type Haproxy struct {
+}
+
+// PerformanceStruct - XXX
+type PerformanceStruct struct {
+	Gauges   map[string]interface{} `json:"gauges"`
+	Counters map[string]interface{} `json:"counters"`
 }
 
 // Description - XXX
@@ -291,12 +300,15 @@ func (h *Haproxy) Description() string {
 
 // Collect - XXX
 func (h *Haproxy) Collect() (interface{}, error) {
+	PerformanceStruct := PerformanceStruct{}
 	addr := "http://127.0.0.1:1936"
 	client := &http.Client{}
 
 	u, err := url.Parse(addr)
 	if err != nil {
-		return fmt.Errorf("Unable parse server address '%s': %s", addr, err)
+		pluginLogger.Errorf("Unable parse server address '%s': %s", addr, err)
+		return PerformanceStruct, err
+
 	}
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s://%s%s/;csv", u.Scheme, u.Host, u.Path), nil)
@@ -307,16 +319,18 @@ func (h *Haproxy) Collect() (interface{}, error) {
 
 	res, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Unable to connect to haproxy server '%s': %s", addr, err)
+		pluginLogger.Errorf("Unable to connect to haproxy server '%s': %s", addr, err)
+		return PerformanceStruct, err
 	}
 
 	if res.StatusCode != 200 {
-		return fmt.Errorf("Unable to get valid stat result from '%s': %s", addr, err)
+		pluginLogger.Errorf("Unable to get valid stat result from '%s': %s", addr, err)
+
 	}
 
-	ParseCSVResult(res.Body, u.Host)
+	ParseCSVResult(res.Body, u.Host, &PerformanceStruct)
 
-	return nil
+	return PerformanceStruct, nil
 }
 
 func init() {

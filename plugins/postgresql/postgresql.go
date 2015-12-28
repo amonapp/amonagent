@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
+	"github.com/mitchellh/mapstructure"
 	// Postgres Driver
 	_ "github.com/lib/pq"
 )
@@ -162,8 +164,48 @@ func (p PerformanceStruct) String() string {
 	return string(s)
 }
 
+// Config - XXX
+type Config struct {
+	Host string
+	DB   string
+}
+
+var sampleConfig = `
+#   Available config options:
+#
+#    {"host": "postgres://user:password@localhost:port/dbname"}
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/postgresql.conf
+`
+
+// SampleConfig - XXX
+func (p *PostgreSQL) SampleConfig() string {
+	return sampleConfig
+}
+
+// SetConfigDefaults - XXX
+func (p *PostgreSQL) SetConfigDefaults(configPath string) error {
+	c, err := plugins.ReadConfigPath(configPath)
+	if err != nil {
+		fmt.Printf("Can't read config file: %v\n", err)
+	}
+	var config Config
+	decodeError := mapstructure.Decode(c, &config)
+	if decodeError != nil {
+		fmt.Print("Can't decode config file", decodeError.Error())
+	}
+
+	u, _ := url.Parse(config.Host)
+	config.DB = strings.Trim(u.Path, "/")
+
+	p.Config = config
+
+	return nil
+}
+
 // PostgreSQL - XXX
 type PostgreSQL struct {
+	Config Config
 }
 
 // PerformanceStruct - XXX
@@ -181,19 +223,11 @@ func (p *PostgreSQL) Description() string {
 }
 
 // Collect - XXX
-func (p *PostgreSQL) Collect() (interface{}, error) {
+func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
-	var serv string
-	serv = "postgres://postgres:123456@localhost/amon"
+	p.SetConfigDefaults(configPath)
 
-	// If user forgot the '/', add it
-	if strings.HasSuffix(serv, ")") {
-		serv = serv + "/"
-	} else if serv == "localhost" {
-		serv = ""
-	}
-
-	db, err := sql.Open("postgres", serv)
+	db, err := sql.Open("postgres", p.Config.Host)
 	if err != nil {
 		pluginLogger.Errorf("Can't connect to database': %v", err)
 		return PerformanceStruct, err
@@ -211,7 +245,7 @@ func (p *PostgreSQL) Collect() (interface{}, error) {
 	for key := range Counters {
 		counterColumns = append(counterColumns, key)
 	}
-	CountersQuery := fmt.Sprintf(DatabaseStatsSQL, strings.Join(counterColumns, ", "), "amon")
+	CountersQuery := fmt.Sprintf(DatabaseStatsSQL, strings.Join(counterColumns, ", "), p.Config.DB)
 	CounterRows, err := db.Query(CountersQuery)
 	defer CounterRows.Close()
 	for CounterRows.Next() {

@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/plugins"
 	"github.com/gonuts/go-shellquote"
 )
 
@@ -18,6 +20,8 @@ type Metric struct {
 	Value float64 `json:"value"`
 	Type  string  `json:"type"`
 }
+
+var pluginLogger = logging.GetLogger("amonagent.custom")
 
 // Run - XXX
 func Run(command *Command) (string, error) {
@@ -62,17 +66,34 @@ type Command struct {
 	Name    string `json:"name"`
 }
 
+// Custom - XXX
+type Custom struct {
+}
+
+// PerformanceStruct - XXX
+type PerformanceStruct struct {
+	Gauges   map[string]interface{} `json:"gauges"`
+	Counters map[string]interface{} `json:"counters"`
+}
+
+// Description - XXX
+func (c *Custom) Description() string {
+	return "Collects metrics from custom collectors"
+}
+
 // Collect - XXX
-func Collect() error {
+func (c *Custom) Collect() (interface{}, error) {
 	file, e := ioutil.ReadFile("/home/martin/temp/amonagent/custom_config.json")
 	if e != nil {
 		fmt.Printf("Config error: %v\n", e)
 	}
 
 	var commands []Command
+	var results []PerformanceStruct
 	json.Unmarshal(file, &commands)
 
 	for _, command := range commands {
+		PerformanceStruct := PerformanceStruct{}
 		result, err := Run(&command)
 
 		lines := strings.Split(result, "\n")
@@ -89,13 +110,19 @@ func Collect() error {
 			}
 		}
 
-		fmt.Print(gauges)
-
 		if err != nil {
 			fmt.Printf("Unable to execute command, %s", err)
 		}
 
+		PerformanceStruct.Gauges = gauges
+		PerformanceStruct.Counters = counters
+		results = append(results, PerformanceStruct)
 	}
 
-	return nil
+	return results, nil
+}
+func init() {
+	plugins.Add("custom", func() plugins.Plugin {
+		return &Custom{}
+	})
 }

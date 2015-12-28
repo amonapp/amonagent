@@ -249,6 +249,42 @@ func CollectGauges(server *Server, perf *PerformanceStruct) error {
 
 // MongoDB - XXX
 type MongoDB struct {
+	Config Config
+}
+
+// Config - XXX
+type Config struct {
+	URI string
+}
+
+var sampleConfig = `
+#   Available config options:
+#
+#    {"uri": "mongodb://username:password@host:port/database"}
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/mongodb.conf
+`
+
+// SampleConfig - XXX
+func (m *MongoDB) SampleConfig() string {
+	return sampleConfig
+}
+
+// SetConfigDefaults - XXX
+func (m *MongoDB) SetConfigDefaults(configPath string) error {
+	c, err := plugins.ReadConfigPath(configPath)
+	if err != nil {
+		fmt.Printf("Can't read config file: %v\n", err)
+	}
+	var config Config
+	decodeError := mapstructure.Decode(c, &config)
+	if decodeError != nil {
+		fmt.Print("Can't decode config file", decodeError.Error())
+	}
+
+	m.Config = config
+
+	return nil
 }
 
 // Description - XXX
@@ -257,17 +293,18 @@ func (m *MongoDB) Description() string {
 }
 
 // Collect - XXX
-func (m *MongoDB) Collect() (interface{}, error) {
-	s := "mongodb://127.0.0.1:27017/amon"
+func (m *MongoDB) Collect(configPath string) (interface{}, error) {
+	m.SetConfigDefaults(configPath)
+	PerformanceStruct := PerformanceStruct{}
 
-	url, err := url.Parse(s)
+	url, err := url.Parse(m.Config.URI)
 	if err != nil {
-		panic(err)
+		pluginLogger.Errorf("Can't parse Mongo URI': %v", err)
+		return PerformanceStruct, err
 	}
 
 	server := Server{URL: url}
 	GetSession(&server)
-	PerformanceStruct := PerformanceStruct{}
 
 	CollectCollectionSize(&server, &PerformanceStruct)
 	CollectSlowQueries(&server, &PerformanceStruct)

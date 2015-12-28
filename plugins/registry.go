@@ -1,13 +1,15 @@
 package plugins
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-// Config - XXX
-type Config struct {
+// PluginConfig - XXX
+type PluginConfig struct {
 	Path string
 	Name string
 }
@@ -15,15 +17,30 @@ type Config struct {
 // ConfigPath - XXX
 const ConfigPath = "/etc/amonagent/plugins-enabled"
 
+// ReadConfigPath - XXX
+func ReadConfigPath(path string) (interface{}, error) {
+	var data map[string]interface{}
+	file, e := ioutil.ReadFile(path)
+	if e != nil {
+		return data, e
+
+	}
+
+	json.Unmarshal(file, &data)
+
+	return data, nil
+
+}
+
 // GetAllEnabledPlugins - XXX
-func GetAllEnabledPlugins() ([]Config, error) {
-	fileList := []Config{}
+func GetAllEnabledPlugins() ([]PluginConfig, error) {
+	fileList := []PluginConfig{}
 	filepath.Walk(ConfigPath, func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() {
 			// Only files ending with .conf
 			fileName := strings.Split(f.Name(), ".conf")
 			if len(fileName) == 2 {
-				f := Config{Path: path, Name: fileName[0]}
+				f := PluginConfig{Path: path, Name: fileName[0]}
 				fileList = append(fileList, f)
 			}
 
@@ -39,7 +56,10 @@ type Plugin interface {
 	// Description returns a one-sentence description on the Plugin
 	Description() string
 
-	Collect() (interface{}, error)
+	SampleConfig() string
+
+	// Collects all the metrics and returns a struct with the results
+	Collect(string) (interface{}, error)
 }
 
 // Creator - XXX

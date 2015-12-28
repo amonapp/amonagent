@@ -3,19 +3,62 @@ package mysql
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
+	"github.com/mitchellh/mapstructure"
 	// Mysql Driver
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var pluginLogger = logging.GetLogger("amonagent.mysql")
 
+// Config - XXX
+type Config struct {
+	Host string
+	DB   string
+}
+
+var sampleConfig = `
+#   Available config options:
+#
+#    {"host": "username:password@protocol(address)/dbname"}
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/mysql.conf
+`
+
+// SampleConfig - XXX
+func (m *MySQL) SampleConfig() string {
+	return sampleConfig
+}
+
+// SetConfigDefaults - XXX
+func (m *MySQL) SetConfigDefaults(configPath string) error {
+	c, err := plugins.ReadConfigPath(configPath)
+	if err != nil {
+		fmt.Printf("Can't read config file: %v\n", err)
+	}
+	var config Config
+	decodeError := mapstructure.Decode(c, &config)
+	if decodeError != nil {
+		fmt.Print("Can't decode config file", decodeError.Error())
+	}
+
+	u, _ := url.Parse(config.Host)
+	config.DB = strings.Trim(u.Path, "/")
+
+	m.Config = config
+
+	return nil
+}
+
 // MySQL - XXX
 type MySQL struct {
+	Config Config
 }
 
 // Counters - XXX
@@ -120,18 +163,11 @@ func (m *MySQL) Description() string {
 }
 
 // Collect - XXX
-func (m *MySQL) Collect() (interface{}, error) {
+func (m *MySQL) Collect(configPath string) (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
-	serv := "root:123456@tcp/employees"
+	m.SetConfigDefaults(configPath)
 
-	// If user forgot the '/', add it
-	if strings.HasSuffix(serv, ")") {
-		serv = serv + "/"
-	} else if serv == "localhost" {
-		serv = ""
-	}
-
-	db, err := sql.Open("mysql", serv)
+	db, err := sql.Open("mysql", m.Config.Host)
 	if err != nil {
 		return PerformanceStruct, err
 	}
@@ -139,11 +175,12 @@ func (m *MySQL) Collect() (interface{}, error) {
 	defer db.Close()
 
 	rows, err := db.Query(`SHOW /*!50002 GLOBAL */ STATUS`)
-	defer rows.Close()
+
 	if err != nil {
+		pluginLogger.Errorf("Can't get STATUS': %v", err)
 		return PerformanceStruct, err
 	}
-
+	defer rows.Close()
 	counters := make(map[string]interface{})
 	gauges := make(map[string]interface{})
 	for rows.Next() {
