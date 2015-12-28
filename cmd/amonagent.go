@@ -7,9 +7,13 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 
 	"github.com/amonapp/amonagent"
 	"github.com/amonapp/amonagent/collectors"
+	"github.com/amonapp/amonagent/plugins"
+
+	_ "github.com/amonapp/amonagent/plugins/all"
 	"github.com/amonapp/amonagent/settings"
 )
 
@@ -23,6 +27,31 @@ var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value i
 var Version string
 
 func main() {
+	var wg sync.WaitGroup
+	wg.Add(len(plugins.Plugins))
+
+	result := make(map[string]interface{})
+	for name := range plugins.Plugins {
+		fmt.Println(name)
+		creator, ok := plugins.Plugins[name]
+		if !ok {
+			fmt.Printf("Undefined but requested plugin: %s", name)
+		}
+
+		plugin := creator()
+		go func(name string) {
+			defer wg.Done()
+			PluginResult, _ := plugin.Collect()
+			result[name] = PluginResult
+		}(name)
+
+	}
+	wg.Wait()
+
+	fmt.Println(result)
+
+	return
+
 	flag.Parse()
 
 	if *fVersion {

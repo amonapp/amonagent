@@ -3,13 +3,17 @@ package mysql
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/amonapp/amonagent/plugins"
 	// Mysql Driver
 	_ "github.com/go-sql-driver/mysql"
 )
+
+// MySQL - XXX
+type MySQL struct {
+}
 
 // Counters - XXX
 var Counters = map[string]string{
@@ -107,8 +111,14 @@ type PerformanceStruct struct {
 	Counters        map[string]interface{} `json:"counters"`
 }
 
+// Description - XXX
+func (m *MySQL) Description() string {
+	return "Read metrics from a MySQL server"
+}
+
 // Collect - XXX
-func Collect() error {
+func (m *MySQL) Collect() (interface{}, error) {
+	PerformanceStruct := PerformanceStruct{}
 	serv := "root:123456@tcp/employees"
 
 	// If user forgot the '/', add it
@@ -120,17 +130,15 @@ func Collect() error {
 
 	db, err := sql.Open("mysql", serv)
 	if err != nil {
-		return err
+		return PerformanceStruct, err
 	}
 
 	defer db.Close()
 
-	PerformanceStruct := PerformanceStruct{}
-
 	rows, err := db.Query(`SHOW /*!50002 GLOBAL */ STATUS`)
 	defer rows.Close()
 	if err != nil {
-		return err
+		return PerformanceStruct, err
 	}
 
 	counters := make(map[string]interface{})
@@ -141,14 +149,14 @@ func Collect() error {
 
 		err = rows.Scan(&name, &val)
 		if err != nil {
-			return err
+			return PerformanceStruct, err
 		}
 
 		for RawKey, FormatedKey := range Gauges {
 			if name == RawKey {
 				i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
 				if err != nil {
-					return err
+					return PerformanceStruct, err
 				}
 				gauges[FormatedKey] = i
 			}
@@ -159,7 +167,7 @@ func Collect() error {
 			if name == RawKey {
 				i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
 				if err != nil {
-					return err
+					return PerformanceStruct, err
 				}
 				counters[FormatedKey] = i
 			}
@@ -176,7 +184,7 @@ func Collect() error {
 
 		err = ConnRows.Scan(&user, &connections)
 		if err != nil {
-			return err
+			return PerformanceStruct, err
 		}
 
 		gauges["connections.active_connections"] = connections
@@ -205,7 +213,7 @@ func Collect() error {
 
 		err = TableSizeRows.Scan(&table, &database, &rows, &fullName, &size, &indexes, &total, &indexFraction)
 		if err != nil {
-			return err
+			return PerformanceStruct, err
 		}
 		fields := []interface{}{}
 		fields = append(fields, table)
@@ -238,7 +246,7 @@ func Collect() error {
 
 		err = SlowQueriesRows.Scan(&queryTime, &rowsSent, &rowsExamined, &lockTime, &db, &query, &startTime)
 		if err != nil {
-			return err
+			return PerformanceStruct, err
 		}
 
 		fields := []interface{}{}
@@ -254,7 +262,12 @@ func Collect() error {
 
 	}
 	PerformanceStruct.SlowQueriesData = SlowQueriesData
-	fmt.Print(PerformanceStruct)
 
-	return nil
+	return PerformanceStruct, nil
+}
+
+func init() {
+	plugins.Add("mysql", func() plugins.Plugin {
+		return &MySQL{}
+	})
 }

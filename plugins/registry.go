@@ -33,3 +33,22 @@ func GetAllEnabledPlugins() ([]Config, error) {
 
 	return fileList, nil
 }
+
+// Plugin - XXX
+type Plugin interface {
+	// Description returns a one-sentence description on the Plugin
+	Description() string
+
+	Collect() (interface{}, error)
+}
+
+// Creator - XXX
+type Creator func() Plugin
+
+// Plugins - XXX
+var Plugins = map[string]Creator{}
+
+// Add - XXX
+func Add(name string, creator Creator) {
+	Plugins[name] = creator
+}

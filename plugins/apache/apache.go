@@ -3,13 +3,20 @@ package apache
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/amonapp/amonagent/plugins"
 )
+
+// Apache - XXX
+type Apache struct {
+}
 
 var tr = &http.Transport{
 	ResponseHeaderTimeout: time.Duration(3 * time.Second),
@@ -21,27 +28,46 @@ var client = &http.Client{Transport: tr}
 // Tracking - XXX
 var Tracking = map[string]string{
 	"ReqPerSec":   "requests.request_per_second",
-	"BytesPerSec": "bytes.per_second",
-	"BytesPerReq": "bytes.per_request",
+	"BytesPerSec": "bytes_per_second.bytes",
+	"BytesPerReq": "bytes_per_request.bytes",
 	"BusyWorkers": "workers.busy",
 	"IdleWorkers": "workers.idle",
+	"Scoreboard":  "scoreboard",
+}
+
+func (p PerformanceStruct) String() string {
+	s, _ := json.Marshal(p)
+	return string(s)
+}
+
+// PerformanceStruct - XXX
+type PerformanceStruct struct {
+	Gauges map[string]interface{} `json:"gauges"`
+	// Counters map[string]interface{} `json:"counters"`
+}
+
+// Description - XXX
+func (a *Apache) Description() string {
+	return "Read Apache status information (mod_status)"
 }
 
 // Collect - XXX
-func Collect() error {
+func (a *Apache) Collect() (interface{}, error) {
+	PerformanceStruct := PerformanceStruct{}
+
 	u := "http://127.0.0.1:81/server-status?auto"
 	addr, err := url.Parse(u)
 	resp, err := client.Get(addr.String())
 	if err != nil {
-		return fmt.Errorf("error making HTTP request to %s: %s", addr.String(), err)
+		return PerformanceStruct, fmt.Errorf("error making HTTP request to %s: %s", addr.String(), err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s returned HTTP status %s", addr.String(), resp.Status)
+		return PerformanceStruct, fmt.Errorf("%s returned HTTP status %s", addr.String(), resp.Status)
 	}
 
 	sc := bufio.NewScanner(resp.Body)
-	fields := make(map[string]interface{})
+	gauges := make(map[string]interface{})
 	for sc.Scan() {
 		line := sc.Text()
 
@@ -54,20 +80,25 @@ func Collect() error {
 
 			switch key {
 			case "Scoreboard":
+				fmt.Print(part)
 				for field, value := range gatherScores(part) {
-					fields[field] = value
+					gauges[field] = value
 				}
 			default:
 				value, err := strconv.ParseFloat(part, 64)
 				if err != nil {
 					continue
 				}
-				fields[key] = value
+				if len(key) > 0 {
+					gauges[key] = value
+				}
+
 			}
 		}
 	}
+	PerformanceStruct.Gauges = gauges
 
-	return nil
+	return PerformanceStruct, nil
 
 }
 
@@ -118,4 +149,10 @@ func gatherScores(data string) map[string]interface{} {
 	}
 
 	return fields
+}
+
+func init() {
+	plugins.Add("apache", func() plugins.Plugin {
+		return &Apache{}
+	})
 }
