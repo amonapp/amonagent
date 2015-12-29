@@ -10,6 +10,7 @@ import (
 
 	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
+	"github.com/mitchellh/mapstructure"
 )
 
 var pluginLogger = logging.GetLogger("amonagent.haproxy")
@@ -285,6 +286,7 @@ func ParseCSVResult(r io.Reader, host string, perf *PerformanceStruct) error {
 
 // Haproxy - XXX
 type Haproxy struct {
+	Config Config
 }
 
 // PerformanceStruct - XXX
@@ -298,15 +300,57 @@ func (h *Haproxy) Description() string {
 	return "Read metrics from a haproxy stats page"
 }
 
+// Config - XXX
+type Config struct {
+	Host string
+}
+
+var sampleConfig = `
+#   Available config options:
+#
+#    {"host": "http://127.0.0.1:1936"}
+#
+#  If the config file is empty, fallback to the following default options:
+#
+#    {"host": "http://127.0.0.1:1936"}
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/haproxy.conf
+`
+
+// SampleConfig - XXX
+func (h *Haproxy) SampleConfig() string {
+	return sampleConfig
+}
+
+// SetConfigDefaults - XXX
+func (h *Haproxy) SetConfigDefaults(configPath string) error {
+	c, err := plugins.ReadConfigPath(configPath)
+	if err != nil {
+		pluginLogger.Errorf("Can't read config file: %v\n", err)
+	}
+	var config Config
+	decodeError := mapstructure.Decode(c, &config)
+	if decodeError != nil {
+		pluginLogger.Errorf("Can't decode config file %s", decodeError.Error())
+	}
+	if len(config.Host) == 0 {
+		config.Host = "http://127.0.0.1:1936"
+	}
+	h.Config = config
+
+	return nil
+}
+
 // Collect - XXX
-func (h *Haproxy) Collect() (interface{}, error) {
+func (h *Haproxy) Collect(configPath string) (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
-	addr := "http://127.0.0.1:1936"
+	h.SetConfigDefaults(configPath)
+
 	client := &http.Client{}
 
-	u, err := url.Parse(addr)
+	u, err := url.Parse(h.Config.Host)
 	if err != nil {
-		pluginLogger.Errorf("Unable parse server address '%s': %s", addr, err)
+		pluginLogger.Errorf("Unable parse server address '%s': %s", h.Config.Host, err)
 		return PerformanceStruct, err
 
 	}
@@ -319,12 +363,12 @@ func (h *Haproxy) Collect() (interface{}, error) {
 
 	res, err := client.Do(req)
 	if err != nil {
-		pluginLogger.Errorf("Unable to connect to haproxy server '%s': %s", addr, err)
+		pluginLogger.Errorf("Unable to connect to haproxy server '%s': %s", h.Config.Host, err)
 		return PerformanceStruct, err
 	}
 
 	if res.StatusCode != 200 {
-		pluginLogger.Errorf("Unable to get valid stat result from '%s': %s", addr, err)
+		pluginLogger.Errorf("Unable to get valid stat result from '%s': %s", h.Config.Host, err)
 
 	}
 

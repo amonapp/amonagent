@@ -108,30 +108,30 @@ type CollectionStats struct {
 	Size           int64            `json:"size"`
 }
 
-// CollectSlowQueries - XXX
-func CollectSlowQueries(server *Server, perf *PerformanceStruct) error {
-	//
-	// params = {"millis": { "$gt" : slowms }}
-	// 	performance = db['system.profile']\
-	// 	.find(params)\
-	// 	.sort("ts", pymongo.DESCENDING)\
-	// 	.limit(10)
-	db := strings.Replace(server.URL.Path, "/", "", -1) // remove slash from Path
-	result := []bson.M{}
-
-	params := bson.M{"millis": bson.M{"$gt": 10}}
-	c := server.Session.DB(db).C("system.profile")
-	err := c.Find(params).All(&result)
-	if err != nil {
-		return err
-	}
-	for _, r := range result {
-		fmt.Println(r)
-		fmt.Println("-----")
-	}
-	// fmt.Println(result)
-	return nil
-}
+// // CollectSlowQueries - XXX
+// func CollectSlowQueries(server *Server, perf *PerformanceStruct) error {
+// 	//
+// 	// params = {"millis": { "$gt" : slowms }}
+// 	// 	performance = db['system.profile']\
+// 	// 	.find(params)\
+// 	// 	.sort("ts", pymongo.DESCENDING)\
+// 	// 	.limit(10)
+// 	db := strings.Replace(server.URL.Path, "/", "", -1) // remove slash from Path
+// 	result := []bson.M{}
+//
+// 	params := bson.M{"millis": bson.M{"$gt": 10}}
+// 	c := server.Session.DB(db).C("system.profile")
+// 	err := c.Find(params).All(&result)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	for _, r := range result {
+// 		pluginLogger.Errorfln(r)
+// 		pluginLogger.Errorfln("-----")
+// 	}
+// 	// pluginLogger.Errorfln(result)
+// 	return nil
+// }
 
 // CollectCollectionSize - XXX
 func CollectCollectionSize(server *Server, perf *PerformanceStruct) error {
@@ -149,12 +149,12 @@ func CollectCollectionSize(server *Server, perf *PerformanceStruct) error {
 		err := server.Session.DB(db).Run(bson.D{{"collstats", col}}, &result)
 
 		if err != nil {
-			fmt.Print("Can't get stats for collection", err.Error())
+			pluginLogger.Errorf("Can't get stats for collection %s", err.Error())
 		}
 		var CollectionResult CollectionStats
 		decodeError := mapstructure.Decode(result, &CollectionResult)
 		if decodeError != nil {
-			fmt.Print("Can't decode collection stats", decodeError.Error())
+			pluginLogger.Errorf("Can't decode collection stats %s", decodeError.Error())
 		}
 
 		TableSizeData.Data = append(TableSizeData.Data, CollectionResult)
@@ -167,12 +167,14 @@ func CollectCollectionSize(server *Server, perf *PerformanceStruct) error {
 
 // GetSession - XXX
 func GetSession(server *Server) error {
+
 	if server.Session == nil {
+
 		dialInfo := &mgo.DialInfo{
 			Addrs:    []string{server.URL.Host},
 			Database: server.URL.Path,
 		}
-		dialInfo.Timeout = 10 * time.Second
+		dialInfo.Timeout = 5 * time.Second
 		if server.URL.User != nil {
 			password, _ := server.URL.User.Password()
 			dialInfo.Username = server.URL.User.Username()
@@ -181,6 +183,7 @@ func GetSession(server *Server) error {
 
 		session, connectionError := mgo.DialWithInfo(dialInfo)
 		if connectionError != nil {
+
 			return fmt.Errorf("Unable to connect to URL (%s), %s\n", server.URL.Host, connectionError.Error())
 		}
 		server.Session = session
@@ -188,6 +191,7 @@ func GetSession(server *Server) error {
 
 		server.Session.SetMode(mgo.Eventual, true)
 		server.Session.SetSocketTimeout(0)
+
 	}
 
 	return nil
@@ -274,12 +278,12 @@ func (m *MongoDB) SampleConfig() string {
 func (m *MongoDB) SetConfigDefaults(configPath string) error {
 	c, err := plugins.ReadConfigPath(configPath)
 	if err != nil {
-		fmt.Printf("Can't read config file: %v\n", err)
+		pluginLogger.Errorf("Can't read config file: %v\n", err)
 	}
 	var config Config
 	decodeError := mapstructure.Decode(c, &config)
 	if decodeError != nil {
-		fmt.Print("Can't decode config file", decodeError.Error())
+		pluginLogger.Errorf("Can't decode config file %s", decodeError.Error())
 	}
 
 	m.Config = config
@@ -304,10 +308,17 @@ func (m *MongoDB) Collect(configPath string) (interface{}, error) {
 	}
 
 	server := Server{URL: url}
-	GetSession(&server)
+	sessionError := GetSession(&server)
+	if sessionError != nil {
+		pluginLogger.Errorf("Can't connect to server': %v", sessionError)
+		return PerformanceStruct, err
+	}
+	CollectGauges(&server, &PerformanceStruct)
+	time.Sleep(time.Duration(1) * time.Second)
+	CollectGauges(&server, &PerformanceStruct)
 
 	CollectCollectionSize(&server, &PerformanceStruct)
-	CollectSlowQueries(&server, &PerformanceStruct)
+	// // CollectSlowQueries(&server, &PerformanceStruct)
 
 	if server.Session != nil {
 		defer server.Session.Close()

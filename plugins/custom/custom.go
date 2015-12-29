@@ -60,21 +60,99 @@ func ParseLine(s string) (Metric, error) {
 	return m, nil
 }
 
+var sampleConfig = `
+#   Available config options:
+#
+#  A JSON list with commands
+#   [
+#    {
+#        "command":"python /path/to/yourplugin.py",
+#        "name":"requests"
+#    },
+#    {
+#        "command":"python /path/to/yourpingplugin.py",
+#        "name":"ping"
+#    },
+#   ]
+#
+#  You can create a custom plugin in any language. Amon parses all the lines from STDOUT in the following format:
+#
+#   requests.per_second:12|gauge"    - metric.line_on_chart_name:value|type
+#
+#   Available types: counter and gauge
+#
+#   To group metrics on a single chart:
+#
+#     connections.active:12|gauge"
+#     connections.waiting:12|gauge"
+#
+#    In Python you can emmit metrics with:
+#    print "requests.per_second:12|gauge"
+#
+#    In Bash with printf "requests.per_second:12|gauge\n", Ruby "puts requests.per_second:12|gauge"
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/custom.conf
+`
+
+// SampleConfig - XXX
+func (c *Custom) SampleConfig() string {
+	return sampleConfig
+}
+
+// Custom - XXX
+type Custom struct {
+	Config Config
+}
+
+//
 // Command - XXX
 type Command struct {
 	Command string `json:"command"`
 	Name    string `json:"name"`
 }
 
-// Custom - XXX
-type Custom struct {
+// Config - XXX
+type Config struct {
+	Commands []Command `json:"commands"`
+}
+
+// SetConfigDefaults - XXX
+func (c *Custom) SetConfigDefaults(configPath string) error {
+	// jsonFile, err := plugins.ReadConfigPath(configPath)
+	jsonFile, err := ioutil.ReadFile(configPath)
+	if err != nil {
+
+		fmt.Printf("Can't read config file: %v\n", err)
+	}
+	var Commands []Command
+
+	if err := json.Unmarshal(jsonFile, &Commands); err != nil {
+		fmt.Printf("Can't decode JSON file: %v\n", err)
+	}
+
+	c.Config.Commands = Commands
+
+	return nil
+}
+
+func (p PerformanceStruct) String() string {
+	s, _ := json.Marshal(p)
+	return string(s)
 }
 
 // PerformanceStruct - XXX
 type PerformanceStruct struct {
-	Gauges   map[string]interface{} `json:"gauges"`
-	Counters map[string]interface{} `json:"counters"`
+	Gauges   map[string]interface{} `json:"gauges,omitempty"`
+	Counters map[string]interface{} `json:"counters,omitempty"`
 }
+
+func (p PerformanceStructBlock) String() string {
+	s, _ := json.Marshal(p)
+	return string(s)
+}
+
+// PerformanceStructBlock - XXX
+type PerformanceStructBlock map[string]PerformanceStruct
 
 // Description - XXX
 func (c *Custom) Description() string {
@@ -82,17 +160,13 @@ func (c *Custom) Description() string {
 }
 
 // Collect - XXX
-func (c *Custom) Collect() (interface{}, error) {
-	file, e := ioutil.ReadFile("/home/martin/temp/amonagent/custom_config.json")
-	if e != nil {
-		fmt.Printf("Config error: %v\n", e)
-	}
+func (c *Custom) Collect(configPath string) (interface{}, error) {
+	c.SetConfigDefaults(configPath)
 
-	var commands []Command
-	var results []PerformanceStruct
-	json.Unmarshal(file, &commands)
+	results := make(PerformanceStructBlock, 0)
 
-	for _, command := range commands {
+	for _, command := range c.Config.Commands {
+
 		PerformanceStruct := PerformanceStruct{}
 		result, err := Run(&command)
 
@@ -116,7 +190,8 @@ func (c *Custom) Collect() (interface{}, error) {
 
 		PerformanceStruct.Gauges = gauges
 		PerformanceStruct.Counters = counters
-		results = append(results, PerformanceStruct)
+		results[command.Name] = PerformanceStruct
+
 	}
 
 	return results, nil

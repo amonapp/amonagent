@@ -15,18 +15,19 @@ type PluginConfig struct {
 }
 
 // ConfigPath - XXX
-const ConfigPath = "/etc/amonagent/plugins-enabled"
+const ConfigPath = "/etc/opt/amonagent/plugins-enabled"
 
-// ReadConfigPath - XXX
+// ReadConfigPath - Works only with flat config files, do something different for nested configs
 func ReadConfigPath(path string) (interface{}, error) {
 	var data map[string]interface{}
 	file, e := ioutil.ReadFile(path)
 	if e != nil {
 		return data, e
-
 	}
 
-	json.Unmarshal(file, &data)
+	if err := json.Unmarshal(file, &data); err != nil {
+		return data, err
+	}
 
 	return data, nil
 

@@ -30,11 +30,11 @@ func main() {
 
 	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 	for _, p := range EnabledPlugins {
-		fmt.Print(p.Name)
+
 		creator, ok := plugins.Plugins[p.Name]
 		if !ok {
 
-			fmt.Println("Non existing plugin:", p.Name)
+			// fmt.Println("Non existing plugin:", p.Name)
 
 		} else {
 			plugin := creator()
@@ -46,7 +46,7 @@ func main() {
 				fmt.Printf("Can't get stats for plugin: %s", err)
 				fmt.Println("\n-----------")
 			}
-			fmt.Print(plugin.SampleConfig())
+			// fmt.Print(plugin.SampleConfig())
 
 			fmt.Println(PluginResult)
 		}

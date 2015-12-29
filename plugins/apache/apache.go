@@ -12,15 +12,56 @@ import (
 	"time"
 
 	"github.com/amonapp/amonagent/plugins"
+	"github.com/mitchellh/mapstructure"
 )
+
+// Config - XXX
+type Config struct {
+	StatusURL string `mapstructure:"status_url"`
+}
+
+var sampleConfig = `
+#   Available config options:
+#
+#    {"status_url": "http://127.0.0.1/server-status?auto"}
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/apache.conf
+`
+
+// SampleConfig - XXX
+func (a *Apache) SampleConfig() string {
+	return sampleConfig
+}
+
+// SetConfigDefaults - XXX
+func (a *Apache) SetConfigDefaults(configPath string) error {
+	c, err := plugins.ReadConfigPath(configPath)
+	if err != nil {
+		fmt.Printf("Can't read config file: %v\n", err)
+	}
+	var config Config
+	decodeError := mapstructure.Decode(c, &config)
+	if decodeError != nil {
+		fmt.Print("Can't decode config file", decodeError.Error())
+	}
+
+	if len(config.StatusURL) == 0 {
+		config.StatusURL = "http://127.0.0.1/server-status?auto"
+	}
+
+	a.Config = config
+
+	return nil
+}
 
 // Apache - XXX
 type Apache struct {
+	Config Config
 }
 
 var tr = &http.Transport{
 	ResponseHeaderTimeout: time.Duration(3 * time.Second),
-	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // remove that from the final plugin
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // make that optional
 }
 
 var client = &http.Client{Transport: tr}
@@ -52,11 +93,11 @@ func (a *Apache) Description() string {
 }
 
 // Collect - XXX
-func (a *Apache) Collect() (interface{}, error) {
+func (a *Apache) Collect(configPath string) (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
+	a.SetConfigDefaults(configPath)
 
-	u := "http://127.0.0.1:81/server-status?auto"
-	addr, err := url.Parse(u)
+	addr, err := url.Parse(a.Config.StatusURL)
 	resp, err := client.Get(addr.String())
 	if err != nil {
 		return PerformanceStruct, fmt.Errorf("error making HTTP request to %s: %s", addr.String(), err)
