@@ -118,7 +118,6 @@ type Config struct {
 
 // SetConfigDefaults - XXX
 func (c *Custom) SetConfigDefaults(configPath string) error {
-	// jsonFile, err := plugins.ReadConfigPath(configPath)
 	jsonFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
 

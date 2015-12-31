@@ -70,6 +70,22 @@ func Distro() DistroStruct {
 	return d
 }
 
+// CloudID - XXX
+func CloudID(provider string) string {
+
+	if provider == "amazon" {
+		// http://169.254.169.254/latest/meta-data/instance-id
+	}
+	if provider == "digitalocean" {
+		// https://169.254.169.254/metadata/v1/id
+
+	}
+	if provider == "google" {
+		// "https://metadata.google.internal/computeMetadata/v1/instance/id/" -H "Metadata-Flavor: Google"
+	}
+	return ""
+}
+
 //MachineID - XXX
 func MachineID() string {
 	var machineidPath = "/var/lib/dbus/machine-id" // Default machine id path

@@ -17,6 +17,9 @@ import (
 )
 
 var fTest = flag.Bool("test", false, "gather metrics, print them out, and exit")
+var fListPlugins = flag.Bool("list-plugins", false, "lists all available plugins and exit")
+var fTestPlugin = flag.Bool("test-plugin", false, "gather plugin metrics, print them out, and exit")
+var fConfig = flag.Bool("plugin-config", false, "Shows the example config for a plugin")
 var fVersion = flag.Bool("version", false, "display the version")
 var fPidfile = flag.String("pidfile", "", "file to write our pid to")
 var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value is used in the Salt minion config")

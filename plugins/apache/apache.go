@@ -15,6 +15,11 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// Description - XXX
+func (a *Apache) Description() string {
+	return "Read Apache status information (mod_status)"
+}
+
 // Config - XXX
 type Config struct {
 	StatusURL string `mapstructure:"status_url"`
@@ -85,11 +90,6 @@ func (p PerformanceStruct) String() string {
 type PerformanceStruct struct {
 	Gauges map[string]interface{} `json:"gauges"`
 	// Counters map[string]interface{} `json:"counters"`
-}
-
-// Description - XXX
-func (a *Apache) Description() string {
-	return "Read Apache status information (mod_status)"
 }
 
 // Collect - XXX

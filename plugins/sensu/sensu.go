@@ -8,9 +8,61 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 
+	"github.com/amonapp/amonagent/plugins"
 	"github.com/gonuts/go-shellquote"
 )
+
+// Sensu - XXX
+type Sensu struct {
+	Config Config
+}
+
+// Description - XXX
+func (s *Sensu) Description() string {
+	return "Collects data from Sensu plugins"
+}
+
+var sampleConfig = `
+#   Available config options:
+#
+#    [
+#     "metrics-es-node-graphite.rb",
+#     "metrics-net.rb",
+#     "metrics-redis-graphite.rb"
+#    ]
+#
+#    List of preinstalled sensu plugins + params
+#
+# Config location: /etc/opt/amonagent/plugins-enabled/sensu.conf
+`
+
+// SampleConfig - XXX
+func (s *Sensu) SampleConfig() string {
+	return sampleConfig
+}
+
+// Config - XXX
+type Config struct {
+	Commands []string `mapstructure:"commands"`
+}
+
+// SetConfigDefaults - XXX
+func (s *Sensu) SetConfigDefaults(configPath string) error {
+	jsonFile, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		fmt.Printf("Can't read config file: %v\n", err)
+	}
+	var Commands []string
+	if err := json.Unmarshal(jsonFile, &Commands); err != nil {
+		fmt.Printf("Can't decode JSON file: %v\n", err)
+	}
+
+	s.Config.Commands = Commands
+
+	return nil
+}
 
 // Run - XXX
 func Run(command string) (string, error) {
@@ -95,7 +147,7 @@ func ParseLine(s string) (ParsedLine, error) {
 		metricFields := strings.FieldsFunc(fields[0], dot)
 
 		var cleanName string
-		// Eliminiate host and plugin name here
+		// Eliminate host and plugin name here
 		// Example ubuntu.elasticsearch.thread_pool......
 		if len(metricFields) > 2 {
 			cleanName = strings.Join(metricFields[2:], ".")
@@ -130,40 +182,44 @@ type Command struct {
 }
 
 // Collect - XXX
-func Collect() error {
+func (s *Sensu) Collect(configPath string) (interface{}, error) {
+	s.SetConfigDefaults(configPath)
+	var wg sync.WaitGroup
+	for _, command := range s.Config.Commands {
+		wg.Add(1)
 
-	file, err := ioutil.ReadFile("/etc/opt/amonagent/plugins-enabled/sensu.conf")
-	if err != nil {
-		fmt.Printf("Can't read config file: %v\n", err)
-	}
-	var Commands []string
+		go func(command string) {
+			defer wg.Done()
+			result, err := Run(command)
+			if err != nil {
+				fmt.Println("Can't execute command: ", err)
+			}
+			lines := strings.Split(result, "\n")
+			ParsedLines := []ParsedLine{}
 
-	if err := json.Unmarshal(file, &Commands); err != nil {
-		return err
-	}
-	for _, command := range Commands {
-
-		result, err := Run(command)
-		if err != nil {
-			fmt.Println("Can't execute command: ", err)
-		}
-		lines := strings.Split(result, "\n")
-		ParsedLines := []ParsedLine{}
-
-		for _, line := range lines {
-			metric, _ := ParseLine(line)
-			if len(metric.Elements) > 0 {
-				ParsedLines = append(ParsedLines, metric)
+			for _, line := range lines {
+				metric, _ := ParseLine(line)
+				if len(metric.Elements) > 0 {
+					ParsedLines = append(ParsedLines, metric)
+				}
 			}
 
-		}
+			for _, line := range ParsedLines {
+				metric, _ := AnalyzeLines(ParsedLines, line)
+				fmt.Println(metric)
+			}
+		}(command)
 
-		for _, line := range ParsedLines {
-			metric, _ := AnalyzeLines(ParsedLines, line)
-			fmt.Println(metric)
-		}
 		// fmt.Println(ParsedLines)
 	}
 
-	return nil
+	wg.Wait()
+
+	return nil, nil
+}
+
+func init() {
+	plugins.Add("sensu", func() plugins.Plugin {
+		return &Sensu{}
+	})
 }
