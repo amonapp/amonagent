@@ -1,7 +1,7 @@
 package all
 
 import (
-	// _ "github.com/amonapp/amonagent/plugins/apache"
+	_ "github.com/amonapp/amonagent/plugins/apache"
 	// _ "github.com/amonapp/amonagent/plugins/custom"
 	_ "github.com/amonapp/amonagent/plugins/sensu"
 	// _ "github.com/amonapp/amonagent/plugins/haproxy"

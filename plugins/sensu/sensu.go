@@ -28,9 +28,10 @@ var sampleConfig = `
 #   Available config options:
 #
 #    [
-#     "metrics-es-node-graphite.rb",
-#     "metrics-net.rb",
-#     "metrics-redis-graphite.rb"
+#        "metrics-es-node-graphite.rb",
+#        "metrics-net.rb",
+#        "metrics-redis-graphite.rb",
+#        "metrics-iostat-extended.rb"
 #    ]
 #
 #    List of preinstalled sensu plugins + params
@@ -89,9 +90,9 @@ func (m Metric) String() string {
 
 // Metric - XXX
 type Metric struct {
-	Chart string `json:"chart"`
-	Line  string `json:"line"`
-	Value string `json:"value"`
+	Plugin string `json:"plugin"`
+	Gauge  string `json:"gauge"`
+	Value  string `json:"value"`
 }
 
 // ParsedLine - XXX
@@ -101,30 +102,8 @@ type ParsedLine struct {
 	Value    string
 }
 
-// AnalyzeLines - XXX
-func AnalyzeLines(completeResult []ParsedLine, line ParsedLine) (Metric, error) {
-	m := Metric{Value: line.Value}
-	elements := line.Elements
-
-	if len(elements) > 2 {
-
-		m.Chart = strings.Join(elements[:2], "_")
-		m.Line = strings.Join(elements[2:], "_")
-
-	} else {
-		m.Chart = elements[0]
-		m.Line = strings.Join(elements[1:], "_")
-	}
-
-	if len(m.Line) == 0 {
-		m.Line = m.Chart
-	}
-
-	return m, nil
-}
-
 // ParseLine - XXX
-func ParseLine(s string) (ParsedLine, error) {
+func ParseLine(s string) (Metric, error) {
 	// split by space
 	f := func(c rune) bool {
 		return c == ' '
@@ -140,6 +119,7 @@ func ParseLine(s string) (ParsedLine, error) {
 
 	fields := strings.FieldsFunc(s, f)
 	line := ParsedLine{}
+	m := Metric{}
 	if len(fields) == 3 {
 		toFloat, _ := strconv.ParseFloat(fields[1], 64)
 		value := strconv.FormatFloat(toFloat, 'f', -1, 64)
@@ -161,18 +141,30 @@ func ParseLine(s string) (ParsedLine, error) {
 		// Example: thread_pool.search.active
 		if len(CleanMetricFields) > 1 {
 			line.Elements = CleanMetricFields
-			line.Plugin = metricFields[1]
-			line.Value = value
+
 		} else {
 			line.Elements = splitOnUnderscore
-			line.Plugin = metricFields[1]
-			line.Value = value
 
 		}
+		elements := line.Elements
+
+		if len(elements) > 2 {
+			chart := strings.Join(elements[:2], "_")
+			line := strings.Join(elements[2:], "_")
+			m.Gauge = chart + "." + line
+
+		} else {
+			chart := elements[0]
+			line := strings.Join(elements[1:], "_")
+			m.Gauge = chart + "." + line
+
+		}
+		m.Value = value
+		m.Plugin = "sensu." + metricFields[1]
 
 	}
 
-	return line, nil
+	return m, nil
 }
 
 // Command - XXX
@@ -182,40 +174,50 @@ type Command struct {
 }
 
 // Collect - XXX
+// This should return the following: sensu.plugin_name: {"gauges": {}}, sensu.another_plugin :{"gauges":{}}
 func (s *Sensu) Collect(configPath string) (interface{}, error) {
 	s.SetConfigDefaults(configPath)
 	var wg sync.WaitGroup
+	plugins := make(map[string]interface{})
+	var result []Metric
 	for _, command := range s.Config.Commands {
 		wg.Add(1)
 
 		go func(command string) {
 			defer wg.Done()
-			result, err := Run(command)
+			gauges := make(map[string]interface{})
+			plugin := ""
+			Commandresult, err := Run(command)
 			if err != nil {
 				fmt.Println("Can't execute command: ", err)
 			}
-			lines := strings.Split(result, "\n")
-			ParsedLines := []ParsedLine{}
+			lines := strings.Split(Commandresult, "\n")
 
 			for _, line := range lines {
 				metric, _ := ParseLine(line)
-				if len(metric.Elements) > 0 {
-					ParsedLines = append(ParsedLines, metric)
+				if len(metric.Gauge) > 0 {
+					result = append(result, metric)
 				}
+
 			}
 
-			for _, line := range ParsedLines {
-				metric, _ := AnalyzeLines(ParsedLines, line)
-				fmt.Println(metric)
+			for _, r := range result {
+				gauges[r.Gauge] = r.Value
+				plugin = r.Plugin
 			}
+
+			if len(plugin) > 0 {
+				plugins[plugin] = gauges
+			}
+
 		}(command)
-
-		// fmt.Println(ParsedLines)
 	}
 
 	wg.Wait()
+	pluginsJSON, _ := json.Marshal(plugins)
+	pluginsJSONString := string(pluginsJSON)
 
-	return nil, nil
+	return pluginsJSONString, nil
 }
 
 func init() {
