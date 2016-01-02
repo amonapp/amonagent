@@ -122,8 +122,7 @@ type Config struct {
 func (c *Custom) SetConfigDefaults(configPath string) error {
 	jsonFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
-
-		fmt.Printf("Can't read config file: %v\n", err)
+		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
 	}
 	var Commands []Command
 

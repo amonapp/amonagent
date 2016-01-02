@@ -53,7 +53,7 @@ type Config struct {
 func (s *Sensu) SetConfigDefaults(configPath string) error {
 	jsonFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		fmt.Printf("Can't read config file: %v\n", err)
+		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
 	}
 	var Commands []string
 	if err := json.Unmarshal(jsonFile, &Commands); err != nil {
@@ -217,10 +217,8 @@ func (s *Sensu) Collect(configPath string) (interface{}, error) {
 	}
 
 	wg.Wait()
-	pluginsJSON, _ := json.Marshal(plugins)
-	pluginsJSONString := string(pluginsJSON)
 
-	return pluginsJSONString, nil
+	return plugins, nil
 }
 
 func init() {

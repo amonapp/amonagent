@@ -187,7 +187,7 @@ func (p *PostgreSQL) SampleConfig() string {
 func (p *PostgreSQL) SetConfigDefaults(configPath string) error {
 	c, err := plugins.ReadConfigPath(configPath)
 	if err != nil {
-		fmt.Printf("Can't read config file: %v\n", err)
+		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
 	}
 	var config Config
 	decodeError := mapstructure.Decode(c, &config)

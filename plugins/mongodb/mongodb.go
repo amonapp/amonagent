@@ -278,7 +278,7 @@ func (m *MongoDB) SampleConfig() string {
 func (m *MongoDB) SetConfigDefaults(configPath string) error {
 	c, err := plugins.ReadConfigPath(configPath)
 	if err != nil {
-		pluginLogger.Errorf("Can't read config file: %v\n", err)
+		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
 	}
 	var config Config
 	decodeError := mapstructure.Decode(c, &config)
