@@ -186,6 +186,7 @@ func (s *Sensu) Collect(configPath string) (interface{}, error) {
 		go func(command string) {
 			defer wg.Done()
 			gauges := make(map[string]interface{})
+			GaugesWrapper := make(map[string]interface{})
 			plugin := ""
 			Commandresult, err := Run(command)
 			if err != nil {
@@ -206,8 +207,10 @@ func (s *Sensu) Collect(configPath string) (interface{}, error) {
 				plugin = r.Plugin
 			}
 
+			GaugesWrapper["gauges"] = gauges
+
 			if len(plugin) > 0 {
-				plugins[plugin] = gauges
+				plugins[plugin] = GaugesWrapper
 			}
 
 		}(command)

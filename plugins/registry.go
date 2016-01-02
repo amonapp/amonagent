@@ -33,6 +33,25 @@ func ReadConfigPath(path string) (interface{}, error) {
 
 }
 
+// GetConfigPath - XXX
+func GetConfigPath(plugin string) (PluginConfig, error) {
+	config := PluginConfig{}
+	filepath.Walk(ConfigPath, func(path string, f os.FileInfo, err error) error {
+		if !f.IsDir() {
+			// Only files ending with .conf
+			fileName := strings.Split(f.Name(), ".conf")
+			if len(fileName) == 2 && fileName[0] == plugin {
+				config.Path = path
+				config.Name = fileName[0]
+			}
+
+		}
+		return nil
+	})
+
+	return config, nil
+}
+
 // GetAllEnabledPlugins - XXX
 func GetAllEnabledPlugins() ([]PluginConfig, error) {
 	fileList := []PluginConfig{}

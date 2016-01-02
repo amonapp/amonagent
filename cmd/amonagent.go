@@ -10,17 +10,21 @@ import (
 
 	"github.com/amonapp/amonagent"
 	"github.com/amonapp/amonagent/collectors"
+	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
 
 	_ "github.com/amonapp/amonagent/plugins/all"
 	"github.com/amonapp/amonagent/settings"
 )
 
+var agentLogger = logging.GetLogger("amonagent.main")
+
 var fTest = flag.Bool("test", false, "gather metrics, print them out, and exit")
 var fListPlugins = flag.Bool("list-plugins", false, "lists all available plugins and exit")
-var fTestPlugin = flag.Bool("test-plugin", false, "gather plugin metrics, print them out, and exit")
-var fConfig = flag.Bool("plugin-config", false, "Shows the example config for a plugin")
+var fTestPlugin = flag.String("test-plugin", "", "gather plugin metrics, print them out, and exit")
+var fPluginConfig = flag.String("plugin-config", "", "Shows the example config for a plugin")
 var fVersion = flag.Bool("version", false, "display the version")
+var fCloudID = flag.Bool("cloud-id", false, "displays Instance ID for Amazon, DigitalOcean and Google Compute servers")
 var fPidfile = flag.String("pidfile", "", "file to write our pid to")
 var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value is used in the Salt minion config")
 
@@ -28,33 +32,84 @@ var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value i
 //	-ldflags "-X main.Version=`git describe --always --tags`"
 var Version string
 
+// ListPlugins -- XXX
+func ListPlugins() {
+	allPlugins := plugins.Plugins
+	fmt.Println("Available plugins:")
+	for r := range allPlugins {
+		fmt.Println(r)
+	}
+}
+
 func main() {
+	flag.Parse()
 	// var wg sync.WaitGroup
+	PluginResults := make(map[string]interface{})
+	CheckResults := make(map[string]interface{})
+
+	if *fListPlugins {
+		ListPlugins()
+		return
+	}
+
+	if len(*fPluginConfig) > 0 {
+		pluginConfig, _ := plugins.GetConfigPath(*fPluginConfig)
+		creator, ok := plugins.Plugins[pluginConfig.Name]
+		if ok {
+			plugin := creator()
+			conf := plugin.SampleConfig()
+
+			fmt.Println(conf)
+		} else {
+			fmt.Printf("Non existing plugin: %s", pluginConfig.Name)
+			ListPlugins()
+		}
+		return
+	}
+
+	if len(*fTestPlugin) > 0 {
+		pluginConfig, _ := plugins.GetConfigPath(*fTestPlugin)
+		creator, ok := plugins.Plugins[pluginConfig.Name]
+		if ok {
+			plugin := creator()
+			PluginResult, err := plugin.Collect(pluginConfig.Path)
+			if err != nil {
+				fmt.Printf("Can't get stats for plugin: %s", err)
+			}
+			fmt.Println(PluginResult)
+		} else {
+			fmt.Printf("Non existing plugin: %s", pluginConfig.Name)
+			ListPlugins()
+		}
+		return
+	}
 
 	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 	for _, p := range EnabledPlugins {
-
 		creator, ok := plugins.Plugins[p.Name]
-		if !ok {
-
-			// fmt.Println("Non existing plugin:", p.Name)
-
-		} else {
+		if ok {
 			plugin := creator()
 
 			PluginResult, err := plugin.Collect(p.Path)
 			if err != nil {
+				agentLogger.Errorf("Can't get stats for plugin: %s", err)
 
-				fmt.Println("\n-----------")
-				fmt.Printf("Can't get stats for plugin: %s", err)
-				fmt.Println("\n-----------")
 			}
 			// fmt.Print(plugin.SampleConfig())
 
-			fmt.Println(PluginResult)
+			if p.Name == "checks" {
+				CheckResults["checks"] = PluginResult
+			} else {
+				PluginResults[p.Name] = PluginResult
+
+			}
+
+		} else {
+			agentLogger.Errorf("Non existing plugin: %s", p.Name)
 		}
 
 	}
+	fmt.Println(PluginResults)
 	// result := make(map[string]interface{})
 	// for name := range plugins.Plugins {
 	// 	fmt.Println(name)
@@ -75,15 +130,14 @@ func main() {
 	//
 	// fmt.Println(result)
 
-	return
-
-	flag.Parse()
-
 	if *fVersion {
 		v := fmt.Sprintf("Amon - Version %s", Version)
 		fmt.Println(v)
 		return
 	}
+
+	return
+
 	config := settings.Settings()
 
 	// Detect Machine ID or ask for a valid Server Key in Settings

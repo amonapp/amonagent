@@ -75,16 +75,18 @@ var sampleConfig = `
 #    },
 #   ]
 #
-#  You can create a custom plugin in any language. Amon parses all the lines from STDOUT in the following format:
+#  You can create a custom plugin in any language. Amon parses all the lines from STDOUT:
 #
-#   requests.per_second:12|gauge"    - metric.line_on_chart_name:value|type
+#   Format: metric.line_on_chart_name:value|type
+#   Example:
+#   requests.per_second:12|gauge
 #
 #   Available types: counter and gauge
 #
 #   To group metrics on a single chart:
 #
-#     connections.active:12|gauge"
-#     connections.waiting:12|gauge"
+#     connections.active:12|gauge
+#     connections.waiting:12|gauge
 #
 #    In Python you can emmit metrics with:
 #    print "requests.per_second:12|gauge"
@@ -187,9 +189,10 @@ func (c *Custom) Collect(configPath string) (interface{}, error) {
 			fmt.Printf("Unable to execute command, %s", err)
 		}
 
+		pluginName := "custom." + command.Name
 		PerformanceStruct.Gauges = gauges
 		PerformanceStruct.Counters = counters
-		results[command.Name] = PerformanceStruct
+		results[pluginName] = PerformanceStruct
 
 	}
 
