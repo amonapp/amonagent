@@ -26,7 +26,7 @@ var fListPlugins = flag.Bool("list-plugins", false, "lists all available plugins
 var fTestPlugin = flag.String("test-plugin", "", "gather plugin metrics, print them out, and exit")
 var fPluginConfig = flag.String("plugin-config", "", "Shows the example config for a plugin")
 var fVersion = flag.Bool("version", false, "display the version")
-var fCloudID = flag.Bool("cloud-id", false, "displays Instance ID for Amazon, DigitalOcean and Google Compute servers")
+var fCloudMetadata = flag.Bool("cloud-metadata", false, "collects instance metadata for Amazon, DigitalOcean and Google Compute servers")
 var fPidfile = flag.String("pidfile", "", "file to write our pid to")
 var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value is used in the Salt minion config")
 
