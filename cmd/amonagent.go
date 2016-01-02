@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"sync"
 
 	"github.com/amonapp/amonagent"
 	"github.com/amonapp/amonagent/collectors"
@@ -26,7 +24,6 @@ var fListPlugins = flag.Bool("list-plugins", false, "lists all available plugins
 var fTestPlugin = flag.String("test-plugin", "", "gather plugin metrics, print them out, and exit")
 var fPluginConfig = flag.String("plugin-config", "", "Shows the example config for a plugin")
 var fVersion = flag.Bool("version", false, "display the version")
-var fCloudMetadata = flag.Bool("cloud-metadata", false, "collects instance metadata for Amazon, DigitalOcean and Google Compute servers")
 var fPidfile = flag.String("pidfile", "", "file to write our pid to")
 var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value is used in the Salt minion config")
 
@@ -45,6 +42,9 @@ func ListPlugins() {
 
 func main() {
 	flag.Parse()
+
+	allMetrics := collectors.CollectSystem()
+	fmt.Println(allMetrics)
 
 	if *fListPlugins {
 		ListPlugins()
@@ -82,39 +82,39 @@ func main() {
 		return
 	}
 
-	PluginResults := make(map[string]interface{})
-	CheckResults := make(map[string]interface{})
-	var wg sync.WaitGroup
-	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
-	for _, p := range EnabledPlugins {
-		creator, ok := plugins.Plugins[p.Name]
-		if ok {
-			wg.Add(1)
-			plugin := creator()
+	// PluginResults := make(map[string]interface{})
+	// CheckResults := make(map[string]interface{})
+	// var wg sync.WaitGroup
+	// EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
+	// for _, p := range EnabledPlugins {
+	// 	creator, ok := plugins.Plugins[p.Name]
+	// 	if ok {
+	// 		wg.Add(1)
+	// 		plugin := creator()
+	//
+	// 		go func(p plugins.PluginConfig) {
+	// 			defer wg.Done()
+	// 			PluginResult, err := plugin.Collect(p.Path)
+	// 			if err != nil {
+	// 				agentLogger.Errorf("Can't get stats for plugin: %s", err)
+	//
+	// 			}
+	// 			if p.Name == "checks" {
+	// 				CheckResults["checks"] = PluginResult
+	// 			} else {
+	// 				PluginResults[p.Name] = PluginResult
+	// 			}
+	// 		}(p)
+	//
+	// 	} else {
+	// 		agentLogger.Errorf("Non existing plugin: %s", p.Name)
+	// 	}
+	// }
+	// wg.Wait()
 
-			go func(p plugins.PluginConfig) {
-				defer wg.Done()
-				PluginResult, err := plugin.Collect(p.Path)
-				if err != nil {
-					agentLogger.Errorf("Can't get stats for plugin: %s", err)
-
-				}
-				if p.Name == "checks" {
-					CheckResults["checks"] = PluginResult
-				} else {
-					PluginResults[p.Name] = PluginResult
-				}
-			}(p)
-
-		} else {
-			agentLogger.Errorf("Non existing plugin: %s", p.Name)
-		}
-	}
-	wg.Wait()
-
-	s, _ := json.Marshal(PluginResults)
-	fmt.Println(string(s))
-	fmt.Println(CheckResults)
+	// s, _ := json.Marshal(PluginResults)
+	// fmt.Println(string(s))
+	// fmt.Println(CheckResults)
 	// result := make(map[string]interface{})
 	// for name := range plugins.Plugins {
 	// 	fmt.Println(name)
