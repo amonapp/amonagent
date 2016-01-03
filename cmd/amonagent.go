@@ -19,7 +19,7 @@ import (
 
 var agentLogger = logging.GetLogger("amonagent.main")
 
-var fTest = flag.Bool("test", false, "gather metrics, print them out, and exit")
+var fTest = flag.Bool("test", false, "gather all metrics, print them out, and exit")
 var fListPlugins = flag.Bool("list-plugins", false, "lists all available plugins and exit")
 var fTestPlugin = flag.String("test-plugin", "", "gather plugin metrics, print them out, and exit")
 var fPluginConfig = flag.String("plugin-config", "", "Shows the example config for a plugin")
@@ -42,9 +42,6 @@ func ListPlugins() {
 
 func main() {
 	flag.Parse()
-
-	allMetrics := collectors.CollectSystem()
-	fmt.Println(allMetrics)
 
 	if *fListPlugins {
 		ListPlugins()
@@ -82,66 +79,11 @@ func main() {
 		return
 	}
 
-	// PluginResults := make(map[string]interface{})
-	// CheckResults := make(map[string]interface{})
-	// var wg sync.WaitGroup
-	// EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
-	// for _, p := range EnabledPlugins {
-	// 	creator, ok := plugins.Plugins[p.Name]
-	// 	if ok {
-	// 		wg.Add(1)
-	// 		plugin := creator()
-	//
-	// 		go func(p plugins.PluginConfig) {
-	// 			defer wg.Done()
-	// 			PluginResult, err := plugin.Collect(p.Path)
-	// 			if err != nil {
-	// 				agentLogger.Errorf("Can't get stats for plugin: %s", err)
-	//
-	// 			}
-	// 			if p.Name == "checks" {
-	// 				CheckResults["checks"] = PluginResult
-	// 			} else {
-	// 				PluginResults[p.Name] = PluginResult
-	// 			}
-	// 		}(p)
-	//
-	// 	} else {
-	// 		agentLogger.Errorf("Non existing plugin: %s", p.Name)
-	// 	}
-	// }
-	// wg.Wait()
-
-	// s, _ := json.Marshal(PluginResults)
-	// fmt.Println(string(s))
-	// fmt.Println(CheckResults)
-	// result := make(map[string]interface{})
-	// for name := range plugins.Plugins {
-	// 	fmt.Println(name)
-	// 	creator, ok := plugins.Plugins[name]
-	// 	if !ok {
-	// 		fmt.Printf("Undefined but requested plugin: %s", name)
-	// 	}
-	// 	wg.Add(1)
-	// 	plugin := creator()
-	// 	go func(name string) {
-	// 		defer wg.Done()
-	// 		PluginResult, _ := plugin.Collect()
-	// 		result[name] = PluginResult
-	// 	}(name)
-	//
-	// }
-	// wg.Wait()
-	//
-	// fmt.Println(result)
-
 	if *fVersion {
 		v := fmt.Sprintf("Amon - Version %s", Version)
 		fmt.Println(v)
 		return
 	}
-
-	return
 
 	config := settings.Settings()
 

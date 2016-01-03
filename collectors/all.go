@@ -147,16 +147,20 @@ func CollectSystem() AllMetricsStruct {
 
 	var machineID string
 	var InstanceID string
+	var ip string
+	var distro DistroStruct
 	go func() {
 		machineID = MachineID()
 	}()
-
 	go func() {
 		InstanceID = CloudID()
 	}()
-
-	distro := Distro()
-	ip := IPAddress()
+	go func() {
+		ip = IPAddress()
+	}()
+	go func() {
+		distro = Distro()
+	}()
 
 	hoststruct := HostDataStruct{
 		Host:       host,
