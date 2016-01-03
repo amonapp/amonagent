@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/amonapp/amonagent/plugins"
@@ -115,17 +116,22 @@ func ExecWithExitCode(command string) (CommandResult, error) {
 // Collect - XXX
 func (c *Checks) Collect(configPath string) (interface{}, error) {
 	c.SetConfigDefaults(configPath)
-
+	var wg sync.WaitGroup
 	var result []CommandResult
 	for _, v := range c.Config.Commands {
-		CheckResult, err := ExecWithExitCode(v)
-		if err != nil {
-			fmt.Println("Can't execute command: ", err)
-		}
+		wg.Add(1)
+		go func(v string) {
+			defer wg.Done()
+			CheckResult, err := ExecWithExitCode(v)
+			if err != nil {
+				fmt.Println("Can't execute command: ", err)
+			}
 
-		result = append(result, CheckResult)
+			result = append(result, CheckResult)
+		}(v)
 
 	}
+	wg.Wait()
 
 	return result, nil
 }

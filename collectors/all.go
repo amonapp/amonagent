@@ -60,7 +60,7 @@ type SystemDataStruct struct {
 // CollectPlugins - XXX
 func CollectPlugins() (interface{}, interface{}) {
 	PluginResults := make(map[string]interface{})
-	CheckResults := make(map[string]interface{})
+	var CheckResults interface{}
 	var wg sync.WaitGroup
 	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 	for _, p := range EnabledPlugins {
@@ -77,7 +77,7 @@ func CollectPlugins() (interface{}, interface{}) {
 
 				}
 				if p.Name == "checks" {
-					CheckResults["checks"] = PluginResult
+					CheckResults = PluginResult
 				} else {
 					PluginResults[p.Name] = PluginResult
 				}
@@ -94,13 +94,41 @@ func CollectPlugins() (interface{}, interface{}) {
 
 // CollectSystem - XXX
 func CollectSystem() AllMetricsStruct {
-	networkUsage, _ := NetworkUsage()
-	cpuUsage := CPUUsage()
-	Load := LoadAverage()
-	diskUsage, _ := DiskUsage()
-	Uptime := Uptime()
-	Memory := MemoryUsage()
-	Processes, _ := Processes()
+	var networkUsage NetworkUsageList
+	var cpuUsage CPUUsageStruct
+	var diskUsage DiskUsageList
+	var memoryUsage MemoryStruct
+	var UptimeString string
+	var ProcessesUsage ProcessesList
+	var Load LoadStruct
+
+	go func() {
+		networkUsage, _ = NetworkUsage()
+	}()
+	go func() {
+		cpuUsage = CPUUsage()
+	}()
+
+	go func() {
+		diskUsage, _ = DiskUsage()
+	}()
+
+	go func() {
+		memoryUsage = MemoryUsage()
+	}()
+
+	go func() {
+		UptimeString = Uptime()
+	}()
+
+	go func() {
+		ProcessesUsage, _ = Processes()
+	}()
+
+	go func() {
+		Load = LoadAverage()
+	}()
+
 	Plugins, Checks := CollectPlugins()
 
 	System := SystemDataStruct{
@@ -108,18 +136,27 @@ func CollectSystem() AllMetricsStruct {
 		Network: networkUsage,
 		Disk:    diskUsage,
 		Load:    Load,
-		Uptime:  Uptime,
-		Memory:  Memory,
+		Uptime:  UptimeString,
+		Memory:  memoryUsage,
 	}
 
 	// Load settings
 	settings := settings.Settings()
 
 	host := Host()
-	machineID := MachineID()
+
+	var machineID string
+	var InstanceID string
+	go func() {
+		machineID = MachineID()
+	}()
+
+	go func() {
+		InstanceID = CloudID()
+	}()
+
 	distro := Distro()
 	ip := IPAddress()
-	InstanceID := CloudID()
 
 	hoststruct := HostDataStruct{
 		Host:       host,
@@ -132,7 +169,7 @@ func CollectSystem() AllMetricsStruct {
 
 	allMetrics := AllMetricsStruct{
 		System:    System,
-		Processes: Processes,
+		Processes: ProcessesUsage,
 		Host:      hoststruct,
 		Plugins:   Plugins,
 		Checks:    Checks,

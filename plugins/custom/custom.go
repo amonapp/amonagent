@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
@@ -162,38 +163,44 @@ func (c *Custom) Description() string {
 // Collect - XXX
 func (c *Custom) Collect(configPath string) (interface{}, error) {
 	c.SetConfigDefaults(configPath)
-
+	var wg sync.WaitGroup
 	results := make(PerformanceStructBlock, 0)
 
 	for _, command := range c.Config.Commands {
+		wg.Add(1)
+		go func(command Command) {
+			defer wg.Done()
 
-		PerformanceStruct := PerformanceStruct{}
-		result, err := Run(&command)
+			PerformanceStruct := PerformanceStruct{}
+			result, err := Run(&command)
 
-		lines := strings.Split(result, "\n")
-		gauges := make(map[string]interface{})
-		counters := make(map[string]interface{})
-		for _, line := range lines {
-			metric, _ := ParseLine(line)
-			if metric.Type == "gauge" {
-				gauges[metric.Name] = metric.Value
+			lines := strings.Split(result, "\n")
+			gauges := make(map[string]interface{})
+			counters := make(map[string]interface{})
+			for _, line := range lines {
+				metric, _ := ParseLine(line)
+				if metric.Type == "gauge" {
+					gauges[metric.Name] = metric.Value
+				}
+
+				if metric.Type == "counter" {
+					counters[metric.Name] = metric.Value
+				}
 			}
 
-			if metric.Type == "counter" {
-				counters[metric.Name] = metric.Value
+			if err != nil {
+				fmt.Printf("Unable to execute command, %s", err)
 			}
-		}
 
-		if err != nil {
-			fmt.Printf("Unable to execute command, %s", err)
-		}
+			pluginName := "custom." + command.Name
+			PerformanceStruct.Gauges = gauges
+			PerformanceStruct.Counters = counters
+			results[pluginName] = PerformanceStruct
 
-		pluginName := "custom." + command.Name
-		PerformanceStruct.Gauges = gauges
-		PerformanceStruct.Counters = counters
-		results[pluginName] = PerformanceStruct
+		}(command)
 
 	}
+	wg.Wait()
 
 	return results, nil
 }

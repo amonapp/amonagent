@@ -82,7 +82,7 @@ func GetMetadataURL(provider string, url string) string {
 		return ""
 	}
 
-	client := &http.Client{Timeout: 3 * time.Second}
+	client := &http.Client{Timeout: 2 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return ""
@@ -107,11 +107,12 @@ func GetMetadataURL(provider string, url string) string {
 // CloudID - XXX
 func CloudID() string {
 	MetadataURLs := map[string]string{
-		"google":       "http://metadata.google.internal/computeMetadata/v1/instance/id",
+		"google":       "http://169.254.169.254/computeMetadata/v1/instance/id",
 		"amazon":       "http://169.254.169.254/latest/meta-data/instance-id",
 		"digitalocean": "http://169.254.169.254/metadata/v1/id",
 	}
 	var CloudID string
+
 	for provider, url := range MetadataURLs {
 		response := GetMetadataURL(provider, url)
 		if len(response) > 0 {
@@ -119,6 +120,7 @@ func CloudID() string {
 			break
 		}
 	}
+
 	return CloudID
 }
 
