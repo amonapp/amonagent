@@ -2,6 +2,7 @@ package remote
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,6 +13,11 @@ import (
 
 // DefaultTimeOut - 10 seconds
 var DefaultTimeOut = 10 * time.Second
+
+var tr = &http.Transport{
+	ResponseHeaderTimeout: DefaultTimeOut,
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // for self-signed certificates
+}
 
 // SystemURL - XXX
 func SystemURL() string {
@@ -31,7 +37,7 @@ func SendData(data interface{}) error {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(JSONBytes))
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: DefaultTimeOut}
+	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Can't connect to the Amon API on %s\n", err.Error())

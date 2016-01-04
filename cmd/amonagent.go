@@ -40,6 +40,13 @@ func ListPlugins() {
 	}
 }
 
+// Debug - XXX
+func Debug() {
+	result, _ := collectors.CollectPlugins()
+
+	fmt.Println(result)
+}
+
 func main() {
 	flag.Parse()
 

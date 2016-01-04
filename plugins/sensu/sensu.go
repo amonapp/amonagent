@@ -179,12 +179,13 @@ func (s *Sensu) Collect(configPath string) (interface{}, error) {
 	s.SetConfigDefaults(configPath)
 	var wg sync.WaitGroup
 	plugins := make(map[string]interface{})
-	var result []Metric
+
 	for _, command := range s.Config.Commands {
 		wg.Add(1)
 
 		go func(command string) {
 			defer wg.Done()
+			var result []Metric
 			gauges := make(map[string]interface{})
 			GaugesWrapper := make(map[string]interface{})
 			plugin := ""
