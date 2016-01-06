@@ -21,7 +21,7 @@ type Agent struct {
 // Test - XXX
 func (a *Agent) Test(config settings.Struct) error {
 
-	allMetrics := collectors.CollectSystem()
+	allMetrics := collectors.CollectAllData()
 
 	fmt.Println("\n------------------")
 	fmt.Println("\033[92mCollecting Metrics: \033[0m")
@@ -66,7 +66,7 @@ func (a *Agent) Test(config settings.Struct) error {
 // GatherAndSend - XXX
 func (a *Agent) GatherAndSend() error {
 
-	allMetrics := collectors.CollectSystem()
+	allMetrics := collectors.CollectAllData()
 	err := remote.SendData(allMetrics)
 	if err != nil {
 		return fmt.Errorf("Can't connect to the Amon API on %s\n", err.Error())

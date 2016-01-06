@@ -57,8 +57,8 @@ type SystemDataStruct struct {
 	Memory  MemoryStruct     `json:"memory"`
 }
 
-// CollectPlugins - XXX
-func CollectPlugins() (interface{}, interface{}) {
+// CollectPluginsData - XXX
+func CollectPluginsData() (interface{}, interface{}) {
 	PluginResults := make(map[string]interface{})
 	var CheckResults interface{}
 	var wg sync.WaitGroup
@@ -92,75 +92,36 @@ func CollectPlugins() (interface{}, interface{}) {
 	return PluginResults, CheckResults
 }
 
-// CollectSystem - XXX
-func CollectSystem() AllMetricsStruct {
-	var networkUsage NetworkUsageList
-	var cpuUsage CPUUsageStruct
-	var diskUsage DiskUsageList
-	var memoryUsage MemoryStruct
-	var UptimeString string
-	var ProcessesUsage ProcessesList
-	var Load LoadStruct
-
-	go func() {
-		networkUsage, _ = NetworkUsage()
-	}()
-	go func() {
-		cpuUsage = CPUUsage()
-	}()
-
-	go func() {
-		diskUsage, _ = DiskUsage()
-	}()
-
-	go func() {
-		memoryUsage = MemoryUsage()
-	}()
-
-	go func() {
-		UptimeString = Uptime()
-	}()
-
-	go func() {
-		ProcessesUsage, _ = Processes()
-	}()
-
-	go func() {
-		Load = LoadAverage()
-	}()
-
-	Plugins, Checks := CollectPlugins()
-
-	System := SystemDataStruct{
-		CPU:     cpuUsage,
-		Network: networkUsage,
-		Disk:    diskUsage,
-		Load:    Load,
-		Uptime:  UptimeString,
-		Memory:  memoryUsage,
-	}
-
-	// Load settings
-	settings := settings.Settings()
+// CollectHostData - XXX
+func CollectHostData() HostDataStruct {
 
 	host := Host()
+	// Load settings
+	settings := settings.Settings()
 
 	var machineID string
 	var InstanceID string
 	var ip string
 	var distro DistroStruct
+	var wg sync.WaitGroup
+	wg.Add(4)
 	go func() {
+		defer wg.Done()
 		machineID = MachineID()
 	}()
 	go func() {
+		defer wg.Done()
 		InstanceID = CloudID()
 	}()
 	go func() {
+		defer wg.Done()
 		ip = IPAddress()
 	}()
 	go func() {
+		defer wg.Done()
 		distro = Distro()
 	}()
+	wg.Wait()
 
 	hoststruct := HostDataStruct{
 		Host:       host,
@@ -171,10 +132,93 @@ func CollectSystem() AllMetricsStruct {
 		InstanceID: InstanceID,
 	}
 
+	return hoststruct
+}
+
+// CollectSystemData - XXX
+func CollectSystemData() SystemDataStruct {
+	var networkUsage NetworkUsageList
+	var cpuUsage CPUUsageStruct
+	var diskUsage DiskUsageList
+	var memoryUsage MemoryStruct
+	var UptimeString string
+	var Load LoadStruct
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		networkUsage, _ = NetworkUsage()
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		cpuUsage = CPUUsage()
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		diskUsage, _ = DiskUsage()
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		memoryUsage = MemoryUsage()
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		UptimeString = Uptime()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		Load = LoadAverage()
+	}()
+
+	wg.Wait()
+
+	SystemData := SystemDataStruct{
+		CPU:     cpuUsage,
+		Network: networkUsage,
+		Disk:    diskUsage,
+		Load:    Load,
+		Uptime:  UptimeString,
+		Memory:  memoryUsage,
+	}
+
+	return SystemData
+
+}
+
+// CollectProcessData - XXX
+func CollectProcessData() ProcessesList {
+	var ProcessesUsage ProcessesList
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ProcessesUsage, _ = Processes()
+	}()
+
+	wg.Wait()
+
+	return ProcessesUsage
+}
+
+// CollectAllData - XXX
+func CollectAllData() AllMetricsStruct {
+
+	ProcessesData := CollectProcessData()
+	SystemData := CollectSystemData()
+	Plugins, Checks := CollectPluginsData()
+	HostData := CollectHostData()
+
 	allMetrics := AllMetricsStruct{
-		System:    System,
-		Processes: ProcessesUsage,
-		Host:      hoststruct,
+		System:    SystemData,
+		Processes: ProcessesData,
+		Host:      HostData,
 		Plugins:   Plugins,
 		Checks:    Checks,
 	}

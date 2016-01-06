@@ -42,7 +42,7 @@ func ListPlugins() {
 
 // Debug - XXX
 func Debug() {
-	result, _ := collectors.CollectPlugins()
+	result := collectors.CollectSystemData()
 
 	fmt.Println(result)
 }

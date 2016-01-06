@@ -179,7 +179,6 @@ func (s *Sensu) Collect(configPath string) (interface{}, error) {
 	s.SetConfigDefaults(configPath)
 	var wg sync.WaitGroup
 	plugins := make(map[string]interface{})
-
 	for _, command := range s.Config.Commands {
 		wg.Add(1)
 
