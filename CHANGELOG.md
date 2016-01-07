@@ -1,6 +1,7 @@
 0.4 - 07.01.2016
 ==============
 
+* Collects all metrics in parallel
 * MySQL Plugin
 * PostgreSQL Plugin
 * MongoDB Plugin
