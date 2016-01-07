@@ -10,6 +10,7 @@
 * Sensu Plugin
 * Nginx Plugin
 * Apache Plugin
+* Health Checks Plugin
 * Can run health checks locally and send the results to Amon
 * Custom Plugin - you can write custom plugins in any language with just a couple lines of code.
 * New command line options - `list-plugins`, `test-plugin`, `plugin-config`
