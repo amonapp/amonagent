@@ -20,6 +20,12 @@ if [ ! -d /etc/opt/amonagent ]; then
 fi
 
 
+# Generate machine id if it does not exists
+if [ ! -f /etc/opt/amonagent/machine-id ]; then
+	dbus-uuidgen > /etc/opt/amonagent/machine-id
+fi
+
+
 # Systemd
 if which systemctl > /dev/null 2>&1 ; then
     cp /opt/amonagent/scripts/amonagent.service   /lib/systemd/system/amonagent.service

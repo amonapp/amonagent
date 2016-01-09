@@ -65,6 +65,7 @@ $(FPM_BUILD) -t deb \
 -n amonagent \
 -d "adduser" \
 -d "sysstat" \
+-d "dbus" \
 --post-install $(PACKAGING)/postinst \
 --post-uninstall $(PACKAGING)/postrm \
 --pre-uninstall  $(PACKAGING)/prerm \
@@ -79,6 +80,7 @@ build_rpm: clean install_base
 $(FPM_BUILD) -t rpm \
 -n "amonagent" \
 -d "sysstat" \
+-d "dbus" \
 --conflicts "amonagent < $(VERSION)" \
 --post-install	    $(PACKAGING)/postinst \
 --post-uninstall    $(PACKAGING)/postrm \

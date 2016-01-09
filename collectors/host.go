@@ -126,13 +126,19 @@ func CloudID() string {
 
 //MachineID - XXX
 func MachineID() string {
-	var machineidPath = "/var/lib/dbus/machine-id" // Default machine id path
+	var machineidPath = "/etc/opt/amonagent/machine-id" // Default machine id path, generated on first install
 	var MachineID string
 	if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
 		machineidPath = "/etc/machine-id"
-		// Does not exists, probably an older distro or docker container
+		// Does not exists, probably an older distro or docker container. TODO - REMOVE THIS IN FUTURE RELEASES
 		if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
-			machineidPath = ""
+
+			// Try one last path
+			var machineidPath = "/var/lib/dbus/machine-id"
+			if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
+				machineidPath = ""
+			}
+
 		}
 	}
 
