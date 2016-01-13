@@ -8,9 +8,10 @@ import (
 // conversion units
 const (
 	BYTE     = 1.0
-	KILOBYTE = 1024 * BYTE
-	MEGABYTE = 1024 * KILOBYTE
-	GIGABYTE = 1024 * MEGABYTE
+	KILOBYTE = float64(1024 * BYTE)
+	MEGABYTE = float64(1024 * KILOBYTE)
+	GIGABYTE = float64(1024 * MEGABYTE)
+	TERABYTE = float64(1024 * GIGABYTE)
 )
 
 // ConvertBytesTo and converts bytes to ..
@@ -47,6 +48,8 @@ func ConvertBytesFloatTo(s float64, convert string) (float64, error) {
 		bytes = s / MEGABYTE
 	case "gb":
 		bytes = s / GIGABYTE
+	case "tb":
+		bytes = s / TERABYTE
 	default:
 		bytes = s / BYTE
 	}
@@ -66,4 +69,12 @@ func FloatDecimalPoint(num float64, precision int) (float64, error) {
 	decimal = float64(round(num*output)) / output
 
 	return decimal, nil
+}
+
+// FloatToString - XXX
+func FloatToString(num float64) (string, error) {
+
+	f := strconv.FormatFloat(num, 'f', 2, 64)
+
+	return f, nil
 }

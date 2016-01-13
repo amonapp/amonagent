@@ -42,12 +42,13 @@ func ListPlugins() {
 
 // Debug - XXX
 func Debug() {
-	result := collectors.CollectSystemData()
+	result := collectors.CollectProcessData()
 
 	fmt.Println(result)
 }
 
 func main() {
+
 	flag.Parse()
 
 	if *fListPlugins {

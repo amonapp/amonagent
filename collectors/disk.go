@@ -30,9 +30,9 @@ type DiskUsageStruct struct {
 	Name        string  `json:"name"`
 	Path        string  `json:"path"`
 	Fstype      string  `json:"fstype"`
-	Total       float64 `json:"total"`
-	Free        float64 `json:"free"`
-	Used        float64 `json:"used"`
+	Total       string  `json:"total"`
+	Free        string  `json:"free"`
+	Used        string  `json:"used"`
 	UsedPercent float64 `json:"percent"`
 }
 
@@ -112,13 +112,17 @@ func DiskUsage() (DiskUsageList, error) {
 					UsedPercent, _ = util.FloatDecimalPoint(UsedPercent, 2)
 					DeviceName := strings.Replace(p.Device, "/dev/", "", -1)
 
+					TotalMBFormatted, _ := util.FloatToString(TotalMB)
+					FreeMBFormatted, _ := util.FloatToString(FreeMB)
+					UsedMBFormatted, _ := util.FloatToString(UsedMB)
+
 					d := DiskUsageStruct{
 						Name:        DeviceName,
 						Path:        du.Path,
 						Fstype:      du.Fstype,
-						Total:       TotalMB,
-						Free:        FreeMB,
-						Used:        UsedMB,
+						Total:       TotalMBFormatted,
+						Free:        FreeMBFormatted,
+						Used:        UsedMBFormatted,
 						UsedPercent: UsedPercent,
 					}
 

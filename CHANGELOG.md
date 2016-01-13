@@ -1,3 +1,9 @@
+0.4.3 - 13.01.2016
+==============
+
+* Properly format process memory metric
+* Properly format disc metrics for values bigger than Terrabyte
+
 0.4.2 - 09.01.2016
 ==============
 

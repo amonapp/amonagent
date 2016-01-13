@@ -22,7 +22,7 @@ func (p ProcessStruct) String() string {
 // ProcessStruct - individual process data
 type ProcessStruct struct {
 	CPU     float64 `json:"cpu"`
-	Memory  float64 `json:"memory_mb"`
+	Memory  string  `json:"memory_mb"`
 	KBRead  float64 `json:"kb_read"`
 	KBWrite float64 `json:"kb_write"`
 	Name    string  `json:"name"`
@@ -125,9 +125,11 @@ func Processes() (ProcessesList, error) {
 							if processNameIndex != -1 {
 								processName := processData[processNameIndex]
 
+								formattedprocessMemoryMB, _ := util.FloatToString(processMemoryMB)
+
 								c := ProcessStruct{
 									CPU:     cpuPercenttoINT,
-									Memory:  processMemoryMB,
+									Memory:  formattedprocessMemoryMB,
 									Name:    processName,
 									KBRead:  ReadKBytes,
 									KBWrite: WriteKBytes,
