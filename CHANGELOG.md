@@ -1,3 +1,8 @@
+0.4.4 - 15.01.2016
+==============
+
+* Recompile with Go 1.5.3(Fixes security-related issue in Go) - https://groups.google.com/forum/#!topic/golang-dev/MEATuOi_ei4 
+
 0.4.3 - 13.01.2016
 ==============
 
