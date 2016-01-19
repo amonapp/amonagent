@@ -260,6 +260,7 @@ func (m *MySQL) Collect(configPath string) (interface{}, error) {
 			fields = append(fields, table)
 			fields = append(fields, database)
 			fields = append(fields, rows)
+			fields = append(fields, fullName)
 			fields = append(fields, size)
 			fields = append(fields, indexes)
 			fields = append(fields, total)

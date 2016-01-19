@@ -19,6 +19,11 @@ if [ ! -d /etc/opt/amonagent ]; then
     mkdir -p /etc/opt/amonagent
 fi
 
+# Make sure the pid directory exists
+if [ ! -d /var/run/amonagent ]; then
+    mkdir -p /var/run/amonagent
+fi
+
 
 # Generate machine id if it does not exists
 if [ ! -f /etc/opt/amonagent/machine-id ]; then
@@ -70,4 +75,5 @@ else
 fi
 
 chown -R -L amonagent:amonagent /opt/amonagent
+chown -R amonagent:amonagent /var/run/amonagent
 chmod -R a+rX /opt/amonagent
