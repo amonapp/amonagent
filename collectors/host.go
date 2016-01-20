@@ -74,6 +74,8 @@ func Distro() DistroStruct {
 
 // GetMetadataURL - XXX
 func GetMetadataURL(provider string, url string) string {
+	tr := &http.Transport{DisableKeepAlives: true}
+
 	req, RequestErr := http.NewRequest("GET", url, nil)
 	if provider == "google" {
 		req.Header.Set("Metadata-Flavor", "Google")
@@ -82,7 +84,7 @@ func GetMetadataURL(provider string, url string) string {
 		return ""
 	}
 
-	client := &http.Client{Timeout: 2 * time.Second}
+	client := &http.Client{Timeout: 2 * time.Second, Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
 		return ""

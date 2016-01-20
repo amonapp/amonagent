@@ -68,12 +68,11 @@ else
     echo ""
     echo "###"
 
-
-    mkdir -p /var/log/amonagent
-    chown -R -L amonagent:amonagent /var/log/amonagent
-
 fi
 
 chown -R -L amonagent:amonagent /opt/amonagent
 chown -R amonagent:amonagent /var/run/amonagent
 chmod -R a+rX /opt/amonagent
+
+mkdir -p /var/log/amonagent
+chown -R -L amonagent:amonagent /var/log/amonagent

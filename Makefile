@@ -28,6 +28,10 @@ install_repo_base:
 	sudo apt-get install reprepro createrepo -y --force-yes
 
 
+update_dep:
+	godep save
+	godep update github.com/shirou/...
+
 build:
 	godep go build -o amonagent -ldflags \
 		"-X main.Version=$(VERSION)" \

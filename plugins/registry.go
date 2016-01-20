@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -43,6 +44,8 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 			if len(fileName) == 2 && fileName[0] == plugin {
 				config.Path = path
 				config.Name = fileName[0]
+			} else {
+				return fmt.Errorf("Can't find config file for %s", f.Name())
 			}
 
 		}

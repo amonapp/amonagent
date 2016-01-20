@@ -23,10 +23,39 @@ func (a *Agent) Test(config settings.Struct) error {
 
 	allMetrics := collectors.CollectAllData()
 
+	ProcessesData := collectors.CollectProcessData()
+	SystemData := collectors.CollectSystemData()
+	Plugins, Checks := collectors.CollectPluginsData()
+	HostData := collectors.CollectHostData()
+
 	fmt.Println("\n------------------")
-	fmt.Println("\033[92mCollecting Metrics: \033[0m")
+	fmt.Println("\033[92mSystem Metrics: \033[0m")
 	fmt.Println("")
-	fmt.Println(allMetrics)
+	fmt.Println(SystemData)
+	fmt.Println("\n------------------")
+
+	fmt.Println("\n------------------")
+	fmt.Println("\033[92mProcess Metrics: \033[0m")
+	fmt.Println("")
+	fmt.Println(ProcessesData)
+	fmt.Println("\n------------------")
+
+	fmt.Println("\n------------------")
+	fmt.Println("\033[92mPlugins: \033[0m")
+	fmt.Println("")
+	fmt.Println(Plugins)
+	fmt.Println("\n------------------")
+
+	fmt.Println("\n------------------")
+	fmt.Println("\033[92mChecks: \033[0m")
+	fmt.Println("")
+	fmt.Println(Checks)
+	fmt.Println("\n------------------")
+
+	fmt.Println("\n------------------")
+	fmt.Println("\033[92mHost Data: \033[0m")
+	fmt.Println("")
+	fmt.Println(HostData)
 	fmt.Println("\n------------------")
 
 	fmt.Println("\033[92mTesting settings: \033[0m")
@@ -48,12 +77,13 @@ func (a *Agent) Test(config settings.Struct) error {
 		fmt.Println("Or alternatively, you can 'Add Server' from the Amon Interface and paste the Server Key value")
 		fmt.Println("as server_key in /etc/opt/amonagent.conf")
 
+	} else {
+		fmt.Println("Settings OK")
 	}
 
 	fmt.Println("\n------------------")
 
-	url := remote.SystemURL()
-	fmt.Printf("\033[92m\nSending data to %s \033[0m", url)
+	// url := remote.SystemURL()
 
 	err := remote.SendData(allMetrics)
 	if err != nil {
@@ -65,12 +95,14 @@ func (a *Agent) Test(config settings.Struct) error {
 
 // GatherAndSend - XXX
 func (a *Agent) GatherAndSend() error {
-
 	allMetrics := collectors.CollectAllData()
+	agentLogger.Info("Metrics collected (Interval:%s)\n", a.Interval)
+
 	err := remote.SendData(allMetrics)
 	if err != nil {
 		return fmt.Errorf("Can't connect to the Amon API on %s\n", err.Error())
 	}
+
 	return nil
 }
 
@@ -91,11 +123,8 @@ func (a *Agent) Run(shutdown chan struct{}) error {
 	ticker := time.NewTicker(a.Interval)
 
 	for {
-
 		if err := a.GatherAndSend(); err != nil {
 			agentLogger.Info("Flusher routine failed, exiting: %s\n", err.Error())
-		} else {
-			agentLogger.Info("Collecting and sending data:%s\n", a.Interval)
 		}
 		select {
 		case <-shutdown:

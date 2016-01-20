@@ -3,11 +3,12 @@
 package net
 
 import (
+	"errors"
 	"os/exec"
 	"strconv"
 	"strings"
 
-	"github.com/shirou/gopsutil/common"
+	"github.com/shirou/gopsutil/internal/common"
 )
 
 // example of netstat -idbn output on yosemite
@@ -16,7 +17,7 @@ import (
 // lo0   16384 ::1/128     ::1                 869107     -  169411755   869107     -  169411755     -   -
 // lo0   16384 127           127.0.0.1         869107     -  169411755   869107     -  169411755     -   -
 func NetIOCounters(pernic bool) ([]NetIOCountersStat, error) {
-	out, err := exec.Command("/usr/sbin/netstat", "-ibdn").Output()
+	out, err := exec.Command("/usr/sbin/netstat", "-ibdnW").Output()
 	if err != nil {
 		return nil, err
 	}
@@ -89,4 +90,12 @@ func NetIOCounters(pernic bool) ([]NetIOCountersStat, error) {
 	}
 
 	return ret, nil
+}
+
+// NetProtoCounters returns network statistics for the entire system
+// If protocols is empty then all protocols are returned, otherwise
+// just the protocols in the list are returned.
+// Not Implemented for Darwin
+func NetProtoCounters(protocols []string) ([]NetProtoCountersStat, error) {
+	return nil, errors.New("NetProtoCounters not implemented for darwin")
 }

@@ -345,7 +345,7 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 	for SlowQueriesRows.Next() {
 
 		var Calls int64
-		var Total int64
+		var Total float64
 		var PerCall float64
 		var Query string
 

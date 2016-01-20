@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/shirou/gopsutil/common"
+	"github.com/shirou/gopsutil/internal/common"
 )
 
 var invoke common.Invoker
@@ -45,6 +45,12 @@ type NetConnectionStat struct {
 	Pid    int32  `json:"pid"`
 }
 
+// System wide stats about different network protocols
+type NetProtoCountersStat struct {
+	Protocol string           `json:"protocol"`
+	Stats    map[string]int64 `json:"stats"`
+}
+
 // NetInterfaceAddr is designed for represent interface addresses
 type NetInterfaceAddr struct {
 	Addr string `json:"addr"`
@@ -56,6 +62,11 @@ type NetInterfaceStat struct {
 	HardwareAddr string             `json:"hardwareaddr"` // IEEE MAC-48, EUI-48 and EUI-64 form
 	Flags        []string           `json:"flags"`        // e.g., FlagUp, FlagLoopback, FlagMulticast
 	Addrs        []NetInterfaceAddr `json:"addrs"`
+}
+
+type NetFilterStat struct {
+	ConnTrackCount int64 `json:"conntrack_count"`
+	ConnTrackMax   int64 `json:"conntrack_max"`
 }
 
 var constMap = map[string]int{
@@ -71,6 +82,11 @@ func (n NetIOCountersStat) String() string {
 }
 
 func (n NetConnectionStat) String() string {
+	s, _ := json.Marshal(n)
+	return string(s)
+}
+
+func (n NetProtoCountersStat) String() string {
 	s, _ := json.Marshal(n)
 	return string(s)
 }

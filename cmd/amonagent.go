@@ -34,7 +34,7 @@ var Version string
 // ListPlugins -- XXX
 func ListPlugins() {
 	allPlugins := plugins.Plugins
-	fmt.Println("Available plugins:")
+	fmt.Println("\033[92m \nAvailable plugins: \033[0m")
 	for r := range allPlugins {
 		fmt.Println(r)
 	}
@@ -42,13 +42,12 @@ func ListPlugins() {
 
 // Debug - XXX
 func Debug() {
-	result := collectors.CollectProcessData()
 
-	fmt.Println(result)
+	// Plugins, _ := collectors.CollectPluginsData()
+
 }
 
 func main() {
-
 	flag.Parse()
 
 	if *fListPlugins {
@@ -71,7 +70,12 @@ func main() {
 	}
 
 	if len(*fTestPlugin) > 0 {
-		pluginConfig, _ := plugins.GetConfigPath(*fTestPlugin)
+		pluginConfig, err := plugins.GetConfigPath(*fTestPlugin)
+
+		if err != nil {
+			fmt.Printf("Can't get config file for plugin: %s", err)
+		}
+
 		creator, ok := plugins.Plugins[pluginConfig.Name]
 		if ok {
 			plugin := creator()
@@ -81,10 +85,11 @@ func main() {
 			}
 			fmt.Println(PluginResult)
 		} else {
-			fmt.Printf("Non existing plugin: %s", pluginConfig.Name)
+			fmt.Printf("\033[91mNon existing plugin: %s or missing config file in /etc/opt/amonagent/plugins-enabled/%s.conf \033[0m", *fTestPlugin, *fTestPlugin)
 			ListPlugins()
 		}
 		return
+		// [0;31m
 	}
 
 	if *fVersion {
