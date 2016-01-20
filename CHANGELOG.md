@@ -1,3 +1,10 @@
+0.4.6 - 20.01.2016
+==============
+
+* Postinst script fixes
+* Improved test command
+* PostgreSQL plugin - slow queries parser fix
+
 0.4.5 - 19.01.2016
 ==============
 
