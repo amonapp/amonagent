@@ -48,6 +48,7 @@ func Debug() {
 }
 
 func main() {
+
 	flag.Parse()
 
 	if *fListPlugins {

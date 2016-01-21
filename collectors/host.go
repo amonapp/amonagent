@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	pshost "github.com/shirou/gopsutil/host"
@@ -74,7 +75,8 @@ func Distro() DistroStruct {
 
 // GetMetadataURL - XXX
 func GetMetadataURL(provider string, url string) string {
-	tr := &http.Transport{DisableKeepAlives: true}
+	transport := &http.Transport{DisableKeepAlives: true}
+	timeout := 2 * time.Second
 
 	req, RequestErr := http.NewRequest("GET", url, nil)
 	if provider == "google" {
@@ -84,7 +86,14 @@ func GetMetadataURL(provider string, url string) string {
 		return ""
 	}
 
-	client := &http.Client{Timeout: 2 * time.Second, Transport: tr}
+	client := &http.Client{Transport: transport}
+
+	timer := time.AfterFunc(timeout, func() {
+		transport.CancelRequest(req)
+		fmt.Println(url, "Metadata URL time out")
+	})
+	defer timer.Stop()
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return ""
@@ -114,14 +123,22 @@ func CloudID() string {
 		"digitalocean": "http://169.254.169.254/metadata/v1/id",
 	}
 	var CloudID string
-
+	wg := sync.WaitGroup{}
 	for provider, url := range MetadataURLs {
-		response := GetMetadataURL(provider, url)
-		if len(response) > 0 {
-			CloudID = response
-			break
-		}
+		wg.Add(1)
+
+		go func(provider string, url string) {
+			defer wg.Done()
+			response := GetMetadataURL(provider, url)
+			if len(response) > 0 {
+				CloudID = response
+			}
+
+		}(provider, url)
+
 	}
+
+	wg.Wait()
 
 	return CloudID
 }

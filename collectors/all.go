@@ -103,25 +103,11 @@ func CollectHostData() HostDataStruct {
 	var InstanceID string
 	var ip string
 	var distro DistroStruct
-	var wg sync.WaitGroup
-	wg.Add(4)
-	go func() {
-		defer wg.Done()
-		machineID = MachineID()
-	}()
-	go func() {
-		defer wg.Done()
-		InstanceID = CloudID()
-	}()
-	go func() {
-		defer wg.Done()
-		ip = IPAddress()
-	}()
-	go func() {
-		defer wg.Done()
-		distro = Distro()
-	}()
-	wg.Wait()
+
+	machineID = MachineID()
+	InstanceID = CloudID()
+	ip = IPAddress()
+	distro = Distro()
 
 	hoststruct := HostDataStruct{
 		Host:       host,
