@@ -1,3 +1,8 @@
+0.48 - 22.01.2016
+==============
+
+* Fixes an issue where the agent will hang and not send data on specific servers
+
 0.4.7 - 21.01.2016
 ==============
 
