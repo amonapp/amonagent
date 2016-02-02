@@ -42,11 +42,14 @@ func ListPlugins() {
 
 // Debug - XXX
 func Debug() {
-	cpu := collectors.CPUUsage()
+	cpu, _ := collectors.CollectPluginsData()
 	fmt.Println(cpu)
 }
 
 func main() {
+
+	// Debug()
+	// return
 	flag.Parse()
 
 	if *fListPlugins {
