@@ -1,4 +1,9 @@
-0.48 - 22.01.2016
+0.4.9 - 03.02.2016
+==============
+
+* Telegraf Plugin
+
+0.4.8 - 22.01.2016
 ==============
 
 * Fixes an issue where the agent will hang and not send data on specific servers
