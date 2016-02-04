@@ -1,7 +1,28 @@
 {
 	"ImportPath": "github.com/amonapp/amonagent",
 	"GoVersion": "go1.5.3",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.2-118-g3dd7008",
+			"Rev": "3dd7008ac1529aca1bcd8a9db75228a71ba23cac"
+		},
+		{
+			"ImportPath": "github.com/gonuts/go-shellquote",
+			"Rev": "e842a11b24c6abfb3dd27af69a17f482e4b483c2"
+		},
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Comment": "go1.0-cutoff-59-gb269bd0",
+			"Rev": "b269bd035a727d6c1081f76e7a239a1b00674c40"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "281073eb9eb092240d33ef253c404f1cca550309"
+		},
 		{
 			"ImportPath": "github.com/shirou/gopsutil/cpu",
 			"Comment": "1.0.0-238-g85bf097",
@@ -36,6 +57,24 @@
 			"ImportPath": "github.com/shirou/gopsutil/net",
 			"Comment": "1.0.0-238-g85bf097",
 			"Rev": "85bf0974ed06e4e668595ae2b4de02e772a2819b"
+		},
+		{
+			"ImportPath": "gopkg.in/bsm/ratelimit.v1",
+			"Rev": "f14ad9c78b155f69b480cfa41cb655259baac260"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Comment": "r2015.06.03-3-g3569c88",
+			"Rev": "3569c88678d88179dcbd68d02ab081cbca3cd4d0"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v3",
+			"Comment": "v3.2.23",
+			"Rev": "ba44d4d158d4f08b4271966798f81e1d1d9b3ba3"
+		},
+		{
+			"ImportPath": "gopkg.in/tomb.v2",
+			"Rev": "14b3d72120e8d10ea6e6b7f87f7175734b1faab8"
 		}
 	]
 }
