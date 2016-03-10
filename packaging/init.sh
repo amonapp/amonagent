@@ -22,7 +22,7 @@ NAME="amonagent"
 GROUP="amonagent"
 PIDFILE="/var/run/amonagent/amonagent.pid"
 PIDPATH=`dirname $PIDFILE`
-CONFING="/etc/opt/amonagent/amonagent.conf"
+CONFIG="/etc/opt/amonagent/amonagent.conf"
 
 [ -f $AGENTPATH ] || echo "$AGENTPATH not found"
 
