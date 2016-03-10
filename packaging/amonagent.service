@@ -5,14 +5,10 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-EnvironmentFile=/etc/default/amonagent
+EnvironmentFile=-/etc/default/amonagent
 ExecStart=/opt/amonagent/amonagent -pidfile /var/run/amonagent/amonagent.pid
 Restart=on-failure
 User=amonagent
-Group=amonagent
-PermissionsStartOnly=true
-ExecStartPre=-mkdir -p /var/run/amonagent
-ExecStartPre=-chown -R amonagent:amonagent /var/run/amonagent/
 KillMode=process
 
 [Install]
