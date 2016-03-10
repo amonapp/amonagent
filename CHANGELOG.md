@@ -1,6 +1,7 @@
 0.5 - 10.03.2016
 ==============
 
+* Remove Metadata URL print statement
 * Systemd fixes
 * Recompile with Go 1.6
 

@@ -90,7 +90,6 @@ func GetMetadataURL(provider string, url string) string {
 
 	timer := time.AfterFunc(timeout, func() {
 		transport.CancelRequest(req)
-		fmt.Println(url, "Metadata URL time out")
 	})
 	defer timer.Stop()
 
