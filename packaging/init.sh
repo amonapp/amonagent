@@ -16,7 +16,7 @@
 # Description:       Amon agent - collects system and process information.
 ### END INIT INFO
 
-DAEMON='/opt/amonagent/amonagent'
+DAEMON='/usr/bin/amonagent'
 USER="amonagent"
 NAME="amonagent"
 GROUP="amonagent"
