@@ -1,6 +1,7 @@
-0.5 - 10.03.2016
+0.5 - 30.03.2016
 ==============
 
+* Move the binary to /usr/bin/amonagent for easier management
 * Remove Metadata URL print statement
 * Systemd fixes
 * Recompile with Go 1.6

@@ -1,26 +1,15 @@
-case "$*" in
-  0)
-    # We're uninstalling.
+#!/bin/bash
 
-    # kill all of the user processes
-    ps -u amonagent | grep -v PID | awk '{print $1}' | xargs -i kill {}
-    sleep 2
-    ps -u amonagent | grep -v PID | awk '{print $1}' | xargs -i kill {}
+BIN_DIR=/usr/bin
 
-    # Systemd
-    if which systemctl > /dev/null 2>&1 ; then
-        systemctl stop amonagent
-    # Sysv
+# Distribution-specific logic
+if [[ -f /etc/debian_version ]]; then
+    # Debian/Ubuntu logic
+    which systemctl &>/dev/null
+    if [[ $? -eq 0 ]]; then
+    deb-systemd-invoke stop amonagent.service
     else
-        service amonagent stop
+    # Assuming sysv
+    invoke-rc.d amonagent stop
     fi
-
-    ;;
-  1)
-    # We're upgrading. Do nothing.
-    ;;
-  *)
-    ;;
-esac
-
-exit 0
+fi

@@ -1,37 +1,46 @@
-#! /bin/sh
+#!/bin/bash
 
-case "$*" in
-  0)
-    # We're uninstalling.
-    # Systemd
-    if which systemctl > /dev/null 2>&1 ; then
-        systemctl disable amonagent
-    # Sysv
-    else
+function disable_systemd {
+    systemctl disable amonagent
+    rm -f /lib/systemd/system/amonagent.service
+}
 
-        # update-rc.d sysv service:
-        if which update-rc.d > /dev/null 2>&1 ; then
-            update-rc.d -f amonagent remove
-            update-rc.d amonagent stop
-        # CentOS-style sysv:
-        else
-            chkconfig --del amonagent
-        fi
+function disable_update_rcd {
+    update-rc.d -f amonagent remove
+    rm -f /etc/init.d/amonagent
+}
+
+function disable_chkconfig {
+    chkconfig --del amonagent
+    rm -f /etc/init.d/amonagent
+}
+
+if [[ -f /etc/redhat-release ]]; then
+    # RHEL-variant logic
+    if [[ "$1" = "0" ]]; then
+  # InfluxDB is no longer installed, remove from init system
+  rm -f /etc/default/amonagent
+  
+  which systemctl &>/dev/null
+  if [[ $? -eq 0 ]]; then
+      disable_systemd
+  else
+      # Assuming sysv
+      disable_chkconfig
+  fi
     fi
-
-   	  getent passwd amonagent >/dev/null && userdel  amonagent
-	  getent group  amonagent >/dev/null && groupdel amonagent
-
-      # Remove config
-      rm -rf /etc/opt/amonagent
-      # Remove binary
-      rm -rf /opt/amonagent
-    ;;
-  1)
-    # We're upgrading.
-    ;;
-  *)
-    ;;
-esac
-
-exit 0
+elif [[ -f /etc/debian_version ]]; then
+    # Debian/Ubuntu logic
+    if [[ "$1" != "upgrade" ]]; then
+      # Remove/purge
+      rm -f /etc/default/amonagent
+  
+      which systemctl &>/dev/null
+      if [[ $? -eq 0 ]]; then
+          disable_systemd
+      else
+          # Assuming sysv
+          disable_update_rcd
+      fi
+    fi
+fi

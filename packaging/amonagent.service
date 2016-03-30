@@ -1,14 +1,13 @@
 [Unit]
 Description=Starts and stops amonagent
 Documentation=https://www.amon.cx/docs
-Wants=network-online.target
-After=network-online.target
+After=network.target
 
 [Service]
 EnvironmentFile=-/etc/default/amonagent
-ExecStart=/opt/amonagent/amonagent -pidfile /var/run/amonagent/amonagent.pid
-Restart=on-failure
 User=amonagent
+ExecStart=/usr/bin/amonagent -pidfile /var/run/amonagent/amonagent.pid
+Restart=on-failure
 KillMode=process
 
 [Install]

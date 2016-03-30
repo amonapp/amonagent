@@ -44,9 +44,9 @@ install_base: build
 	mkdir -p $(BUILD)
 	mkdir -p $(BUILD)/etc/opt/amonagent
 	mkdir -p $(BUILD)/etc/opt/amonagent/plugins-enabled
-	mkdir -p $(BUILD)/opt/amonagent
+	mkdir -p $(BUILD)/usr/bin
 
-	cp amonagent $(BUILD)/opt/amonagent/amonagent
+	cp amonagent $(BUILD)/usr/bin/amonagent
 
 	mkdir -p $(BUILD)/var/log/amonagent
 	chmod 755 $(BUILD)/var/log/amonagent
@@ -105,6 +105,12 @@ deploy: update_debian_repo update_rpm_repo
 	aws s3 sync $(PACKAGES_PATH)/debian/repo s3://packages.amon.cx/repo --region=eu-west-1
 	aws s3 sync $(PACKAGES_PATH)/centos s3://packages.amon.cx/rpm --region=eu-west-1
 
+
+deploy_beta: update_debian_repo update_rpm_repo
+	sudo ntpdate -u pool.ntp.org
+	aws s3 sync $(PACKAGES_PATH)/debian/repo s3://packages.amon.cx/repo --region=eu-west-1
+	aws s3 sync $(PACKAGES_PATH)/centos s3://packages.amon.cx/rpm --region=eu-west-1
+
 upload:
 	sudo ntpdate -u pool.ntp.org
 	aws s3 sync $(PACKAGES_PATH)/debian s3://packages.amon.cx/repo/ --region=eu-west-1
@@ -112,6 +118,7 @@ upload:
 
 
 build_and_deploy: build_all deploy
+build_and_deploy_beta: build_all deploy_beta
 
 test_ubuntu_container:
 	cp $(PACKAGING)/containers/Dockerfile.ubuntu.1404 Dockerfile
