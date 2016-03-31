@@ -106,10 +106,6 @@ deploy: update_debian_repo update_rpm_repo
 	aws s3 sync $(PACKAGES_PATH)/centos s3://packages.amon.cx/rpm --region=eu-west-1
 
 
-deploy_beta: update_debian_repo update_rpm_repo
-	sudo ntpdate -u pool.ntp.org
-	aws s3 sync $(PACKAGES_PATH)/debian/repo s3://beta.packages.amon.cx/repo --region=eu-west-1
-	aws s3 sync $(PACKAGES_PATH)/centos s3://beta.packages.amon.cx/rpm --region=eu-west-1
 
 upload:
 	sudo ntpdate -u pool.ntp.org
@@ -118,27 +114,11 @@ upload:
 
 
 build_and_deploy: build_all deploy
-build_and_deploy_beta: build_all deploy_beta
 
-test_ubuntu_container:
-	cp $(PACKAGING)/containers/Dockerfile.ubuntu.1404 Dockerfile
-	sed -i s/AMON_DEB_FILE/"$(DEBIAN_PACKAGE_NAME)"/g Dockerfile
-	docker build --force-rm=true --rm=true --no-cache .
-	rm Dockerfile
-	docker rmi $$(docker images -q --filter dangling=true)
-
-centos6_container:
-	cp $(PACKAGING)/containers/Dockerfile.centos6 Dockerfile
-	sed -i s/AMON_RPM_FILE/"$(CENTOS_PACKAGE_NAME)"/g Dockerfile
-	docker build --force-rm=true --rm=true --no-cache .
-	rm Dockerfile
-	docker rmi $$(docker images -q --filter dangling=true)
-
-
-
-test_debian: build_deb
-	cp $(PACKAGING)/debian/Dockerfile Dockerfile
-	sed -i s/AMON_DEB_FILE/"$(DEBIAN_PACKAGE_NAME)"/g Dockerfile
-	docker build --rm=true --no-cache -t=amonagent-$(VERSION) .
-	rm Dockerfile
-	docker rmi $$(docker images -q --filter dangling=true)
+upload_packages: build_all 
+	sudo ntpdate -u pool.ntp.org
+	
+	find . -iname "*.deb*" -execdir mv {} amonagent.deb \;
+	find . -iname "*.rpm*" -execdir mv {} amonagent.rpm \;
+	aws s3 cp amonagent.deb s3://amonagent-test --region=eu-west-1
+	aws s3 cp amonagent.rpm s3://amonagent-test --region=eu-west-1

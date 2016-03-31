@@ -1,0 +1,3 @@
+amonagent:
+  enabled: true
+  running: true

@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 
-ADD amonagent_0.3_all.deb var/agent.deb
+ADD amonagent_0.5-1-g8b8581a_all.deb var/agent.deb
 
 # Install dependecy
 RUN apt-get install -y sysstat
