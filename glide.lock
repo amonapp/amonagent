@@ -1,0 +1,47 @@
+hash: f8da839d8b6326f9fd041526a39ee43b7530d3b669f5d8a3b4fa00d144056b04
+updated: 2016-04-23T14:42:44.670587215+02:00
+imports:
+- name: github.com/go-ole/go-ole
+  version: 572eabb84c424e76a0d39d31510dd7dfd62f70b2
+  subpackages:
+  - oleutil
+- name: github.com/go-sql-driver/mysql
+  version: 7ebe0a500653eeb1859664bed5e48dec1e164e73
+- name: github.com/gonuts/go-shellquote
+  version: e842a11b24c6abfb3dd27af69a17f482e4b483c2
+- name: github.com/lib/pq
+  version: 3cd0097429be7d611bb644ef85b42bfb102ceea4
+  subpackages:
+  - oid
+- name: github.com/mitchellh/mapstructure
+  version: d2dd0262208475919e1a362f675cfc0e7c10e905
+- name: github.com/shirou/gopsutil
+  version: 85bf0974ed06e4e668595ae2b4de02e772a2819b
+  subpackages:
+  - cpu
+  - disk
+  - host
+  - internal/common
+  - load
+  - mem
+  - net
+  - process
+- name: github.com/shirou/w32
+  version: 3c9377fc6748f222729a8270fe2775d149a249ad
+- name: github.com/StackExchange/wmi
+  version: f3e2bae1e0cb5aef83e319133eabfee30013a4a5
+- name: gopkg.in/bsm/ratelimit.v1
+  version: db14e161995a5177acef654cb0dd785e8ee8bc22
+- name: gopkg.in/mgo.v2
+  version: b6e2fa371e64216a45e61072a96d4e3859f169da
+  subpackages:
+  - bson
+  - internal/sasl
+  - internal/scram
+- name: gopkg.in/redis.v3
+  version: b3514029955f38f2a1120b5c3ad59f241d9eecca
+  subpackages:
+  - internal/consistenthash
+  - internal/hashtag
+  - internal/pool
+devImports: []
