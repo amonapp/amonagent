@@ -7,26 +7,26 @@ function install_init {
     cp -f $SCRIPT_DIR/init.sh /etc/init.d/amonagent
     chmod +x /etc/init.d/amonagent
 
-	echo "### You can start amonagent by executing"
+    echo "### You can start amonagent by executing"
     echo ""
     echo " sudo systemctl start amonagent"
     echo ""
     echo "###"
 
-	systemctl restart amonagent
+    systemctl restart amonagent
 }
 
 function install_systemd {
     cp -f $SCRIPT_DIR/amonagent.service /lib/systemd/system/amonagent.service
-    systemctl enable amonagent
-
-	echo "### You can start amonagent by executing"
+    systemctl enable amonagent || true
+    systemctl daemon-reload || true
+    echo "### You can start amonagent by executing"
     echo ""
     echo "sudo service amonagent start"
     echo ""
     echo "###"
 
-	service amonagent restart
+    service amonagent restart
 }
 
 function install_update_rcd {
@@ -72,7 +72,7 @@ chmod 775 /var/run/amonagent
 
 # Generate machine id if it does not exists
 if [ ! -f /etc/opt/amonagent/machine-id ]; then
-	dbus-uuidgen > /etc/opt/amonagent/machine-id
+    dbus-uuidgen > /etc/opt/amonagent/machine-id
 fi
 
 # Distribution-specific logic
@@ -80,27 +80,27 @@ if [[ -f /etc/redhat-release ]]; then
     # RHEL-variant logic
     which systemctl &>/dev/null
     if [[ $? -eq 0 ]]; then
-	install_systemd
+       install_systemd
     else
-	# Assuming sysv
-	install_init
-	install_chkconfig
+       # Assuming sysv
+       install_init
+       install_chkconfig
     fi
 elif [[ -f /etc/debian_version ]]; then
     # Debian/Ubuntu logic
     which systemctl &>/dev/null
     if [[ $? -eq 0 ]]; then
-	install_systemd
+        install_systemd
     else
-	# Assuming sysv
-	install_init
-	install_update_rcd
+        # Assuming sysv
+        install_init
+        install_update_rcd
     fi
 elif [[ -f /etc/os-release ]]; then
     source /etc/os-release
     if [[ $ID = "amzn" ]]; then
-	# Amazon Linux logic
-	install_init
-	install_chkconfig
+        # Amazon Linux logic
+        install_init
+        install_chkconfig
     fi
 fi
