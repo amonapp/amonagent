@@ -27,3 +27,4 @@ _testmain.go
 *.rpm
 amonagent
 packaging/build/
+vendor/
