@@ -46,7 +46,7 @@ install_base: build
 	mkdir -p $(BUILD)/etc/opt/amonagent/plugins-enabled
 	mkdir -p $(BUILD)/usr/bin
 
-	cp amonagent $(BUILD)/usr/bin/amonagent
+	cp amonagent $(BUILD)/opt/amonagent/amonagent
 
 	mkdir -p $(BUILD)/var/log/amonagent
 	chmod 755 $(BUILD)/var/log/amonagent
