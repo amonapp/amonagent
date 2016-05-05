@@ -28,12 +28,8 @@ install_repo_base:
 	sudo apt-get install reprepro createrepo -y --force-yes
 
 
-update_dep:
-	godep save
-	godep update github.com/shirou/...
-
 build:
-	godep go build -o amonagent -ldflags \
+	go build -o amonagent -ldflags \
 		"-X main.Version=$(VERSION)" \
 		./cmd/amonagent.go
 
@@ -44,7 +40,7 @@ install_base: build
 	mkdir -p $(BUILD)
 	mkdir -p $(BUILD)/etc/opt/amonagent
 	mkdir -p $(BUILD)/etc/opt/amonagent/plugins-enabled
-	mkdir -p $(BUILD)/usr/bin
+	mkdir -p $(BUILD)/opt/amonagent
 
 	cp amonagent $(BUILD)/opt/amonagent/amonagent
 
