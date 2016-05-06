@@ -29,7 +29,7 @@ var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value i
 
 // Amonagent version
 //	-ldflags "-X main.Version=`git describe --always --tags`"
-var Version string
+var version string
 
 // ListPlugins -- XXX
 func ListPlugins() {
@@ -48,8 +48,8 @@ func Debug() {
 
 func main() {
 
-	// Debug()
-	// return
+	Debug()
+	return
 	flag.Parse()
 
 	if *fListPlugins {

@@ -63,7 +63,7 @@ type DistroStruct struct {
 // Distro - gets distro info
 // {'version': '14.04', 'name': 'Ubuntu'}
 func Distro() DistroStruct {
-	host, _ := pshost.HostInfo()
+	host, _ := pshost.Info()
 
 	d := DistroStruct{
 		Version: host.PlatformVersion,

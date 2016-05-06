@@ -27,7 +27,7 @@ type CPUUsageStruct struct {
 }
 
 // totalCpuTime - XXX
-func totalCPUTime(t cpu.CPUTimesStat) float64 {
+func totalCPUTime(t cpu.TimesStat) float64 {
 	total := t.User + t.System + t.Nice + t.Iowait + t.Irq + t.Softirq + t.Steal +
 		t.Guest + t.GuestNice + t.Idle
 	return total
@@ -35,7 +35,7 @@ func totalCPUTime(t cpu.CPUTimesStat) float64 {
 
 // CPUUsage - return a map with CPU usage stats
 func CPUUsage() CPUUsageStruct {
-	cpuTimes1, err := cpu.CPUTimes(false)
+	cpuTimes1, err := cpu.TimesStat()
 	if err != nil {
 		cpuLogger.Errorf("error getting CPU info: %s", err)
 	}
@@ -45,7 +45,7 @@ func CPUUsage() CPUUsageStruct {
 		lastTotal := totalCPUTime(lastCts)
 		time.Sleep(1 * time.Second)
 
-		cpuTimes2, _ := cpu.CPUTimes(false)
+		cpuTimes2, _ := cpu.Times()
 		cts := cpuTimes2[i]
 		total := totalCPUTime(cts)
 

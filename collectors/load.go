@@ -27,8 +27,8 @@ type LoadStruct struct {
 // LoadAverage - returns load avg
 func LoadAverage() LoadStruct {
 
-	cores, _ := cpu.CPUCounts(true)
-	load, _ := load.LoadAvg()
+	cores, _ := cpu.Counts(true)
+	load, _ := load.Avg()
 
 	l := LoadStruct{
 		Minute:         load.Load1,

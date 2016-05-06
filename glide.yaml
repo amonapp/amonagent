@@ -1,24 +1,5 @@
 package: github.com/amonapp/amonagent
 import:
-- package: github.com/StackExchange/wmi
-  version: f3e2bae1e0cb5aef83e319133eabfee30013a4a5
-- package: github.com/go-ole/go-ole
-  version: 572eabb84c424e76a0d39d31510dd7dfd62f70b2
-  subpackages:
-  - oleutil
-- package: github.com/shirou/gopsutil
-  version: 85bf0974ed06e4e668595ae2b4de02e772a2819b
-  subpackages:
-  - cpu
-  - disk
-  - host
-  - internal/common
-  - load
-  - mem
-  - net
-  - process
-- package: github.com/shirou/w32
-  version: 3c9377fc6748f222729a8270fe2775d149a249ad
 - package: github.com/go-sql-driver/mysql
 - package: github.com/gonuts/go-shellquote
 - package: github.com/lib/pq
@@ -27,3 +8,8 @@ import:
   subpackages:
   - bson
 - package: gopkg.in/redis.v3
+- package: github.com/Sirupsen/logrus
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+- package: github.com/shirou/gopsutil

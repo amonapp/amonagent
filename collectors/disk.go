@@ -86,7 +86,7 @@ func isPseudoFS(name string) (res bool) {
 
 // DiskUsage - return a list with disk usage structs
 func DiskUsage() (DiskUsageList, error) {
-	parts, err := disk.DiskPartitions(false)
+	parts, err := disk.Partitions(false)
 	if err != nil {
 		diskLogger.Errorf("Error getting disk usage info: %v", err)
 	}
@@ -95,7 +95,7 @@ func DiskUsage() (DiskUsageList, error) {
 
 	for _, p := range parts {
 		if _, err := os.Stat(p.Mountpoint); err == nil {
-			du, err := disk.DiskUsage(p.Mountpoint)
+			du, err := disk.Usage(p.Mountpoint)
 			if err != nil {
 				diskLogger.Errorf("Error getting disk usage for Mount: %v", err)
 			}

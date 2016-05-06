@@ -21,7 +21,7 @@ SCRIPT
 
 # vagrant plugin install vagrant-vbguest
 Vagrant.configure("2") do |config|
- 
+
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.define "ubuntu1404" do |ubuntu1404|
@@ -46,7 +46,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "centos7" do |centos7|
     centos7.vm.box = "bento/centos-7.1"
-    centos6.vm.provision "shell", inline: $rpm
+    centos7.vm.provision "shell", inline: $rpm
   end
 
 end

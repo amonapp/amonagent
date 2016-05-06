@@ -58,6 +58,7 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 // GetAllEnabledPlugins - XXX
 func GetAllEnabledPlugins() ([]PluginConfig, error) {
 	fileList := []PluginConfig{}
+
 	filepath.Walk(ConfigPath, func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() {
 			// Only files ending with .conf
