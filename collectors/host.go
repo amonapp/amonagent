@@ -142,8 +142,8 @@ func CloudID() string {
 	return CloudID
 }
 
-//MachineID - XXX
-func MachineID() string {
+// GetOrCreateMachineID - XXX
+func GetOrCreateMachineID() string {
 	var machineidPath = "/etc/opt/amonagent/machine-id" // Default machine id path, generated on first install
 	var MachineID string
 	if _, err := os.Stat(machineidPath); os.IsNotExist(err) {

@@ -35,7 +35,7 @@ func totalCPUTime(t cpu.TimesStat) float64 {
 
 // CPUUsage - return a map with CPU usage stats
 func CPUUsage() CPUUsageStruct {
-	cpuTimes1, err := cpu.TimesStat()
+	cpuTimes1, err := cpu.Times(false)
 	if err != nil {
 		cpuLogger.Errorf("error getting CPU info: %s", err)
 	}
@@ -45,7 +45,7 @@ func CPUUsage() CPUUsageStruct {
 		lastTotal := totalCPUTime(lastCts)
 		time.Sleep(1 * time.Second)
 
-		cpuTimes2, _ := cpu.Times()
+		cpuTimes2, _ := cpu.Times(false)
 		cts := cpuTimes2[i]
 		total := totalCPUTime(cts)
 

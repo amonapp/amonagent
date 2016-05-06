@@ -104,7 +104,7 @@ func CollectHostData() HostDataStruct {
 	var ip string
 	var distro DistroStruct
 
-	machineID = MachineID()
+	machineID = GetOrCreateMachineID()
 	InstanceID = CloudID()
 	ip = IPAddress()
 	distro = Distro()
