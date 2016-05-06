@@ -2,4 +2,5 @@
 
 package settings
 
-const configPath = "/etc/opt/amonagent/"
+// ConfigPath - XXX
+const ConfigPath = "/etc/opt/amonagent/"

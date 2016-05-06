@@ -4,14 +4,18 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/amonapp/amonagent/settings"
+	"github.com/amonapp/amonagent/util"
 	pshost "github.com/shirou/gopsutil/host"
 )
 
@@ -144,23 +148,26 @@ func CloudID() string {
 
 // GetOrCreateMachineID - XXX
 func GetOrCreateMachineID() string {
-	var machineidPath = "/etc/opt/amonagent/machine-id" // Default machine id path, generated on first install
+
+	var machineidPath = path.Join(settings.ConfigPath, "machine-id") // Default machine id path, generated on first install
+	fmt.Print(machineidPath)
 	var MachineID string
+	// First run, generate and save
 	if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
-		machineidPath = "/etc/machine-id"
-		// Does not exists, probably an older distro or docker container. TODO - REMOVE THIS IN FUTURE RELEASES
-		if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
+		generatedMachineID := util.GenerateMachineID()
 
-			// Try one last path
-			var machineidPath = "/var/lib/dbus/machine-id"
-			if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
-				machineidPath = ""
-			}
-
+		f, fileError := os.Create(machineidPath)
+		if fileError != nil {
+			fmt.Printf(fileError.Error())
 		}
-	}
+		_, writeMachineidErr := io.WriteString(f, generatedMachineID)
+		if writeMachineidErr != nil {
+			fmt.Printf(writeMachineidErr.Error())
+		}
 
-	if len(machineidPath) > 0 {
+		defer f.Close()
+
+	} else {
 		file, err := os.Open(machineidPath)
 		if err != nil {
 			fmt.Printf(err.Error())

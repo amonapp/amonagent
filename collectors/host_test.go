@@ -23,5 +23,10 @@ func TestHost(t *testing.T) {
 	d := Host()
 	var aString interface{} = "string"
 	assert.IsType(t, aString, d)
+}
 
+func TestGetCreateMachineID(t *testing.T) {
+	d := GetOrCreateMachineID()
+	var aString interface{} = "string"
+	assert.IsType(t, aString, d)
 }

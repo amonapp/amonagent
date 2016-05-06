@@ -26,7 +26,6 @@ var fPluginConfig = flag.String("plugin-config", "", "Shows the example config f
 var fVersion = flag.Bool("version", false, "display the version")
 var fPidfile = flag.String("pidfile", "", "file to write our pid to")
 var fMachineID = flag.Bool("machineid", false, "Returns machine id, this value is used in the Salt minion config")
-var fGenerateMachineID = flag.Bool("generate-machineid", false, "Generates machine id on first install")
 
 // Amonagent version
 //	-ldflags "-X main.Version=`git describe --always --tags`"
