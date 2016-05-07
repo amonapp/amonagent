@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/amonapp/amonagent/settings"
 )
 
 // PluginConfig - XXX
@@ -14,8 +17,8 @@ type PluginConfig struct {
 	Name string
 }
 
-// ConfigPath - XXX
-const ConfigPath = "/etc/opt/amonagent/plugins-enabled"
+// PluginConfigPath - XXX
+const PluginConfigPath = path.Join(settings.ConfigPath, "plugins-enabled")
 
 // ReadConfigPath - Works only with flat config files, do something different for nested configs
 func ReadConfigPath(path string) (interface{}, error) {
@@ -36,7 +39,7 @@ func ReadConfigPath(path string) (interface{}, error) {
 // GetConfigPath - XXX
 func GetConfigPath(plugin string) (PluginConfig, error) {
 	config := PluginConfig{}
-	filepath.Walk(ConfigPath, func(path string, f os.FileInfo, err error) error {
+	filepath.Walk(PluginConfigPath, func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() {
 			// Only files ending with .conf
 			fileName := strings.Split(f.Name(), ".conf")
@@ -59,7 +62,7 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 func GetAllEnabledPlugins() ([]PluginConfig, error) {
 	fileList := []PluginConfig{}
 
-	filepath.Walk(ConfigPath, func(path string, f os.FileInfo, err error) error {
+	filepath.Walk(PluginConfigPath, func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() {
 			// Only files ending with .conf
 			fileName := strings.Split(f.Name(), ".conf")

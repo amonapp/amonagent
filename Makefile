@@ -63,7 +63,6 @@ $(FPM_BUILD) -t deb \
 -n amonagent \
 -d "adduser" \
 -d "sysstat" \
--d "dbus" \
 --post-install $(PACKAGING)/postinst.sh \
 --post-uninstall $(PACKAGING)/postrm.sh \
 --pre-uninstall  $(PACKAGING)/prerm.sh \
@@ -78,7 +77,6 @@ build_rpm: clean install_base
 $(FPM_BUILD) -t rpm \
 -n "amonagent" \
 -d "sysstat" \
--d "dbus" \
 --conflicts "amonagent < $(VERSION)" \
 --post-install	    $(PACKAGING)/postinst.sh \
 --post-uninstall    $(PACKAGING)/postrm.sh \
@@ -111,9 +109,9 @@ upload:
 
 build_and_deploy: build_all deploy
 
-upload_packages: build_all 
+upload_packages: build_all
 	sudo ntpdate -u pool.ntp.org
-	
+
 	find . -iname "*.deb*" -execdir mv {} amonagent.deb \;
 	find . -iname "*.rpm*" -execdir mv {} amonagent.rpm \;
 	aws s3 cp amonagent.deb s3://amonagent-test --region=eu-west-1
