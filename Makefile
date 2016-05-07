@@ -123,7 +123,7 @@ upload_packages: build_all
 
 test_systemd: build_deb
 	find . -iname "*.deb*" -execdir mv {} amonagent.deb \;
-	vagrant up ubuntu1404
+	vagrant reload ubuntu1404 --provision
 
 
 test_output:
