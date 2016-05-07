@@ -28,6 +28,7 @@ func TestHost(t *testing.T) {
 	assert.IsType(t, aString, d)
 }
 
+// http://www.devdungeon.com/content/working-files-go#check_if_exists
 func TestGetCreateMachineID(t *testing.T) {
 	// Delete the file and start from scratch. Run the test suite only on machines that are not running the agent in production.
 	var machineidPath = path.Join(settings.ConfigPath, "machine-id") // Default machine id path, generated on first install
