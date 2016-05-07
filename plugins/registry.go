@@ -56,7 +56,13 @@ func GetAllEnabledPlugins() ([]PluginConfig, error) {
 	if _, err := os.Stat(PluginConfigPath); os.IsNotExist(err) {
 		if err != nil {
 			if os.IsNotExist(err) {
-				fmt.Printf("Plugin directory doesn't exist: %s\n", PluginConfigPath)
+				// Plugin config directory doesn't exist for some reason. Create
+				PluginDirErr := os.MkdirAll(PluginConfigPath, os.ModePerm)
+
+				if PluginDirErr != nil {
+					fmt.Printf("Plugin directory doesn't exist: %s\n", PluginConfigPath)
+				}
+
 			}
 			return fileList, err
 		}
