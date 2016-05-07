@@ -26,6 +26,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "ubuntu1404" do |ubuntu1404|
     ubuntu1404.vm.box = "ubuntu/trusty64"
+    ubuntu1404.vm.provision "file", source: "amonagent.deb", destination: "amonagent.deb"
     ubuntu1404.vm.provision "shell", inline: $deb
   end
 

@@ -116,3 +116,6 @@ upload_packages: build_all
 	find . -iname "*.rpm*" -execdir mv {} amonagent.rpm \;
 	aws s3 cp amonagent.deb s3://amonagent-test --region=eu-west-1
 	aws s3 cp amonagent.rpm s3://amonagent-test --region=eu-west-1
+
+test_systemd: build_deb
+	vagrant up ubuntu1404
