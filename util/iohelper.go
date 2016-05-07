@@ -3,9 +3,6 @@ package util
 import (
 	"bufio"
 	"os"
-	// "strings"
-	// "unicode"
-	// "unicode/utf8"
 )
 
 // ReadLine savely reads the line and cleans up afterwards

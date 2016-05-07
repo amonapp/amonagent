@@ -2,4 +2,5 @@
 
 package settings
 
-const configPath = "C:/ProgramFiles/AmonAgent/"
+// ConfigPath - XXX
+const ConfigPath = "C:/ProgramFiles/AmonAgent/"

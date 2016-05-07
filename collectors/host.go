@@ -148,19 +148,16 @@ func CloudID() string {
 
 // GetOrCreateMachineID - XXX
 func GetOrCreateMachineID() string {
-
 	var machineidPath = path.Join(settings.ConfigPath, "machine-id") // Default machine id path, generated on first install
-	fmt.Print(machineidPath)
 	var MachineID string
 	// First run, generate and save
 	if _, err := os.Stat(machineidPath); os.IsNotExist(err) {
-		generatedMachineID := util.GenerateMachineID()
-
+		MachineID = util.GenerateMachineID()
 		f, fileError := os.Create(machineidPath)
 		if fileError != nil {
 			fmt.Printf(fileError.Error())
 		}
-		_, writeMachineidErr := io.WriteString(f, generatedMachineID)
+		_, writeMachineidErr := io.WriteString(f, MachineID)
 		if writeMachineidErr != nil {
 			fmt.Printf(writeMachineidErr.Error())
 		}
