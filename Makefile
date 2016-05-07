@@ -21,6 +21,10 @@ FPM_BUILD=fpm --epoch 1 -s dir -e -C $(BUILD) \
 -v $(VERSION) \
 --vendor Amon
 
+setup_dev_env:
+	sudo apt-get install ruby-dev gcc make -y --force-yes
+	sudo gem install fpm
+
 clean:
 	rm -rf $(BUILD)
 
@@ -118,6 +122,7 @@ upload_packages: build_all
 	aws s3 cp amonagent.rpm s3://amonagent-test --region=eu-west-1
 
 test_systemd: build_deb
+	find . -iname "*.deb*" -execdir mv {} amonagent.deb \;
 	vagrant up ubuntu1404
 
 
