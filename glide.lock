@@ -1,5 +1,5 @@
 hash: f4eaeb61a9be183e2ed4a261100f46417d8f81bc5903f82d1f9cd785c0be3299
-updated: 2016-05-06T10:24:58.601938853+02:00
+updated: 2016-05-07T16:30:08.184183951+02:00
 imports:
 - name: github.com/go-ole/go-ole
   version: 572eabb84c424e76a0d39d31510dd7dfd62f70b2

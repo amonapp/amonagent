@@ -119,3 +119,8 @@ upload_packages: build_all
 
 test_systemd: build_deb
 	vagrant up ubuntu1404
+
+
+test_output:
+	go build
+	./amonagent -test

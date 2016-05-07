@@ -25,7 +25,7 @@ func Settings() Struct {
 
 	configFile, err := os.Open(SettingsPath)
 	if err != nil {
-		fmt.Println("opening config file", err.Error())
+		fmt.Println("Error opening config file", err.Error())
 	}
 
 	jsonParser := json.NewDecoder(configFile)

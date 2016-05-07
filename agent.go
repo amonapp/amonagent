@@ -60,7 +60,7 @@ func (a *Agent) Test(config settings.Struct) error {
 
 	fmt.Println("\033[92mTesting settings: \033[0m")
 	fmt.Println("")
-	machineID := collectors.MachineID()
+	machineID := collectors.GetOrCreateMachineID()
 
 	if len(machineID) == 0 && len(config.ServerKey) == 0 {
 		fmt.Println("Can't find Machine ID (looking in /etc/opt/amonagent/machine-id, /etc/machine-id and /var/lib/dbus/machine-id).")

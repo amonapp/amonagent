@@ -66,6 +66,7 @@ func GetAllEnabledPlugins() ([]PluginConfig, error) {
 			}
 			return fileList, err
 		}
+
 	}
 
 	filepath.Walk(PluginConfigPath, func(path string, f os.FileInfo, err error) error {
