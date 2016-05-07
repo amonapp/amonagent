@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -18,7 +19,7 @@ type PluginConfig struct {
 }
 
 // PluginConfigPath - XXX
-const PluginConfigPath = path.Join(settings.ConfigPath, "plugins-enabled")
+var PluginConfigPath = path.Join(settings.ConfigPath, "plugins-enabled")
 
 // ReadConfigPath - Works only with flat config files, do something different for nested configs
 func ReadConfigPath(path string) (interface{}, error) {
@@ -39,21 +40,11 @@ func ReadConfigPath(path string) (interface{}, error) {
 // GetConfigPath - XXX
 func GetConfigPath(plugin string) (PluginConfig, error) {
 	config := PluginConfig{}
-	filepath.Walk(PluginConfigPath, func(path string, f os.FileInfo, err error) error {
-		if !f.IsDir() {
-			// Only files ending with .conf
-			fileName := strings.Split(f.Name(), ".conf")
-			if len(fileName) == 2 && fileName[0] == plugin {
-				config.Path = path
-				config.Name = fileName[0]
-			}
-			// } else {
-			// 	return fmt.Errorf("Can't find config file for %s", f.Name())
-			// }
 
-		}
-		return nil
-	})
+	// On Linux /etc/opt/amonagent/plugins-enabled/plugin.conf
+	var pluginPath = path.Join(PluginConfigPath, strings.Join([]string{plugin, "conf"}, "."))
+	config.Path = pluginPath
+	config.Name = plugin
 
 	return config, nil
 }
@@ -61,6 +52,15 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 // GetAllEnabledPlugins - XXX
 func GetAllEnabledPlugins() ([]PluginConfig, error) {
 	fileList := []PluginConfig{}
+
+	if _, err := os.Stat(PluginConfigPath); os.IsNotExist(err) {
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Printf("Plugin directory doesn't exist: %s\n", PluginConfigPath)
+			}
+			return fileList, err
+		}
+	}
 
 	filepath.Walk(PluginConfigPath, func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() {

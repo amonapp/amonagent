@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -20,9 +21,9 @@ func Settings() Struct {
 
 	var settings Struct
 
-	var configPath = "/etc/opt/amonagent/amonagent.conf"
+	var SettingsPath = path.Join(ConfigPath, "amonagent.conf")
 
-	configFile, err := os.Open(configPath)
+	configFile, err := os.Open(SettingsPath)
 	if err != nil {
 		fmt.Println("opening config file", err.Error())
 	}
