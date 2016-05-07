@@ -1,3 +1,10 @@
+0.5.5 - WIP
+==============
+
+* Cleanup and update test suite
+* Remove hard coded config directories(prepare for future cross platform releases)
+
+
 0.5 - 30.03.2016
 ==============
 

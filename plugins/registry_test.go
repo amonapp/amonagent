@@ -61,4 +61,20 @@ func TestGetAllEnabledPlugins(t *testing.T) {
 		assert.IsType(t, aString, plugin.Name)
 	}
 
+	// Create bogus config files
+	for i := 1; i <= 5; i++ {
+		var pluginPath = path.Join(PluginConfigPath, fmt.Sprint("plugin", i, ".bogus"))
+		_, err := os.Create(pluginPath)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	}
+
+	PluginListTestBogus, PluginListTestBogusErr := GetAllEnabledPlugins()
+
+	assert.Nil(t, PluginListTestBogusErr)
+	assert.Len(t, PluginListTestBogus, 5, "Ignore bogus configs.")
+
 }
