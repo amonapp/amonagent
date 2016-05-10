@@ -9,11 +9,11 @@ function install_init {
 
     echo "### You can start amonagent by executing"
     echo ""
-    echo " sudo systemctl start amonagent"
+    echo " sudo service start amonagent"
     echo ""
     echo "###"
 
-    systemctl restart amonagent
+    invoke-rc.d amonagent restart
 }
 
 function install_systemd {
@@ -22,11 +22,11 @@ function install_systemd {
     systemctl daemon-reload || true
     echo "### You can start amonagent by executing"
     echo ""
-    echo "sudo service amonagent start"
+    echo "sudo systemctl amonagent start"
     echo ""
     echo "###"
 
-    service amonagent restart
+    systemctl amonagent restart
 }
 
 function install_update_rcd {
