@@ -22,14 +22,12 @@ FPM_BUILD=fpm --epoch 1 -s dir -e -C $(BUILD) \
 --vendor Amon
 
 setup_dev_env:
-	sudo apt-get install ruby-dev gcc make -y --force-yes
+	sudo apt-get install ruby-dev gcc make reprepro createrepo -y --force-yes
 	sudo gem install fpm
+	vagrant up
 
 clean:
 	rm -rf $(BUILD)
-
-install_repo_base:
-	sudo apt-get install reprepro createrepo -y --force-yes
 
 
 build:
@@ -123,10 +121,16 @@ upload_packages: build_all
 	aws s3 cp amonagent.deb s3://amonagent-test --region=eu-west-1
 	aws s3 cp amonagent.rpm s3://amonagent-test --region=eu-west-1
 
-test_systemd: build_deb
+test_deb: build_deb
 	find . -iname "*.deb*" -execdir mv {} amonagent.deb \;
-	vagrant reload ubuntu1404 --provision
+	# vagrant reload ubuntu1404 --provision
+	# vagrant reload debian8 --provision
+	vagrant reload debian7 --provision
 
+test_rpm: build_rpm
+	find . -iname "*.rpm*" -execdir mv {} amonagent.rpm \;
+	vagrant reload centos6 --provision
+	# vagrant reload centos7 --provision
 
 test_output:
 	go build

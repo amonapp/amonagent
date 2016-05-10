@@ -12,8 +12,6 @@ function install_init {
     echo " sudo service start amonagent"
     echo ""
     echo "###"
-
-    invoke-rc.d amonagent restart
 }
 
 function install_systemd {
@@ -25,8 +23,6 @@ function install_systemd {
     echo "sudo systemctl amonagent start"
     echo ""
     echo "###"
-
-    systemctl amonagent restart
 }
 
 function install_update_rcd {
@@ -69,11 +65,6 @@ fi
 chown -R -L amonagent:amonagent  /var/run/amonagent
 chmod 775 /var/run/amonagent
 
-
-# Generate machine id if it does not exists
-if [ ! -f /etc/opt/amonagent/machine-id ]; then
-    dbus-uuidgen > /etc/opt/amonagent/machine-id
-fi
 
 # Distribution-specific logic
 if [[ -f /etc/redhat-release ]]; then

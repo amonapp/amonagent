@@ -6,6 +6,8 @@ apt-get remove -y amonagent
 rm -rf /etc/opt/amonagent
 rm -rf /var/log/amonagent/amonagent.log
 
+
+
 dpkg -i /vagrant/amonagent.deb
 echo '{"api_key": "test", "amon_instance": "https://demo.amon.cx"}' >> /etc/opt/amonagent/amonagent.conf
 /opt/amonagent/amonagent -test
@@ -19,10 +21,16 @@ SCRIPT
 
 $rpm = <<SCRIPT
 rm *.rpm
+yum install /vagrant/amonagent.rpm -y
 echo '{"api_key": "test", "amon_instance": "https://demo.amon.cx"}' >> /etc/opt/amonagent/amonagent.conf
-yum install amonagent.rpm -y
+
 
 /opt/amonagent/amonagent -test
+
+service amonagent start
+service amonagent status
+cat /var/log/amonagent/amonagent.log
+service amonagent stop
 SCRIPT
 
 # vagrant plugin install vagrant-vbguest

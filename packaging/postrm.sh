@@ -18,23 +18,22 @@ function disable_chkconfig {
 if [[ -f /etc/redhat-release ]]; then
     # RHEL-variant logic
     if [[ "$1" = "0" ]]; then
-  # InfluxDB is no longer installed, remove from init system
-  rm -f /etc/default/amonagent
-  
-  which systemctl &>/dev/null
-  if [[ $? -eq 0 ]]; then
-      disable_systemd
-  else
-      # Assuming sysv
-      disable_chkconfig
-  fi
+  		rm -f /etc/default/amonagent
+
+	  which systemctl &>/dev/null
+	  if [[ $? -eq 0 ]]; then
+	      disable_systemd
+	  else
+	      # Assuming sysv
+	      disable_chkconfig
+	  fi
     fi
 elif [[ -f /etc/debian_version ]]; then
     # Debian/Ubuntu logic
     if [[ "$1" != "upgrade" ]]; then
       # Remove/purge
       rm -f /etc/default/amonagent
-  
+
       which systemctl &>/dev/null
       if [[ $? -eq 0 ]]; then
           disable_systemd
