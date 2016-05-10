@@ -1,18 +1,24 @@
 $deb = <<SCRIPT
 rm *.deb
-wget https://s3-eu-west-1.amazonaws.com/amonagent-test/amonagent.deb
 apt-get update
 apt-get install -y sysstat
-echo '{"api_key": "test", "amon_instance": "https://demo.amon.cx"}' >> /etc/opt/amonagent/amonagent.conf
-dpkg -i amonagent.deb
+apt-get remove -y amonagent
+rm -rf /etc/opt/amonagent
+rm -rf /var/log/amonagent/amonagent.log
 
+dpkg -i /vagrant/amonagent.deb
+echo '{"api_key": "test", "amon_instance": "https://demo.amon.cx"}' >> /etc/opt/amonagent/amonagent.conf
 /opt/amonagent/amonagent -test
+
+service amonagent start
+service amonagent status
+cat /var/log/amonagent/amonagent.log
+service amonagent stop
 SCRIPT
 
 
 $rpm = <<SCRIPT
 rm *.rpm
-wget https://s3-eu-west-1.amazonaws.com/amonagent-test/amonagent.rpm
 echo '{"api_key": "test", "amon_instance": "https://demo.amon.cx"}' >> /etc/opt/amonagent/amonagent.conf
 yum install amonagent.rpm -y
 
@@ -22,11 +28,13 @@ SCRIPT
 # vagrant plugin install vagrant-vbguest
 Vagrant.configure("2") do |config|
 
-  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder "~/go/src/github.com/amonapp/amonagent/",
+		"/vagrant/",
+		:mount_options => [ "dmode=777", "fmode=777" ]
 
   config.vm.define "ubuntu1404" do |ubuntu1404|
     ubuntu1404.vm.box = "ubuntu/trusty64"
-    ubuntu1404.vm.provision "file", source: "amonagent.deb", destination: "/vagrant/amonagent.deb"
+
     ubuntu1404.vm.provision "shell", inline: $deb
   end
 
