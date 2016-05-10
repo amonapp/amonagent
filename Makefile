@@ -135,3 +135,9 @@ test_rpm: build_rpm
 test_output:
 	go build
 	./amonagent -test
+
+
+setup_travis:
+	sudo add-apt-repository ppa:masterminds/glide && sudo apt-get update
+	sudo apt-get install glide
+	glide i
