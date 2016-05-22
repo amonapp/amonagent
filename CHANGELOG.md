@@ -1,4 +1,4 @@
-0.5.5 - WIP
+0.5.5 - 10.05.2016
 ==============
 
 * Cleanup and update test suite
