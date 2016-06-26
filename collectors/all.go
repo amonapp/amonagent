@@ -2,7 +2,6 @@ package collectors
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/amonapp/amonagent/logging"
@@ -58,6 +57,12 @@ type SystemDataStruct struct {
 	Memory  MemoryStruct     `json:"memory"`
 }
 
+// PluginResultStruct - a channel struct that holds plugin results
+type PluginResultStruct struct {
+	Name   string
+	Result interface{}
+}
+
 // CollectPluginsData - XXX
 func CollectPluginsData() (interface{}, interface{}) {
 	PluginResults := make(map[string]interface{})
@@ -65,7 +70,7 @@ func CollectPluginsData() (interface{}, interface{}) {
 	var wg sync.WaitGroup
 	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 
-	resultChan := make(chan interface{}, len(EnabledPlugins))
+	resultChan := make(chan PluginResultStruct, len(EnabledPlugins))
 
 	for _, p := range EnabledPlugins {
 		wg.Add(1)
@@ -76,28 +81,26 @@ func CollectPluginsData() (interface{}, interface{}) {
 			PluginResult, err := plugin.Collect(p.Path)
 			if err != nil {
 				CollectorLogger.Errorf("Can't get stats for plugin: %s", err)
-
 			}
 
-			resultChan <- PluginResult
+			r := PluginResultStruct{Name: p.Name, Result: PluginResult}
+
+			resultChan <- r
 			defer wg.Done()
 		}(p)
-
-		// if p.Name == "checks" {
-		// 	CheckResults = resultChan
-		// } else {
-		// 	PluginResults[p.Name] = resultChan
-		// }
 
 	}
 
 	wg.Wait()
 	close(resultChan)
 
-	for i := range resultChan {
-		fmt.Println(i)
-		fmt.Println("---------------------------------------------------")
-		// result = append(result, i)
+	for result := range resultChan {
+		if result.Name == "checks" {
+			CheckResults = result.Result
+		} else {
+			PluginResults[result.Name] = result.Result
+		}
+
 	}
 
 	return PluginResults, CheckResults
