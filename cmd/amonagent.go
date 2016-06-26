@@ -51,6 +51,8 @@ func Debug() {
 func main() {
 	flag.Parse()
 
+	machineID := collectors.GetOrCreateMachineID()
+
 	if *fListPlugins {
 		ListPlugins()
 		return
@@ -101,8 +103,6 @@ func main() {
 
 	config := settings.Settings()
 
-	// Detect Machine ID or ask for a valid Server Key in Settings
-	machineID := collectors.GetOrCreateMachineID()
 	serverKey := config.ServerKey
 
 	ag, err := amonagent.NewAgent(config)

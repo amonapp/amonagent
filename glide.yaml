@@ -1,4 +1,5 @@
 package: github.com/amonapp/amonagent
+version: ""
 import:
 - package: github.com/go-sql-driver/mysql
 - package: github.com/gonuts/go-shellquote
@@ -13,3 +14,6 @@ import:
   subpackages:
   - assert
 - package: github.com/shirou/gopsutil
+- package: github.com/derekparker/delve
+  subpackages:
+  - cmd/dlv

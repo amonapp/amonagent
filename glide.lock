@@ -1,6 +1,10 @@
-hash: f4eaeb61a9be183e2ed4a261100f46417d8f81bc5903f82d1f9cd785c0be3299
-updated: 2016-05-07T16:30:08.184183951+02:00
+hash: 686c8a12b688413ff87f34fd0d381604c7e0666495884e395fbf81455f2c01ff
+updated: 2016-06-24T18:49:13.99837327+03:00
 imports:
+- name: github.com/derekparker/delve
+  version: 323c0450d1e5ac8bb0f783f783ad2cd520b83f16
+  subpackages:
+  - cmd/dlv
 - name: github.com/go-ole/go-ole
   version: 572eabb84c424e76a0d39d31510dd7dfd62f70b2
   subpackages:

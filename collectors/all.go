@@ -2,6 +2,7 @@ package collectors
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/amonapp/amonagent/logging"
@@ -63,25 +64,36 @@ func CollectPluginsData() (interface{}, interface{}) {
 	var CheckResults interface{}
 	var wg sync.WaitGroup
 	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
+
+	// resultChan := make(chan CommandResult, len(c.Config.Commands))
+
 	for _, p := range EnabledPlugins {
 		creator, ok := plugins.Plugins[p.Name]
 		if ok {
+			fmt.Println(creator)
 			wg.Add(1)
+			resultChan := make(chan interface{}, 1)
 			plugin := creator()
 
 			go func(p plugins.PluginConfig) {
-				defer wg.Done()
 				PluginResult, err := plugin.Collect(p.Path)
 				if err != nil {
 					CollectorLogger.Errorf("Can't get stats for plugin: %s", err)
 
 				}
-				if p.Name == "checks" {
-					CheckResults = PluginResult
-				} else {
-					PluginResults[p.Name] = PluginResult
-				}
+
+				resultChan <- PluginResult
+
+				defer wg.Done()
 			}(p)
+
+			if p.Name == "checks" {
+				CheckResults = resultChan
+			} else {
+				PluginResults[p.Name] = resultChan
+			}
+
+			close(resultChan)
 
 		} else {
 			CollectorLogger.Errorf("Non existing plugin: %s", p.Name)

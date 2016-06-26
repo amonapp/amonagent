@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/amonapp/amonagent/plugins"
 )
@@ -23,6 +24,7 @@ type CommandResult struct {
 	ExitCode int    `json:"exit_code"`
 	Output   string `json:"output"`
 	Command  string `json:"command"`
+	Error    string `json:"error"`
 }
 
 // Checks - XXX
@@ -78,10 +80,10 @@ func (c *Checks) SetConfigDefaults(configPath string) error {
 
 // ExecWithExitCode - XXX
 // Source: http://stackoverflow.com/questions/10385551/get-exit-code-go
-func ExecWithExitCode(command string) (CommandResult, error) {
+func ExecWithExitCode(command string) CommandResult {
 	parts := strings.Fields(command)
 	head := parts[0]
-	parts = parts[1:len(parts)]
+	parts = parts[1:]
 	cmd := exec.Command(head, parts...)
 	output := CommandResult{Command: command}
 
@@ -89,7 +91,8 @@ func ExecWithExitCode(command string) (CommandResult, error) {
 	cmd.Stdout = &out
 
 	if err := cmd.Start(); err != nil {
-		return output, err
+		output.Error = err.Error()
+
 	}
 
 	if err := cmd.Wait(); err != nil {
@@ -104,12 +107,18 @@ func ExecWithExitCode(command string) (CommandResult, error) {
 				output.ExitCode = status.ExitStatus()
 			}
 		} else {
-			return output, err
+			output.Error = err.Error()
 		}
 	}
+
+	timer := time.AfterFunc(10*time.Second, func() {
+		cmd.Process.Kill()
+	})
+	timer.Stop()
+
 	output.Output = out.String()
 
-	return output, nil
+	return output
 
 }
 
@@ -118,20 +127,27 @@ func (c *Checks) Collect(configPath string) (interface{}, error) {
 	c.SetConfigDefaults(configPath)
 	var wg sync.WaitGroup
 	var result []CommandResult
+
+	resultChan := make(chan CommandResult, len(c.Config.Commands))
+
 	for _, v := range c.Config.Commands {
 		wg.Add(1)
-		go func(v string) {
-			defer wg.Done()
-			CheckResult, err := ExecWithExitCode(v)
-			if err != nil {
-				fmt.Println("Can't execute command: ", err)
-			}
 
-			result = append(result, CheckResult)
+		go func(command string) {
+
+			CheckResult := ExecWithExitCode(command)
+
+			resultChan <- CheckResult
+			defer wg.Done()
 		}(v)
 
 	}
 	wg.Wait()
+	close(resultChan)
+
+	for i := range resultChan {
+		result = append(result, i)
+	}
 
 	return result, nil
 }
