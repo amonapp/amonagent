@@ -74,8 +74,16 @@ func GetAllEnabledPlugins() ([]PluginConfig, error) {
 			// Only files ending with .conf
 			fileName := strings.Split(f.Name(), ".conf")
 			if len(fileName) == 2 {
-				f := PluginConfig{Path: path, Name: fileName[0]}
-				fileList = append(fileList, f)
+
+				// Go over the list of available plugins and add the config only if it is for an existing plugin
+				for name := range Plugins {
+					if name == fileName[0] {
+						f := PluginConfig{Path: path, Name: fileName[0]}
+						fileList = append(fileList, f)
+					}
+
+				}
+
 			}
 
 		}

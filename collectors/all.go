@@ -65,41 +65,40 @@ func CollectPluginsData() (interface{}, interface{}) {
 	var wg sync.WaitGroup
 	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 
-	// resultChan := make(chan CommandResult, len(c.Config.Commands))
+	resultChan := make(chan interface{}, len(EnabledPlugins))
 
 	for _, p := range EnabledPlugins {
-		creator, ok := plugins.Plugins[p.Name]
-		if ok {
-			fmt.Println(creator)
-			wg.Add(1)
-			resultChan := make(chan interface{}, 1)
-			plugin := creator()
+		wg.Add(1)
+		creator, _ := plugins.Plugins[p.Name]
+		plugin := creator()
 
-			go func(p plugins.PluginConfig) {
-				PluginResult, err := plugin.Collect(p.Path)
-				if err != nil {
-					CollectorLogger.Errorf("Can't get stats for plugin: %s", err)
+		go func(p plugins.PluginConfig) {
+			PluginResult, err := plugin.Collect(p.Path)
+			if err != nil {
+				CollectorLogger.Errorf("Can't get stats for plugin: %s", err)
 
-				}
-
-				resultChan <- PluginResult
-
-				defer wg.Done()
-			}(p)
-
-			if p.Name == "checks" {
-				CheckResults = resultChan
-			} else {
-				PluginResults[p.Name] = resultChan
 			}
 
-			close(resultChan)
+			resultChan <- PluginResult
+			defer wg.Done()
+		}(p)
 
-		} else {
-			CollectorLogger.Errorf("Non existing plugin: %s", p.Name)
-		}
+		// if p.Name == "checks" {
+		// 	CheckResults = resultChan
+		// } else {
+		// 	PluginResults[p.Name] = resultChan
+		// }
+
 	}
+
 	wg.Wait()
+	close(resultChan)
+
+	for i := range resultChan {
+		fmt.Println(i)
+		fmt.Println("---------------------------------------------------")
+		// result = append(result, i)
+	}
 
 	return PluginResults, CheckResults
 }
