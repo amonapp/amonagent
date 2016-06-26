@@ -1,17 +1,15 @@
 package sensu
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/amonapp/amonagent/plugins"
-	"github.com/gonuts/go-shellquote"
+	"github.com/amonapp/amonagent/util"
 )
 
 // Sensu - XXX
@@ -63,24 +61,6 @@ func (s *Sensu) SetConfigDefaults(configPath string) error {
 	s.Config.Commands = Commands
 
 	return nil
-}
-
-// Run - XXX
-func Run(command string) (string, error) {
-	splitCmd, err := shellquote.Split(command)
-	if err != nil || len(splitCmd) == 0 {
-		return "", fmt.Errorf("exec: unable to parse command, %s", err)
-	}
-
-	cmd := exec.Command(splitCmd[0], splitCmd[1:]...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("exec: %s for command '%s'", err, command)
-	}
-
-	return out.String(), nil
 }
 
 func (m Metric) String() string {
@@ -179,44 +159,50 @@ func (s *Sensu) Collect(configPath string) (interface{}, error) {
 	s.SetConfigDefaults(configPath)
 	var wg sync.WaitGroup
 	plugins := make(map[string]interface{})
+
+	resultChan := make(chan util.CommandResult, len(s.Config.Commands))
 	for _, command := range s.Config.Commands {
 		wg.Add(1)
 
 		go func(command string) {
+
+			CheckResult := util.ExecWithExitCode(command)
+
+			resultChan <- CheckResult
 			defer wg.Done()
-			var result []Metric
-			gauges := make(map[string]interface{})
-			GaugesWrapper := make(map[string]interface{})
-			plugin := ""
-			Commandresult, err := Run(command)
-			if err != nil {
-				fmt.Println("Can't execute command: ", err)
-			}
-			lines := strings.Split(Commandresult, "\n")
-
-			for _, line := range lines {
-				metric, _ := ParseLine(line)
-				if len(metric.Gauge) > 0 {
-					result = append(result, metric)
-				}
-
-			}
-
-			for _, r := range result {
-				gauges[r.Gauge] = r.Value
-				plugin = r.Plugin
-			}
-
-			GaugesWrapper["gauges"] = gauges
-
-			if len(plugin) > 0 {
-				plugins[plugin] = GaugesWrapper
-			}
 
 		}(command)
 	}
 
 	wg.Wait()
+	close(resultChan)
+
+	for command := range resultChan {
+		var result []Metric
+		gauges := make(map[string]interface{})
+		GaugesWrapper := make(map[string]interface{})
+		plugin := ""
+		lines := strings.Split(command.Output, "\n")
+
+		for _, line := range lines {
+			metric, _ := ParseLine(line)
+			if len(metric.Gauge) > 0 {
+				result = append(result, metric)
+			}
+		}
+
+		for _, r := range result {
+			gauges[r.Gauge] = r.Value
+			plugin = r.Plugin
+		}
+
+		GaugesWrapper["gauges"] = gauges
+
+		if len(plugin) > 0 {
+			plugins[plugin] = GaugesWrapper
+		}
+
+	}
 
 	return plugins, nil
 }

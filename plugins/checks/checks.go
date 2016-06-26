@@ -1,31 +1,14 @@
 package checks
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os/exec"
-	"strings"
 	"sync"
-	"syscall"
-	"time"
 
 	"github.com/amonapp/amonagent/plugins"
+	"github.com/amonapp/amonagent/util"
 )
-
-func (c CommandResult) String() string {
-	s, _ := json.Marshal(c)
-	return string(s)
-}
-
-// CommandResult - XXX
-type CommandResult struct {
-	ExitCode int    `json:"exit_code"`
-	Output   string `json:"output"`
-	Command  string `json:"command"`
-	Error    string `json:"error"`
-}
 
 // Checks - XXX
 type Checks struct {
@@ -78,64 +61,20 @@ func (c *Checks) SetConfigDefaults(configPath string) error {
 	return nil
 }
 
-// ExecWithExitCode - XXX
-// Source: http://stackoverflow.com/questions/10385551/get-exit-code-go
-func ExecWithExitCode(command string) CommandResult {
-	parts := strings.Fields(command)
-	head := parts[0]
-	parts = parts[1:]
-	cmd := exec.Command(head, parts...)
-	output := CommandResult{Command: command}
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Start(); err != nil {
-		output.Error = err.Error()
-
-	}
-
-	if err := cmd.Wait(); err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			// The program has exited with an exit code != 0
-
-			// This works on both Unix and Windows. Although package
-			// syscall is generally platform dependent, WaitStatus is
-			// defined for both Unix and Windows and in both cases has
-			// an ExitStatus() method with the same signature.
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				output.ExitCode = status.ExitStatus()
-			}
-		} else {
-			output.Error = err.Error()
-		}
-	}
-
-	timer := time.AfterFunc(10*time.Second, func() {
-		cmd.Process.Kill()
-	})
-	timer.Stop()
-
-	output.Output = out.String()
-
-	return output
-
-}
-
 // Collect - XXX
 func (c *Checks) Collect(configPath string) (interface{}, error) {
 	c.SetConfigDefaults(configPath)
 	var wg sync.WaitGroup
-	var result []CommandResult
+	var result []util.CommandResult
 
-	resultChan := make(chan CommandResult, len(c.Config.Commands))
+	resultChan := make(chan util.CommandResult, len(c.Config.Commands))
 
 	for _, v := range c.Config.Commands {
 		wg.Add(1)
 
 		go func(command string) {
 
-			CheckResult := ExecWithExitCode(command)
+			CheckResult := util.ExecWithExitCode(command)
 
 			resultChan <- CheckResult
 			defer wg.Done()
