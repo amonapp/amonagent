@@ -63,19 +63,11 @@ func (a *Agent) Test(config settings.Struct) error {
 	machineID := collectors.GetOrCreateMachineID()
 
 	if len(machineID) == 0 && len(config.ServerKey) == 0 {
-		fmt.Println("Can't find Machine ID (looking in /etc/opt/amonagent/machine-id, /etc/machine-id and /var/lib/dbus/machine-id).")
-		fmt.Println("This usually means D-bus is missing on this server. To solve this problem")
+		fmt.Println("Can't find Machine ID (looking in /etc/opt/amonagent/machine-id).")
+		fmt.Println("To solve this problem, run the following command:")
 		fmt.Println("---")
-		fmt.Println("On RPM distros:")
-		fmt.Println("rpm install dbus")
-		fmt.Println("dbus-uuidgen > /etc/opt/amonagent/machine-id")
+		fmt.Println("amonagent -machineid")
 		fmt.Println("---")
-		fmt.Println("On Debian distros:")
-		fmt.Println("apt-get install dbus")
-		fmt.Println("dbus-uuidgen > /etc/opt/amonagent/machine-id")
-		fmt.Println("---")
-		fmt.Println("Or alternatively, you can 'Add Server' from the Amon Interface and paste the Server Key value")
-		fmt.Println("as server_key in /etc/opt/amonagent.conf")
 
 	} else {
 		fmt.Println("Settings OK")

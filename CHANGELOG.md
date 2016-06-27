@@ -1,3 +1,8 @@
+0.6 - 27.06.2016
+==============
+
+* Stability fixes - cleanup Golang data races in plugin collectors
+
 0.5.5 - 10.05.2016
 ==============
 

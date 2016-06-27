@@ -181,11 +181,6 @@ func GetOrCreateMachineID() string {
 		}
 	}
 
-	// Can't detect, return an empty string and ask for a server key
-	if len(MachineID) != 32 {
-		MachineID = ""
-	}
-
 	return MachineID
 }
 
