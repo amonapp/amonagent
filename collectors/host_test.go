@@ -5,7 +5,6 @@ import (
 	"path"
 	"testing"
 
-	"github.com/amonapp/amonagent/settings"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +30,7 @@ func TestHost(t *testing.T) {
 // http://www.devdungeon.com/content/working-files-go#check_if_exists
 func TestGetCreateMachineID(t *testing.T) {
 	// Delete the file and start from scratch. Run the test suite only on machines that are not running the agent in production.
-	var machineidPath = path.Join(settings.ConfigPath, "machine-id") // Default machine id path, generated on first install
+	var machineidPath = path.Join("tmp", "machine-id") // Default machine id path, generated on first install
 
 	if _, err := os.Stat(machineidPath); err == nil {
 		err := os.Remove(machineidPath)
