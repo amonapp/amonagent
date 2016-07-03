@@ -35,7 +35,7 @@ var prevInstance *Statsd
 
 // Config - XXX
 type Config struct {
-	Port int64
+	Address string
 }
 
 // SetConfigDefaults - XXX
@@ -50,8 +50,8 @@ func (s *Statsd) SetConfigDefaults(configPath string) error {
 		fmt.Print("Can't decode config file", decodeError.Error())
 	}
 
-	if len(config.Port) == 0 {
-		config.Port = 8125
+	if len(config.Address) == 0 {
+		config.Address = ":8125"
 	}
 
 	s.Config = config
@@ -61,8 +61,7 @@ func (s *Statsd) SetConfigDefaults(configPath string) error {
 
 // Statsd - XXX
 type Statsd struct {
-	// Address & Port to serve from
-	ServiceAddress string
+	Config Config
 
 	// Number of messages allowed to queue up in between calls to Gather. If this
 	// fills up, packets will get dropped until the next Gather interval is ran.
@@ -163,7 +162,7 @@ func (_ *Statsd) Description() string {
 const sampleConfig = `
 #   Available config options:
 	{
-		"port": 8125 # Default
+		"address": ":8125" # Default
 	}
 # Config location: /etc/opt/amonagent/plugins-enabled/statsd.conf
 `
@@ -172,7 +171,8 @@ func (_ *Statsd) SampleConfig() string {
 	return sampleConfig
 }
 
-func (s *Statsd) Collect() error {
+func (s *Statsd) Collect(configPath string) (interface{}, error) {
+	PerformanceStruct := PerformanceStruct{}
 	s.Lock()
 	defer s.Unlock()
 
@@ -220,21 +220,24 @@ func (s *Statsd) Collect() error {
 		s.counters = make(map[string]cachedcounter)
 	}
 
-	for _, metric := range s.sets {
-		fields := make(map[string]interface{})
-		for field, set := range metric.fields {
-			fields[field] = int64(len(set))
-		}
-		fmt.Println(metric.name, fields)
-	}
+	PerformanceStruct.Gauges = timings
+	PerformanceStruct.Counters = gauges
+
+	// for _, metric := range s.sets {
+	// 	fields := make(map[string]interface{})
+	// 	for field, set := range metric.fields {
+	// 		fields[field] = int64(len(set))
+	// 	}
+	// 	// fmt.Println(metric.name, fields)
+	// }
 	if s.DeleteSets {
 		s.sets = make(map[string]cachedset)
 	}
 
-	return nil
+	return PerformanceStruct, nil
 }
 
-func (s *Statsd) Start() error {
+func (s *Statsd) Start(configPath string) error {
 	s.SetConfigDefaults(configPath)
 	// Make data structures
 	s.done = make(chan struct{})
@@ -257,7 +260,7 @@ func (s *Statsd) Start() error {
 	go s.udpListen()
 	// Start the line parser
 	go s.parser()
-	log.Printf("Started the statsd service on %s\n", s.Port)
+	log.Printf("Started the statsd service on %s\n", s.Config.Address)
 	prevInstance = s
 	return nil
 }
@@ -266,7 +269,7 @@ func (s *Statsd) Start() error {
 func (s *Statsd) udpListen() error {
 	defer s.wg.Done()
 	var err error
-	address, _ := net.ResolveUDPAddr("udp", s.Port)
+	address, _ := net.ResolveUDPAddr("udp", s.Config.Address)
 	s.listener, err = net.ListenUDP("udp", address)
 	if err != nil {
 		log.Fatalf("ERROR: ListenUDP - %s", err)

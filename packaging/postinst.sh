@@ -95,3 +95,10 @@ elif [[ -f /etc/os-release ]]; then
         install_chkconfig
     fi
 fi
+
+
+
+# Generate machine id, if it does not exists
+if [ ! -d /etc/opt/amonagent/machine-id ]; then
+    amonagent -machineid
+fi

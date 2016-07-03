@@ -1,3 +1,8 @@
+0.6.1 - 03.07.2016
+==============
+
+* Generate machine id on first install / run. Fixes duplicate server creation in the Amon interface
+
 0.6 - 27.06.2016
 ==============
 
