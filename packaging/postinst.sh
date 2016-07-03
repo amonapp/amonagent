@@ -9,7 +9,7 @@ function install_init {
 
     echo "### You can start amonagent by executing"
     echo ""
-    echo " sudo service start amonagent"
+    echo " sudo service amonagent start"
     echo ""
     echo "###"
 }
