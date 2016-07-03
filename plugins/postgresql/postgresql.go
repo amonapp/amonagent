@@ -248,6 +248,7 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 	CountersQuery := fmt.Sprintf(DatabaseStatsSQL, strings.Join(counterColumns, ", "), p.Config.DB)
 	CounterRows, errCounterRows := db.Query(CountersQuery)
 	if errCounterRows == nil {
+		defer CounterRows.Close()
 
 		for CounterRows.Next() {
 			err = CounterRows.Scan(dest...)
@@ -262,13 +263,13 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 			}
 		}
 	}
-	defer CounterRows.Close()
 
 	gauges := make(map[string]interface{})
 	GaugesQuery := fmt.Sprintf(DatabaseStatsSQL, "numbackends", "amon")
 	GaugeRows, errGaugeRows := db.Query(GaugesQuery)
-	defer GaugeRows.Close()
+
 	if errGaugeRows == nil {
+		defer GaugeRows.Close()
 
 		for GaugeRows.Next() {
 			var connections int
@@ -287,8 +288,8 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 	TableSizeHeaders := []string{"name", "type", "size"}
 	TableSizeData := TableSizeData{Headers: TableSizeHeaders}
 
-	defer TableSizeRows.Close()
 	if errTableSizeRows == nil {
+		defer TableSizeRows.Close()
 
 		for TableSizeRows.Next() {
 			// TABLES_SIZE_ROWS = ['name','type','size']
@@ -309,18 +310,17 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 
 		}
 
-	}
+		PerformanceStruct.TableSizeData = TableSizeData
 
-	PerformanceStruct.TableSizeData = TableSizeData
+	}
 
 	IndexHitRows, errIndexHitRows := db.Query(IndexCacheHitRateSQL)
 	IndexHitHeaders := []string{"table_name", "size", "reads",
 		"cumulative_pct_reads", "index_hit_rate", "cache_hit_rate"}
 	IndexHitData := IndexHitRateData{Headers: IndexHitHeaders}
-	defer IndexHitRows.Close()
 
 	if errIndexHitRows == nil {
-
+		defer IndexHitRows.Close()
 		for IndexHitRows.Next() {
 			// INDEX_CACHE_HIT_RATE_ROWS = ['table_name','size','reads',
 			// 'cumulative_pct_reads', 'index_hit_rate', 'cache_hit_rate']
@@ -348,17 +348,16 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 			IndexHitData.Data = append(IndexHitData.Data, fields)
 
 		}
-	}
 
-	PerformanceStruct.IndexHitRateData = IndexHitData
+		PerformanceStruct.IndexHitRateData = IndexHitData
+	}
 
 	SlowQueriesRows, errSlowQueriesRows := db.Query(SlowQueriesSQL)
 	SlowQueriesHeaders := []string{"calls", "total", "per_call", "query"}
 	SlowQueriesData := SlowQueriesData{Headers: SlowQueriesHeaders}
 
-	defer SlowQueriesRows.Close()
-
 	if errSlowQueriesRows == nil {
+		defer SlowQueriesRows.Close()
 		for SlowQueriesRows.Next() {
 
 			var Calls int64
@@ -379,9 +378,9 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 			SlowQueriesData.Data = append(SlowQueriesData.Data, fields)
 
 		}
-	}
 
-	PerformanceStruct.SlowQueriesData = SlowQueriesData
+		PerformanceStruct.SlowQueriesData = SlowQueriesData
+	}
 
 	PerformanceStruct.Counters = counters
 	PerformanceStruct.Gauges = gauges
