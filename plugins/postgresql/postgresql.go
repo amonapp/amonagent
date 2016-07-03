@@ -246,33 +246,40 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 		counterColumns = append(counterColumns, key)
 	}
 	CountersQuery := fmt.Sprintf(DatabaseStatsSQL, strings.Join(counterColumns, ", "), p.Config.DB)
-	CounterRows, err := db.Query(CountersQuery)
-	defer CounterRows.Close()
-	for CounterRows.Next() {
-		err = CounterRows.Scan(dest...)
-		if err != nil {
-			pluginLogger.Errorf("Can't get Counter stats': %v", err)
+	CounterRows, errCounterRows := db.Query(CountersQuery)
+	if errCounterRows == nil {
 
-		}
+		for CounterRows.Next() {
+			err = CounterRows.Scan(dest...)
+			if err != nil {
+				pluginLogger.Errorf("Can't get Counter stats': %v", err)
 
-		for i, val := range rawResult {
-			key := counterColumns[i]
-			counters[key] = string(val)
+			}
+
+			for i, val := range rawResult {
+				key := counterColumns[i]
+				counters[key] = string(val)
+			}
 		}
 	}
+	defer CounterRows.Close()
 
 	gauges := make(map[string]interface{})
 	GaugesQuery := fmt.Sprintf(DatabaseStatsSQL, "numbackends", "amon")
-	GaugeRows, err := db.Query(GaugesQuery)
+	GaugeRows, errGaugeRows := db.Query(GaugesQuery)
 	defer GaugeRows.Close()
-	for GaugeRows.Next() {
-		var connections int
-		err = GaugeRows.Scan(&connections)
-		if err != nil {
-			pluginLogger.Errorf("Can't get Gauges': %v", err)
+	if errGaugeRows == nil {
+
+		for GaugeRows.Next() {
+			var connections int
+			err = GaugeRows.Scan(&connections)
+			if err != nil {
+				pluginLogger.Errorf("Can't get Gauges': %v", err)
+
+			}
+			gauges["connections"] = connections
 
 		}
-		gauges["connections"] = connections
 
 	}
 

@@ -113,6 +113,7 @@ func (a *Agent) Run(shutdown chan struct{}) error {
 	agentLogger.Info("Agent Config: Interval:%s\n", a.Interval)
 
 	ticker := time.NewTicker(a.Interval)
+	defer ticker.Stop()
 
 	for {
 		if err := a.GatherAndSend(); err != nil {

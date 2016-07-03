@@ -10,6 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/amonapp/amonagent/plugins"
+	"github.com/mitchellh/mapstructure"
 )
 
 const defaultPercentileLimit = 1000
@@ -29,6 +32,32 @@ var dropwarn = "ERROR: statsd message queue full. " +
 	"You may want to increase allowed_pending_messages in the config\n"
 
 var prevInstance *Statsd
+
+// Config - XXX
+type Config struct {
+	Port int64
+}
+
+// SetConfigDefaults - XXX
+func (s *Statsd) SetConfigDefaults(configPath string) error {
+	c, err := plugins.ReadConfigPath(configPath)
+	if err != nil {
+		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+	}
+	var config Config
+	decodeError := mapstructure.Decode(c, &config)
+	if decodeError != nil {
+		fmt.Print("Can't decode config file", decodeError.Error())
+	}
+
+	if len(config.Port) == 0 {
+		config.Port = 8125
+	}
+
+	s.Config = config
+
+	return nil
+}
 
 // Statsd - XXX
 type Statsd struct {
@@ -206,6 +235,7 @@ func (s *Statsd) Collect() error {
 }
 
 func (s *Statsd) Start() error {
+	s.SetConfigDefaults(configPath)
 	// Make data structures
 	s.done = make(chan struct{})
 	s.in = make(chan []byte, s.AllowedPendingMessages)
@@ -222,16 +252,12 @@ func (s *Statsd) Start() error {
 		s.timings = prevInstance.timings
 	}
 
-	if s.MetricSeparator == "" {
-		s.MetricSeparator = defaultSeparator
-	}
-
 	s.wg.Add(2)
 	// Start the UDP listener
 	go s.udpListen()
 	// Start the line parser
 	go s.parser()
-	log.Printf("Started the statsd service on %s\n", s.ServiceAddress)
+	log.Printf("Started the statsd service on %s\n", s.Port)
 	prevInstance = s
 	return nil
 }
@@ -240,7 +266,7 @@ func (s *Statsd) Start() error {
 func (s *Statsd) udpListen() error {
 	defer s.wg.Done()
 	var err error
-	address, _ := net.ResolveUDPAddr("udp", s.ServiceAddress)
+	address, _ := net.ResolveUDPAddr("udp", s.Port)
 	s.listener, err = net.ListenUDP("udp", address)
 	if err != nil {
 		log.Fatalf("ERROR: ListenUDP - %s", err)
@@ -560,9 +586,8 @@ func (s *Statsd) Stop() {
 	close(s.in)
 }
 
-func main() {
-	s := Statsd{}
-	s.Start()
-
-	// s.Gather()
+func init() {
+	plugins.Add("statsd", func() plugins.Plugin {
+		return &Statsd{}
+	})
 }
