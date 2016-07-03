@@ -283,92 +283,104 @@ func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
 
 	}
 
-	TableSizeRows, err := db.Query(TableSizeSQL)
+	TableSizeRows, errTableSizeRows := db.Query(TableSizeSQL)
 	TableSizeHeaders := []string{"name", "type", "size"}
 	TableSizeData := TableSizeData{Headers: TableSizeHeaders}
 
 	defer TableSizeRows.Close()
-	for TableSizeRows.Next() {
-		// TABLES_SIZE_ROWS = ['name','type','size']
-		var name string
-		var Type string
-		var size int64
+	if errTableSizeRows == nil {
 
-		err = TableSizeRows.Scan(&name, &Type, &size)
-		if err != nil {
-			pluginLogger.Errorf("Can't get Table size rows': %v", err)
+		for TableSizeRows.Next() {
+			// TABLES_SIZE_ROWS = ['name','type','size']
+			var name string
+			var Type string
+			var size int64
+
+			err = TableSizeRows.Scan(&name, &Type, &size)
+			if err != nil {
+				pluginLogger.Errorf("Can't get Table size rows': %v", err)
+			}
+			fields := []interface{}{}
+			fields = append(fields, name)
+			fields = append(fields, Type)
+			fields = append(fields, size)
+
+			TableSizeData.Data = append(TableSizeData.Data, fields)
+
 		}
-		fields := []interface{}{}
-		fields = append(fields, name)
-		fields = append(fields, Type)
-		fields = append(fields, size)
-
-		TableSizeData.Data = append(TableSizeData.Data, fields)
 
 	}
 
 	PerformanceStruct.TableSizeData = TableSizeData
 
-	IndexHitRows, err := db.Query(IndexCacheHitRateSQL)
+	IndexHitRows, errIndexHitRows := db.Query(IndexCacheHitRateSQL)
 	IndexHitHeaders := []string{"table_name", "size", "reads",
 		"cumulative_pct_reads", "index_hit_rate", "cache_hit_rate"}
 	IndexHitData := IndexHitRateData{Headers: IndexHitHeaders}
 	defer IndexHitRows.Close()
 
-	for IndexHitRows.Next() {
-		// INDEX_CACHE_HIT_RATE_ROWS = ['table_name','size','reads',
-		// 'cumulative_pct_reads', 'index_hit_rate', 'cache_hit_rate']
+	if errIndexHitRows == nil {
 
-		var TableName string
-		var Size string
-		var Read int64
-		var CumulativeReads float64
-		var IndexHitRate float64
-		var CacheHitRate float64
+		for IndexHitRows.Next() {
+			// INDEX_CACHE_HIT_RATE_ROWS = ['table_name','size','reads',
+			// 'cumulative_pct_reads', 'index_hit_rate', 'cache_hit_rate']
 
-		err = IndexHitRows.Scan(&TableName, &Size, &Read, &CumulativeReads, &IndexHitRate, &CacheHitRate)
-		if err != nil {
-			pluginLogger.Errorf("Can't get Index Hit Rate tables': %v", err)
+			var TableName string
+			var Size string
+			var Read int64
+			var CumulativeReads float64
+			var IndexHitRate float64
+			var CacheHitRate float64
+
+			err = IndexHitRows.Scan(&TableName, &Size, &Read, &CumulativeReads, &IndexHitRate, &CacheHitRate)
+			if err != nil {
+				pluginLogger.Errorf("Can't get Index Hit Rate tables': %v", err)
+
+			}
+			fields := []interface{}{}
+			fields = append(fields, TableName)
+			fields = append(fields, Size)
+			fields = append(fields, Read)
+			fields = append(fields, CumulativeReads)
+			fields = append(fields, IndexHitRate)
+			fields = append(fields, CacheHitRate)
+
+			IndexHitData.Data = append(IndexHitData.Data, fields)
 
 		}
-		fields := []interface{}{}
-		fields = append(fields, TableName)
-		fields = append(fields, Size)
-		fields = append(fields, Read)
-		fields = append(fields, CumulativeReads)
-		fields = append(fields, IndexHitRate)
-		fields = append(fields, CacheHitRate)
-
-		IndexHitData.Data = append(IndexHitData.Data, fields)
-
 	}
+
 	PerformanceStruct.IndexHitRateData = IndexHitData
 
-	SlowQueriesRows, err := db.Query(SlowQueriesSQL)
+	SlowQueriesRows, errSlowQueriesRows := db.Query(SlowQueriesSQL)
 	SlowQueriesHeaders := []string{"calls", "total", "per_call", "query"}
 	SlowQueriesData := SlowQueriesData{Headers: SlowQueriesHeaders}
 
 	defer SlowQueriesRows.Close()
-	for SlowQueriesRows.Next() {
 
-		var Calls int64
-		var Total float64
-		var PerCall float64
-		var Query string
+	if errSlowQueriesRows == nil {
+		for SlowQueriesRows.Next() {
 
-		err = SlowQueriesRows.Scan(&Calls, &Total, &PerCall, &Query)
-		if err != nil {
-			pluginLogger.Errorf("Can't get Slow Queries': %v", err)
+			var Calls int64
+			var Total float64
+			var PerCall float64
+			var Query string
+
+			err = SlowQueriesRows.Scan(&Calls, &Total, &PerCall, &Query)
+			if err != nil {
+				pluginLogger.Errorf("Can't get Slow Queries': %v", err)
+			}
+			fields := []interface{}{}
+			fields = append(fields, Calls)
+			fields = append(fields, Total)
+			fields = append(fields, PerCall)
+			fields = append(fields, Query)
+
+			SlowQueriesData.Data = append(SlowQueriesData.Data, fields)
+
 		}
-		fields := []interface{}{}
-		fields = append(fields, Calls)
-		fields = append(fields, Total)
-		fields = append(fields, PerCall)
-		fields = append(fields, Query)
-
-		SlowQueriesData.Data = append(SlowQueriesData.Data, fields)
-
 	}
+
 	PerformanceStruct.SlowQueriesData = SlowQueriesData
 
 	PerformanceStruct.Counters = counters
