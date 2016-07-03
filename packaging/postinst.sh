@@ -82,10 +82,12 @@ elif [[ -f /etc/debian_version ]]; then
     which systemctl &>/dev/null
     if [[ $? -eq 0 ]]; then
         install_systemd
+        systemctl restart amonagent || echo "WARNING: systemd not running."
     else
         # Assuming sysv
         install_init
         install_update_rcd
+        invoke-rc.d amonagent restart
     fi
 elif [[ -f /etc/os-release ]]; then
     source /etc/os-release
@@ -100,5 +102,10 @@ fi
 
 # Generate machine id, if it does not exists
 if [ ! -d /etc/opt/amonagent/machine-id ]; then
+    echo "### Checking machine id:"
+    echo ""
     amonagent -machineid
+    echo ""
+    echo "###"
+    
 fi

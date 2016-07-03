@@ -1,6 +1,7 @@
-0.6.1 - 03.07.2016
+0.6.2 - 03.07.2016
 ==============
 
+* Automatically start on Ubuntu / Debian
 * Generate machine id on first install / run. Fixes duplicate server creation in the Amon interface
 
 0.6 - 27.06.2016

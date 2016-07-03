@@ -37,9 +37,11 @@ elif [[ -f /etc/debian_version ]]; then
       which systemctl &>/dev/null
       if [[ $? -eq 0 ]]; then
           disable_systemd
+          deb-systemd-invoke stop amonagent.service
       else
           # Assuming sysv
           disable_update_rcd
+          invoke-rc.d amonagent stop
       fi
     fi
 fi
