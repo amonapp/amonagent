@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  connection: local
+  # sudo: True
+  become: true
+  become_user: root
+  vars_files:
+   - api_vars.yml
+  tasks:
+     - include: ubuntu_debian.yml
+       when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+     - include: centos.yml
+       when: ansible_distribution == 'CentOS'
+     - template: src=templates/amonagent.conf dest=/etc/opt/amonagent/amonagent.conf owner=amonagent group=amonagent mode=0644
+     - command: /etc/init.d/amonagent restart 
