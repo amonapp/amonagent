@@ -53,15 +53,17 @@ func Debug() {
 
 		statsd.Start(pluginConfig.Path)
 
-		statsd.Stop()
+		// statsd.Collect(pluginConfig.Path)
+
+		// statsd.Stop()
 
 	}
 
 }
 
 func main() {
-	Debug()
-	return
+	// Debug()
+	// return
 	flag.Parse()
 
 	machineID := collectors.GetOrCreateMachineID()

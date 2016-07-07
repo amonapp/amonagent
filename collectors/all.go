@@ -74,6 +74,7 @@ func CollectPluginsData() (interface{}, interface{}) {
 
 	for _, p := range EnabledPlugins {
 		wg.Add(1)
+
 		creator, _ := plugins.Plugins[p.Name]
 		plugin := creator()
 
