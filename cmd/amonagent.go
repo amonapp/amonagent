@@ -46,9 +46,22 @@ func ListPlugins() {
 // Debug - XXX
 func Debug() {
 
+	creator, ok := plugins.ServicePlugins["statsd"]
+	if ok {
+		statsd := creator()
+		pluginConfig, _ := plugins.GetConfigPath("statsd")
+
+		statsd.Start(pluginConfig.Path)
+
+		statsd.Stop()
+
+	}
+
 }
 
 func main() {
+	Debug()
+	return
 	flag.Parse()
 
 	machineID := collectors.GetOrCreateMachineID()

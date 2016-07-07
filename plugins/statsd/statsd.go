@@ -590,7 +590,7 @@ func (s *Statsd) Stop() {
 }
 
 func init() {
-	plugins.Add("statsd", func() plugins.Plugin {
+	plugins.AddService("statsd", func() plugins.ServicePlugin {
 		return &Statsd{}
 	})
 }
