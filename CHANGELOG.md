@@ -1,3 +1,8 @@
+0.6.5 - WIP
+==============
+
+* `amonagent -test` displays each plugin output individualy + show execution time
+
 0.6.2 - 03.07.2016
 ==============
 

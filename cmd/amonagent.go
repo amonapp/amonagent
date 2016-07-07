@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"time"
 
 	"github.com/amonapp/amonagent"
 	"github.com/amonapp/amonagent/collectors"
@@ -44,8 +45,7 @@ func ListPlugins() {
 
 // Debug - XXX
 func Debug() {
-	cpu, _ := collectors.CollectPluginsData()
-	fmt.Println(cpu)
+
 }
 
 func main() {
@@ -82,11 +82,15 @@ func main() {
 		creator, ok := plugins.Plugins[pluginConfig.Name]
 		if ok {
 			plugin := creator()
+			start := time.Now()
 			PluginResult, err := plugin.Collect(pluginConfig.Path)
 			if err != nil {
 				fmt.Printf("Can't get stats for plugin: %s", err)
 			}
 			fmt.Println(PluginResult)
+
+			elapsed := time.Since(start)
+			fmt.Printf("\n Executed in %s", elapsed)
 		} else {
 			fmt.Printf("\033[91mNon existing plugin: %s or missing config file in /etc/opt/amonagent/plugins-enabled/%s.conf \033[0m", *fTestPlugin, *fTestPlugin)
 			ListPlugins()

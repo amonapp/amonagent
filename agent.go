@@ -6,6 +6,7 @@ import (
 
 	"github.com/amonapp/amonagent/collectors"
 	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/plugins"
 	"github.com/amonapp/amonagent/remote"
 	"github.com/amonapp/amonagent/settings"
 )
@@ -25,7 +26,7 @@ func (a *Agent) Test(config settings.Struct) error {
 
 	ProcessesData := collectors.CollectProcessData()
 	SystemData := collectors.CollectSystemData()
-	Plugins, Checks := collectors.CollectPluginsData()
+	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 	HostData := collectors.CollectHostData()
 
 	fmt.Println("\n------------------")
@@ -43,14 +44,27 @@ func (a *Agent) Test(config settings.Struct) error {
 	fmt.Println("\n------------------")
 	fmt.Println("\033[92mPlugins: \033[0m")
 	fmt.Println("")
-	fmt.Println(Plugins)
-	fmt.Println("\n------------------")
 
-	fmt.Println("\n------------------")
-	fmt.Println("\033[92mChecks: \033[0m")
-	fmt.Println("")
-	fmt.Println(Checks)
-	fmt.Println("\n------------------")
+	for _, p := range EnabledPlugins {
+
+		creator, _ := plugins.Plugins[p.Name]
+		plugin := creator()
+		start := time.Now()
+		PluginResult, err := plugin.Collect(p.Path)
+		if err != nil {
+			agentLogger.Errorf("Can't get stats for plugin: %s", err)
+		}
+
+		fmt.Println("\n------------------")
+		fmt.Print("\033[92mPlugin: ")
+		fmt.Print(p.Name)
+		fmt.Print("\033[0m \n")
+		fmt.Println(PluginResult)
+
+		elapsed := time.Since(start)
+		fmt.Printf("\n Executed in %s", elapsed)
+
+	}
 
 	fmt.Println("\n------------------")
 	fmt.Println("\033[92mHost Data: \033[0m")
