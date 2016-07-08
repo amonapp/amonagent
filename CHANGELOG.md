@@ -1,7 +1,8 @@
-0.6.5 - WIP
+0.6.3 - 08.07.2016
 ==============
 
 * `amonagent -test` displays each plugin output individualy + show execution time
+* New CLI param `amonagent -debu` - starts the agent and display the metrics sent in the terminal
 
 0.6.2 - 03.07.2016
 ==============
