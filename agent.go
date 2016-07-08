@@ -91,7 +91,7 @@ func (a *Agent) Test(config settings.Struct) error {
 
 	// url := remote.SystemURL()
 
-	err := remote.SendData(allMetrics)
+	err := remote.SendData(allMetrics, true)
 	if err != nil {
 		return fmt.Errorf("%s\n", err.Error())
 	}
@@ -100,11 +100,11 @@ func (a *Agent) Test(config settings.Struct) error {
 }
 
 // GatherAndSend - XXX
-func (a *Agent) GatherAndSend() error {
+func (a *Agent) GatherAndSend(debug bool) error {
 	allMetrics := collectors.CollectAllData()
 	agentLogger.Info("Metrics collected (Interval:%s)\n", a.Interval)
 
-	err := remote.SendData(allMetrics)
+	err := remote.SendData(allMetrics, debug)
 	if err != nil {
 		return fmt.Errorf("Can't connect to the Amon API on %s\n", err.Error())
 	}
@@ -122,7 +122,7 @@ func NewAgent(config settings.Struct) (*Agent, error) {
 }
 
 // Run runs the agent daemon, gathering every Interval
-func (a *Agent) Run(shutdown chan struct{}) error {
+func (a *Agent) Run(shutdown chan struct{}, debug bool) error {
 
 	agentLogger.Info("Agent Config: Interval:%s\n", a.Interval)
 
@@ -130,7 +130,7 @@ func (a *Agent) Run(shutdown chan struct{}) error {
 	defer ticker.Stop()
 
 	for {
-		if err := a.GatherAndSend(); err != nil {
+		if err := a.GatherAndSend(debug); err != nil {
 			agentLogger.Info("Flusher routine failed, exiting: %s\n", err.Error())
 		}
 		select {

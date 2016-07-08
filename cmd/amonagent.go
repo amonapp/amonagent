@@ -21,6 +21,7 @@ import (
 var agentLogger = logging.GetLogger("amonagent.main")
 
 var fTest = flag.Bool("test", false, "gather all metrics, print them out, and exit")
+var fDebug = flag.Bool("debug", false, "Starts the agent and displays the metrics sent in the terminal")
 var fListPlugins = flag.Bool("list-plugins", false, "lists all available plugins and exit")
 var fTestPlugin = flag.String("test-plugin", "", "gather plugin metrics, print them out, and exit")
 var fPluginConfig = flag.String("plugin-config", "", "Shows the example config for a plugin")
@@ -173,5 +174,5 @@ func main() {
 		f.Close()
 	}
 
-	ag.Run(shutdown)
+	ag.Run(shutdown, *fDebug)
 }
