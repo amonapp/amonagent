@@ -2,6 +2,7 @@
 
 LOG_DIR=/var/log/amonagent
 SCRIPT_DIR=/opt/amonagent/scripts/
+HOME_DIR=/home/amonagent
 
 function install_init {
     cp -f $SCRIPT_DIR/init.sh /etc/init.d/amonagent
@@ -35,12 +36,18 @@ function install_chkconfig {
 
 id amonagent &>/dev/null
 if [[ $? -ne 0 ]]; then
-    useradd --system -U -M amonagent -s /bin/false -d /etc/amonagent
+    useradd --system --user-group --key USERGROUPS_ENAB=yes -M amonagent --shell /bin/false -d /etc/opt/amonagent
 fi
+
 
 test -d $LOG_DIR || mkdir -p $LOG_DIR
 chown -R -L amonagent:amonagent $LOG_DIR
 chmod 755 $LOG_DIR
+
+
+# Create a dummy home directory, Sensu plugins need this for some reason
+test -d $HOME_DIR || mkdir -p $HOME_DIR
+chown -R -L amonagent:amonagent $HOME_DIR
 
 # Remove legacy symlink, if it exists
 if [[ -L /etc/init.d/amonagent ]]; then
