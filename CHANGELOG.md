@@ -1,3 +1,8 @@
+0.6.5 - 10.07.2016
+==============
+
+* Systemd, RPM distros - properly creates the /var/run/amonagent directory on reboot
+
 0.6.4 - 08.07.2016
 ==============
 
