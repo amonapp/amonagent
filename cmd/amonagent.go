@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"time"
 
 	"github.com/amonapp/amonagent"
 	"github.com/amonapp/amonagent/collectors"
@@ -20,6 +21,7 @@ import (
 var agentLogger = logging.GetLogger("amonagent.main")
 
 var fTest = flag.Bool("test", false, "gather all metrics, print them out, and exit")
+var fDebug = flag.Bool("debug", false, "Starts the agent and displays the metrics sent in the terminal")
 var fListPlugins = flag.Bool("list-plugins", false, "lists all available plugins and exit")
 var fTestPlugin = flag.String("test-plugin", "", "gather plugin metrics, print them out, and exit")
 var fPluginConfig = flag.String("plugin-config", "", "Shows the example config for a plugin")
@@ -44,11 +46,25 @@ func ListPlugins() {
 
 // Debug - XXX
 func Debug() {
-	cpu, _ := collectors.CollectPluginsData()
-	fmt.Println(cpu)
+
+	creator, ok := plugins.ServicePlugins["statsd"]
+	if ok {
+		statsd := creator()
+		pluginConfig, _ := plugins.GetConfigPath("statsd")
+
+		statsd.Start(pluginConfig.Path)
+
+		// statsd.Collect(pluginConfig.Path)
+
+		// statsd.Stop()
+
+	}
+
 }
 
 func main() {
+	// Debug()
+	// return
 	flag.Parse()
 
 	machineID := collectors.GetOrCreateMachineID()
@@ -82,11 +98,15 @@ func main() {
 		creator, ok := plugins.Plugins[pluginConfig.Name]
 		if ok {
 			plugin := creator()
+			start := time.Now()
 			PluginResult, err := plugin.Collect(pluginConfig.Path)
 			if err != nil {
 				fmt.Printf("Can't get stats for plugin: %s", err)
 			}
 			fmt.Println(PluginResult)
+
+			elapsed := time.Since(start)
+			fmt.Printf("\n Executed in %s", elapsed)
 		} else {
 			fmt.Printf("\033[91mNon existing plugin: %s or missing config file in /etc/opt/amonagent/plugins-enabled/%s.conf \033[0m", *fTestPlugin, *fTestPlugin)
 			ListPlugins()
@@ -154,5 +174,5 @@ func main() {
 		f.Close()
 	}
 
-	ag.Run(shutdown)
+	ag.Run(shutdown, *fDebug)
 }

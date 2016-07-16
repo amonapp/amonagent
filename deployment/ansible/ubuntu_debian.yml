@@ -1,0 +1,14 @@
+- name: Add Amon agent repository key.
+  command: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv AD53961F
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Add repository - Debian/Ubuntu.
+  lineinfile: "dest=/etc/apt/sources.list.d/amonagent.list create=yes line='deb http://packages.amon.cx/repo amon contrib'"
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+
+- name: Update.
+  command: apt-get update
+
+- name: Install.
+  command: apt-get install -y --force-yes amonagent

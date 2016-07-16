@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/amonapp/amonagent/logging"
@@ -32,10 +33,16 @@ func SystemURL() string {
 }
 
 // SendData - XXX
-func SendData(data interface{}) error {
+func SendData(data interface{}, debug bool) error {
 	url := SystemURL()
 
 	JSONBytes, err := json.Marshal(data)
+
+	if debug {
+		var out bytes.Buffer
+		json.Indent(&out, JSONBytes, "", " ")
+		out.WriteTo(os.Stdout)
+	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(JSONBytes))
 	req.Header.Set("Content-Type", "application/json")

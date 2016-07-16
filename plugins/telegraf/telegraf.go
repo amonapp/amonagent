@@ -105,7 +105,6 @@ func ParseLine(s string) (ParsedLine, error) {
 	if len(measurementLine) > 0 {
 
 		lineStarter := measurementLine[0]
-
 		// > ping,url=www.google.com average_response_ms=2.596,packets_received=1i 1454321712994367057
 		if lineStarter == ">" {
 

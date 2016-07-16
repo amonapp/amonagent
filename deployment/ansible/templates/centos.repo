@@ -1,0 +1,5 @@
+[amon-agent]
+name=AmonAgent
+gpgcheck=0
+enabled=1
+baseurl=http://packages.amon.cx/rpm

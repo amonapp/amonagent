@@ -1,3 +1,19 @@
+0.6.5 - 10.07.2016
+==============
+
+* Systemd, RPM distros - properly creates the /var/run/amonagent directory on reboot
+
+0.6.4 - 08.07.2016
+==============
+
+* Postinst script permissions changes for properly running Sensu plugins on CentOS
+
+0.6.3 - 08.07.2016
+==============
+
+* `amonagent -test` displays each plugin output individualy + show execution time
+* New CLI param `amonagent -debug` - starts the agent and display the metrics sent in the terminal
+
 0.6.2 - 03.07.2016
 ==============
 

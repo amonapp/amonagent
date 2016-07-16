@@ -5,6 +5,7 @@ VERSION = $(shell sh -c 'git describe --always --tags')
 # VERSION = "0.2.1"
 INITD_SCRIPT=packaging/init.sh
 SYSTEMD_SCRIPT=packaging/amonagent.service
+TEMPFILE_CONF=packaging/tmpfilesd_amonagent.conf
 
 PACKAGES_PATH=/home/martin/amon-packages
 DEBIAN_REPO_PATH=$(PACKAGES_PATH)/debian/
@@ -50,6 +51,10 @@ install_base: build
 
 	mkdir -p $(BUILD)/var/log/amonagent
 	chmod 755 $(BUILD)/var/log/amonagent
+
+	# /var/run permissions for RPM distros
+	mkdir -p $(BUILD)/usr/lib/tmpfiles.d
+	cp $(TEMPFILE_CONF) $(BUILD)/usr/lib/tmpfiles.d/amonagent.conf
 
 	mkdir -p $(BUILD)/opt/amonagent/scripts
 	cp $(INITD_SCRIPT) $(BUILD)/opt/amonagent/scripts/init.sh

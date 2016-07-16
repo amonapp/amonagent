@@ -104,13 +104,42 @@ type Plugin interface {
 	Collect(string) (interface{}, error)
 }
 
-// Creator - XXX
-type Creator func() Plugin
+// ServicePlugin - XXX
+type ServicePlugin interface {
+	// SampleConfig returns the default configuration of the Plugin
+	SampleConfig() string
+
+	// Description returns a one-sentence description on the Plugin
+	Description() string
+
+	// Collects all the metrics and returns a struct with the results
+	Collect(string) (interface{}, error)
+
+	// Start starts the service
+	Start(string) error
+
+	// Stop stops the services and closes any necessary channels and connections
+	Stop()
+}
+
+// PluginRegistry - XXX
+type PluginRegistry func() Plugin
 
 // Plugins - XXX
-var Plugins = map[string]Creator{}
+var Plugins = map[string]PluginRegistry{}
 
 // Add - XXX
-func Add(name string, creator Creator) {
-	Plugins[name] = creator
+func Add(name string, registry PluginRegistry) {
+	Plugins[name] = registry
+}
+
+// ServicePluginRegistry - XXX
+type ServicePluginRegistry func() ServicePlugin
+
+// Plugins - XXX
+var ServicePlugins = map[string]ServicePluginRegistry{}
+
+// AddService - XXX
+func AddService(name string, registry ServicePluginRegistry) {
+	ServicePlugins[name] = registry
 }
