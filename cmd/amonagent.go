@@ -48,8 +48,6 @@ func Debug() {
 	if ok {
 		statsd := creator()
 
-		fmt.Println(statsd)
-
 		err := statsd.Start()
 		if err != nil {
 			fmt.Printf("Can't start Statsd: %s", err)

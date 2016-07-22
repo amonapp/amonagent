@@ -49,7 +49,7 @@ func (s *Statsd) SetConfigDefaults() error {
 		}).Error("Can't read config file")
 	}
 	var config Config
-	fmt.Println(configFile)
+
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		log.WithFields(log.Fields{
