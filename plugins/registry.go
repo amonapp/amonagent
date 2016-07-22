@@ -1,7 +1,6 @@
 package plugins
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -33,43 +32,19 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 	return config, nil
 }
 
-// GetPluginConfigKeyValue - {"status_url": url, "ip_address": 8000}
-func GetPluginConfigKeyValue(plugin string) (interface{}, error) {
+// ReadPluginConfig - {"status_url": url, "ip_address": 8000}
+func ReadPluginConfig(plugin string) ([]byte, error) {
 	c, err := GetConfigPath(plugin)
 	if err != nil {
 		fmt.Printf("Can't read config file: %s %v\n", c.Path, err)
 	}
-	var data map[string]interface{}
+
 	file, e := ioutil.ReadFile(c.Path)
 	if e != nil {
-		return data, e
+		return nil, e
 	}
 
-	if err := json.Unmarshal(file, &data); err != nil {
-		return data, err
-	}
-
-	return data, nil
-
-}
-
-// GetPluginConfigList - ["command", "another_command"]
-func GetPluginConfigList(plugin string) ([]string, error) {
-	c, err := GetConfigPath(plugin)
-	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", c.Path, err)
-	}
-	var data []string
-	file, e := ioutil.ReadFile(c.Path)
-	if e != nil {
-		return data, e
-	}
-
-	if err := json.Unmarshal(file, &data); err != nil {
-		return data, err
-	}
-
-	return data, nil
+	return file, nil
 
 }
 

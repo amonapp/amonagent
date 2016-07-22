@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -51,9 +52,15 @@ type Config struct {
 
 // SetConfigDefaults - XXX
 func (c *Checks) SetConfigDefaults() error {
-	Commands, err := plugins.GetPluginConfigList("checks")
+	configFile, err := plugins.ReadPluginConfig("checks")
 	if err != nil {
 		fmt.Printf("Can't read config file: %s\n", err)
+	}
+
+	var Commands []string
+
+	if e := json.Unmarshal(configFile, &Commands); e != nil {
+		fmt.Printf("Can't decode JSON file: %v\n", e)
 	}
 
 	c.Config.Commands = Commands

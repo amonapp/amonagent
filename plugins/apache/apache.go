@@ -46,12 +46,13 @@ func (a *Apache) SampleConfig() string {
 
 // SetConfigDefaults - XXX
 func (a *Apache) SetConfigDefaults() error {
-	c, err := plugins.GetPluginConfigKeyValue("apache")
+	configFile, err := plugins.ReadPluginConfig("apache")
 	if err != nil {
 		fmt.Printf("Can't read config file: %s\n", err)
 	}
+
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		fmt.Print("Can't decode config file", decodeError.Error())
 	}

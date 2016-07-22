@@ -61,9 +61,7 @@ func ParseLine(s string) (Metric, error) {
 }
 
 // Start - XXX
-func (c *Custom) Start() {
-	return nil
-}
+func (c *Custom) Start() error { return nil }
 
 // Stop - XXX
 func (c *Custom) Stop() {
@@ -129,10 +127,16 @@ type Config struct {
 
 // SetConfigDefaults - XXX
 func (c *Custom) SetConfigDefaults() error {
-	Commands, err := plugins.GetPluginConfigList("custom")
+	configFile, err := plugins.ReadPluginConfig("custom")
 	if err != nil {
 		fmt.Printf("Can't read config file: %s\n", err)
 	}
+	var Commands []string
+	if err := json.Unmarshal(configFile, &Commands); err != nil {
+		fmt.Printf("Can't decode JSON file: %v\n", err)
+	}
+
+	fmt.Println(Commands)
 
 	c.Config.Commands = Commands
 
