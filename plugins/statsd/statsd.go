@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 )
@@ -41,14 +41,20 @@ type Config struct {
 
 // SetConfigDefaults - XXX
 func (s *Statsd) SetConfigDefaults() error {
-	c, err := plugins.GetPluginConfigKeyValue("statsd")
+	configFile, err := plugins.ReadPluginConfig("statsd")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s \n", err)
+		log.WithFields(log.Fields{
+			"plugin": "statsd",
+			"error":  err.Error(),
+		}).Error("Can't read config file")
 	}
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		fmt.Print("Can't decode config file", decodeError.Error())
+		log.WithFields(log.Fields{
+			"plugin": "statsd",
+			"error":  decodeError.Error(),
+		}).Error("Can't decode config file")
 	}
 
 	if len(config.Address) == 0 {

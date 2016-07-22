@@ -36,7 +36,7 @@ type PerformanceStruct struct {
 }
 
 // Start - XXX
-func (n *Nginx) Start(configPath string) {
+func (n *Nginx) Start() error {
 	return nil
 }
 
@@ -63,13 +63,13 @@ func (n *Nginx) SampleConfig() string {
 }
 
 // SetConfigDefaults - XXX
-func (n *Nginx) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (n *Nginx) SetConfigDefaults() error {
+	configFile, err := plugins.ReadPluginConfig("nginx")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		fmt.Print("Can't decode config file", decodeError.Error())
 	}
@@ -90,8 +90,8 @@ func (n *Nginx) Description() string {
 }
 
 // Collect - XXX
-func (n *Nginx) Collect(configPath string) (interface{}, error) {
-	n.SetConfigDefaults(configPath)
+func (n *Nginx) Collect() (interface{}, error) {
+	n.SetConfigDefaults()
 	PerformanceStruct := PerformanceStruct{}
 	// 	Active connections: 8
 	// 	server accepts handled requests

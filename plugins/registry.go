@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/settings"
 )
 
@@ -36,7 +37,11 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 func ReadPluginConfig(plugin string) ([]byte, error) {
 	c, err := GetConfigPath(plugin)
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", c.Path, err)
+		log.WithFields(log.Fields{
+			"plugin": plugin,
+			"path":   c.Path,
+			"error":  err,
+		}).Error("Can't read config file")
 	}
 
 	file, e := ioutil.ReadFile(c.Path)
@@ -59,7 +64,7 @@ func GetAllEnabledPlugins() ([]PluginConfig, error) {
 				PluginDirErr := os.MkdirAll(PluginConfigPath, os.ModePerm)
 
 				if PluginDirErr != nil {
-					fmt.Printf("Plugin directory doesn't exist: %s\n", PluginConfigPath)
+					fmt.Printf("Plugin config directory doesn't exist: %s\n", PluginConfigPath)
 				}
 
 			}

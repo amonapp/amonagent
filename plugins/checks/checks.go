@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/amonapp/amonagent/plugins"
 )
@@ -54,7 +55,10 @@ type Config struct {
 func (c *Checks) SetConfigDefaults() error {
 	configFile, err := plugins.ReadPluginConfig("checks")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{
+			"plugin": "checks",
+			"error":  err,
+		}).Error("Can't read config file")
 	}
 
 	var Commands []string

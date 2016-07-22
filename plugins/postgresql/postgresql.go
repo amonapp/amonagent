@@ -171,7 +171,7 @@ type Config struct {
 }
 
 // Start - XXX
-func (p *PostgreSQL) Start(configPath string) {
+func (p *PostgreSQL) Start() error {
 	return nil
 }
 
@@ -193,13 +193,13 @@ func (p *PostgreSQL) SampleConfig() string {
 }
 
 // SetConfigDefaults - XXX
-func (p *PostgreSQL) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (p *PostgreSQL) SetConfigDefaults() error {
+	configFile, err := plugins.ReadPluginConfig("postgresql")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		fmt.Print("Can't decode config file", decodeError.Error())
 	}
@@ -232,9 +232,9 @@ func (p *PostgreSQL) Description() string {
 }
 
 // Collect - XXX
-func (p *PostgreSQL) Collect(configPath string) (interface{}, error) {
+func (p *PostgreSQL) Collect() (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
-	p.SetConfigDefaults(configPath)
+	p.SetConfigDefaults()
 
 	db, err := sql.Open("postgres", p.Config.Host)
 	if err != nil {

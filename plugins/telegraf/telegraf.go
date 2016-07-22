@@ -24,7 +24,7 @@ func (t *Telegraf) Description() string {
 }
 
 // Start - XXX
-func (t *Telegraf) Start(configPath string) {
+func (t *Telegraf) Start() error {
 	return nil
 }
 
@@ -69,13 +69,13 @@ type ParsedLine struct {
 }
 
 // SetConfigDefaults - XXX
-func (t *Telegraf) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (t *Telegraf) SetConfigDefaults() error {
+	configFile, err := plugins.ReadPluginConfig("telegraf")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		fmt.Print("Can't decode config file", decodeError.Error())
 	}
@@ -202,8 +202,8 @@ func Run(command string) (string, error) {
 }
 
 // Collect - XXX
-func (t *Telegraf) Collect(configPath string) (interface{}, error) {
-	t.SetConfigDefaults(configPath)
+func (t *Telegraf) Collect() (interface{}, error) {
+	t.SetConfigDefaults()
 	Command := fmt.Sprintf("/usr/bin/telegraf -test -config %s", t.Config.Config)
 	Commandresult, err := Run(Command)
 	if err != nil {

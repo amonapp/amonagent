@@ -296,7 +296,7 @@ type PerformanceStruct struct {
 }
 
 // Start - XXX
-func (h *Haproxy) Start(configPath string) {
+func (h *Haproxy) Start() error {
 	return nil
 }
 
@@ -332,13 +332,13 @@ func (h *Haproxy) SampleConfig() string {
 }
 
 // SetConfigDefaults - XXX
-func (h *Haproxy) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (h *Haproxy) SetConfigDefaults() error {
+	configFile, err := plugins.ReadPluginConfig("haproxy")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		pluginLogger.Errorf("Can't decode config file %s", decodeError.Error())
 	}
@@ -351,9 +351,9 @@ func (h *Haproxy) SetConfigDefaults(configPath string) error {
 }
 
 // Collect - XXX
-func (h *Haproxy) Collect(configPath string) (interface{}, error) {
+func (h *Haproxy) Collect() (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
-	h.SetConfigDefaults(configPath)
+	h.SetConfigDefaults()
 
 	client := &http.Client{}
 

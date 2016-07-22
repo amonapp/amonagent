@@ -3,7 +3,6 @@ package sensu
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,7 +42,7 @@ func (s *Sensu) SampleConfig() string {
 }
 
 // Start - XXX
-func (s *Sensu) Start(configPath string) {
+func (s *Sensu) Start() error {
 	return nil
 }
 
@@ -57,13 +56,13 @@ type Config struct {
 }
 
 // SetConfigDefaults - XXX
-func (s *Sensu) SetConfigDefaults(configPath string) error {
-	jsonFile, err := ioutil.ReadFile(configPath)
+func (s *Sensu) SetConfigDefaults() error {
+	configFile, err := plugins.ReadPluginConfig("checks")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var Commands []string
-	if err := json.Unmarshal(jsonFile, &Commands); err != nil {
+	if err := json.Unmarshal(configFile, &Commands); err != nil {
 		fmt.Printf("Can't decode JSON file: %v\n", err)
 	}
 
@@ -164,8 +163,8 @@ type Command struct {
 
 // Collect - XXX
 // This should return the following: sensu.plugin_name: {"gauges": {}}, sensu.another_plugin :{"gauges":{}}
-func (s *Sensu) Collect(configPath string) (interface{}, error) {
-	s.SetConfigDefaults(configPath)
+func (s *Sensu) Collect() (interface{}, error) {
+	s.SetConfigDefaults()
 	var wg sync.WaitGroup
 	plugins := make(map[string]interface{})
 

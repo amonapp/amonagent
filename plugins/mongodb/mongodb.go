@@ -262,7 +262,7 @@ type Config struct {
 }
 
 // Start - XXX
-func (m *MongoDB) Start(configPath string) {
+func (m *MongoDB) Start() error {
 	return nil
 }
 
@@ -284,13 +284,13 @@ func (m *MongoDB) SampleConfig() string {
 }
 
 // SetConfigDefaults - XXX
-func (m *MongoDB) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (m *MongoDB) SetConfigDefaults() error {
+	configFile, err := plugins.ReadPluginConfig("mongodb")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		pluginLogger.Errorf("Can't decode config file %s", decodeError.Error())
 	}
@@ -306,8 +306,8 @@ func (m *MongoDB) Description() string {
 }
 
 // Collect - XXX
-func (m *MongoDB) Collect(configPath string) (interface{}, error) {
-	m.SetConfigDefaults(configPath)
+func (m *MongoDB) Collect() (interface{}, error) {
+	m.SetConfigDefaults()
 	PerformanceStruct := PerformanceStruct{}
 
 	url, err := url.Parse(m.Config.URI)

@@ -131,12 +131,10 @@ func (c *Custom) SetConfigDefaults() error {
 	if err != nil {
 		fmt.Printf("Can't read config file: %s\n", err)
 	}
-	var Commands []string
+	var Commands []Command
 	if err := json.Unmarshal(configFile, &Commands); err != nil {
 		fmt.Printf("Can't decode JSON file: %v\n", err)
 	}
-
-	fmt.Println(Commands)
 
 	c.Config.Commands = Commands
 

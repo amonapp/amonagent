@@ -24,7 +24,7 @@ type Config struct {
 }
 
 // Start - XXX
-func (m *MySQL) Start(configPath string) {
+func (m *MySQL) Start() error {
 	return nil
 }
 
@@ -46,13 +46,13 @@ func (m *MySQL) SampleConfig() string {
 }
 
 // SetConfigDefaults - XXX
-func (m *MySQL) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (m *MySQL) SetConfigDefaults() error {
+	configFile, err := plugins.ReadPluginConfig("mysql")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		fmt.Print("Can't decode config file", decodeError.Error())
 	}
@@ -172,9 +172,9 @@ func (m *MySQL) Description() string {
 }
 
 // Collect - XXX
-func (m *MySQL) Collect(configPath string) (interface{}, error) {
+func (m *MySQL) Collect() (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
-	m.SetConfigDefaults(configPath)
+	m.SetConfigDefaults()
 
 	db, err := sql.Open("mysql", m.Config.Host)
 	if err != nil {

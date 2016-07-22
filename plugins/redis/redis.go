@@ -97,7 +97,7 @@ func (r *Redis) SampleConfig() string {
 }
 
 // Start - XXX
-func (r *Redis) Start(configPath string) {
+func (r *Redis) Start() error {
 	return nil
 }
 
@@ -106,13 +106,13 @@ func (r *Redis) Stop() {
 }
 
 // SetConfigDefaults - XXX
-func (r *Redis) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (r *Redis) SetConfigDefaults() error {
+	configFile, err := plugins.ReadPluginConfig("redis")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var config Config
-	decodeError := mapstructure.Decode(c, &config)
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		fmt.Print("Can't decode config file", decodeError.Error())
 	}
@@ -136,8 +136,8 @@ type Redis struct {
 }
 
 // Collect - XXX
-func (r *Redis) Collect(configPath string) (interface{}, error) {
-	r.SetConfigDefaults(configPath)
+func (r *Redis) Collect() (interface{}, error) {
+	r.SetConfigDefaults()
 	PerformanceStruct := PerformanceStruct{}
 
 	client := redis.NewClient(&redis.Options{
