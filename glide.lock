@@ -1,8 +1,8 @@
-hash: 686c8a12b688413ff87f34fd0d381604c7e0666495884e395fbf81455f2c01ff
-updated: 2016-06-24T18:49:13.99837327+03:00
+hash: 0b5701392e987be772f3a5958f321b8e740dcadc602835c3b51914129c2c487b
+updated: 2016-07-23T01:03:31.590642219+03:00
 imports:
 - name: github.com/derekparker/delve
-  version: 323c0450d1e5ac8bb0f783f783ad2cd520b83f16
+  version: 218c2b953b13c439a645ede821d3aaca7b71ff7b
   subpackages:
   - cmd/dlv
 - name: github.com/go-ole/go-ole
@@ -40,6 +40,10 @@ imports:
   version: 6cb3b85ef5a0efef77caef88363ec4d4b5c0976d
   subpackages:
   - assert
+- name: golang.org/x/sys
+  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  subpackages:
+  - unix
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
 - name: gopkg.in/mgo.v2
@@ -55,4 +59,12 @@ imports:
   - internal/consistenthash
   - internal/hashtag
   - internal/pool
-devImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
