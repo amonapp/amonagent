@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/amonapp/amonagent/settings"
-	"github.com/amonapp/amonagent/util"
+	"github.com/amonapp/amonagent/internal/settings"
+	"github.com/amonapp/amonagent/internal/util"
 	pshost "github.com/shirou/gopsutil/host"
 )
 

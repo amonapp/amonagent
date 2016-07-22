@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 )
@@ -293,6 +293,15 @@ type Haproxy struct {
 type PerformanceStruct struct {
 	Gauges   map[string]interface{} `json:"gauges"`
 	Counters map[string]interface{} `json:"counters"`
+}
+
+// Start - XXX
+func (h *Haproxy) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (h *Haproxy) Stop() {
 }
 
 // Description - XXX

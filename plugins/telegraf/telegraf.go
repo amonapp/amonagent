@@ -23,6 +23,15 @@ func (t *Telegraf) Description() string {
 	return "Collects data from Telegraf"
 }
 
+// Start - XXX
+func (t *Telegraf) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (t *Telegraf) Stop() {
+}
+
 var sampleConfig = `
 #   Available config options:
 #

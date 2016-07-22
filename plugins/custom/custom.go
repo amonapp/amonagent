@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/gonuts/go-shellquote"
 )
@@ -59,6 +59,15 @@ func ParseLine(s string) (Metric, error) {
 	}
 
 	return m, nil
+}
+
+// Start - XXX
+func (c *Custom) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (c *Custom) Stop() {
 }
 
 var sampleConfig = `

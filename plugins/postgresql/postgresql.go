@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 	// Postgres Driver
@@ -168,6 +168,15 @@ func (p PerformanceStruct) String() string {
 type Config struct {
 	Host string
 	DB   string
+}
+
+// Start - XXX
+func (p *PostgreSQL) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (p *PostgreSQL) Stop() {
 }
 
 var sampleConfig = `

@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 )
@@ -33,6 +33,15 @@ var client = &http.Client{Transport: tr}
 // PerformanceStruct - XXX
 type PerformanceStruct struct {
 	Gauges map[string]interface{} `json:"gauges"`
+}
+
+// Start - XXX
+func (n *Nginx) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (n *Nginx) Stop() {
 }
 
 // Config - XXX

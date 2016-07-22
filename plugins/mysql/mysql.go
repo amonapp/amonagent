@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 	// Mysql Driver
@@ -21,6 +21,15 @@ var pluginLogger = logging.GetLogger("amonagent.mysql")
 type Config struct {
 	Host string
 	DB   string
+}
+
+// Start - XXX
+func (m *MySQL) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (m *MySQL) Stop() {
 }
 
 var sampleConfig = `

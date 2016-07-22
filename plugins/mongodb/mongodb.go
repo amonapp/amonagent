@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/plugins"
 
 	"github.com/mitchellh/mapstructure"
@@ -259,6 +259,15 @@ type MongoDB struct {
 // Config - XXX
 type Config struct {
 	URI string
+}
+
+// Start - XXX
+func (m *MongoDB) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (m *MongoDB) Stop() {
 }
 
 var sampleConfig = `

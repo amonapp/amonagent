@@ -6,13 +6,22 @@ import (
 	"io/ioutil"
 	"sync"
 
+	"github.com/amonapp/amonagent/internal/util"
 	"github.com/amonapp/amonagent/plugins"
-	"github.com/amonapp/amonagent/util"
 )
 
 // Checks - XXX
 type Checks struct {
 	Config Config
+}
+
+// Start - XXX
+func (c *Checks) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (c *Checks) Stop() {
 }
 
 // Description - XXX

@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/amonapp/amonagent/logging"
-	"github.com/amonapp/amonagent/settings"
+	"github.com/amonapp/amonagent/internal/logging"
+	"github.com/amonapp/amonagent/internal/settings"
 )
 
 var remoteLogger = logging.GetLogger("amonagent.remote")

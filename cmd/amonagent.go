@@ -3,22 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent"
 	"github.com/amonapp/amonagent/collectors"
-	"github.com/amonapp/amonagent/logging"
 	"github.com/amonapp/amonagent/plugins"
 
+	"github.com/amonapp/amonagent/internal/settings"
 	_ "github.com/amonapp/amonagent/plugins/all"
-	"github.com/amonapp/amonagent/settings"
 )
-
-var agentLogger = logging.GetLogger("amonagent.main")
 
 var fTest = flag.Bool("test", false, "gather all metrics, print them out, and exit")
 var fDebug = flag.Bool("debug", false, "Starts the agent and displays the metrics sent in the terminal")
@@ -47,24 +44,29 @@ func ListPlugins() {
 // Debug - XXX
 func Debug() {
 
-	creator, ok := plugins.ServicePlugins["statsd"]
+	creator, ok := plugins.Plugins["statsd"]
 	if ok {
 		statsd := creator()
-		pluginConfig, _ := plugins.GetConfigPath("statsd")
 
-		statsd.Start(pluginConfig.Path)
+		fmt.Println(statsd)
 
-		// statsd.Collect(pluginConfig.Path)
+		err := statsd.Start()
+		if err != nil {
+			fmt.Printf("Can't start Statsd: %s", err)
+		}
 
-		// statsd.Stop()
+		time.Sleep(3000 * time.Millisecond)
+		statsd.Collect()
+
+		statsd.Stop()
 
 	}
 
 }
 
 func main() {
-	// Debug()
-	// return
+	Debug()
+	return
 	flag.Parse()
 
 	machineID := collectors.GetOrCreateMachineID()
@@ -99,7 +101,7 @@ func main() {
 		if ok {
 			plugin := creator()
 			start := time.Now()
-			PluginResult, err := plugin.Collect(pluginConfig.Path)
+			PluginResult, err := plugin.Collect()
 			if err != nil {
 				fmt.Printf("Can't get stats for plugin: %s", err)
 			}
@@ -155,7 +157,11 @@ func main() {
 		close(shutdown)
 	}()
 
-	log.Printf("Starting Amon Agent (version %s)\n", Version)
+	log.WithFields(log.Fields{
+		"version": Version,
+	}).Info("Starting Amon Agent")
+
+	// log.Printf("Starting Amon Agent (version %s)\n", Version)
 
 	if *fPidfile != "" {
 		// Ensure the required directory structure exists.
@@ -166,7 +172,7 @@ func main() {
 
 		f, err := os.Create(*fPidfile)
 		if err != nil {
-			log.Fatalf("Unable to create pidfile: %s", err)
+			log.Fatal("Unable to create pidfile", err)
 		}
 
 		fmt.Fprintf(f, "%d\n", os.Getpid())

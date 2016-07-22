@@ -3,8 +3,8 @@ package collectors
 import (
 	"encoding/json"
 
-	"github.com/amonapp/amonagent/logging"
-	"github.com/amonapp/amonagent/util"
+	"github.com/amonapp/amonagent/internal/logging"
+	"github.com/amonapp/amonagent/internal/util"
 	psmem "github.com/shirou/gopsutil/mem"
 )
 

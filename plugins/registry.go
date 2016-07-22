@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/amonapp/amonagent/settings"
+	"github.com/amonapp/amonagent/internal/settings"
 )
 
 // PluginConfig - XXX
@@ -21,22 +21,6 @@ type PluginConfig struct {
 // PluginConfigPath - XXX
 var PluginConfigPath = path.Join(settings.ConfigPath, "plugins-enabled")
 
-// ReadConfigPath - Works only with flat config files, do something different for nested configs
-func ReadConfigPath(path string) (interface{}, error) {
-	var data map[string]interface{}
-	file, e := ioutil.ReadFile(path)
-	if e != nil {
-		return data, e
-	}
-
-	if err := json.Unmarshal(file, &data); err != nil {
-		return data, err
-	}
-
-	return data, nil
-
-}
-
 // GetConfigPath - XXX
 func GetConfigPath(plugin string) (PluginConfig, error) {
 	config := PluginConfig{}
@@ -47,6 +31,26 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 	config.Name = plugin
 
 	return config, nil
+}
+
+// GetPluginConfig - Works only with flat config files, do something different for nested configs
+func GetPluginConfig(plugin string) (interface{}, error) {
+	c, err := GetConfigPath(plugin)
+	if err != nil {
+		fmt.Printf("Can't read config file: %s %v\n", c.Path, err)
+	}
+	var data map[string]interface{}
+	file, e := ioutil.ReadFile(c.Path)
+	if e != nil {
+		return data, e
+	}
+
+	if err := json.Unmarshal(file, &data); err != nil {
+		return data, err
+	}
+
+	return data, nil
+
 }
 
 // GetAllEnabledPlugins - XXX
@@ -95,30 +99,19 @@ func GetAllEnabledPlugins() ([]PluginConfig, error) {
 
 // Plugin - XXX
 type Plugin interface {
+
 	// Description returns a one-sentence description on the Plugin
 	Description() string
 
 	SampleConfig() string
 
 	// Collects all the metrics and returns a struct with the results
-	Collect(string) (interface{}, error)
-}
+	Collect() (interface{}, error)
 
-// ServicePlugin - XXX
-type ServicePlugin interface {
-	// SampleConfig returns the default configuration of the Plugin
-	SampleConfig() string
+	// Start starts the service - Optional
+	Start() error
 
-	// Description returns a one-sentence description on the Plugin
-	Description() string
-
-	// Collects all the metrics and returns a struct with the results
-	Collect(string) (interface{}, error)
-
-	// Start starts the service
-	Start(string) error
-
-	// Stop stops the services and closes any necessary channels and connections
+	// Stop stops the services and closes any necessary channels and connections - Optional
 	Stop()
 }
 
@@ -131,15 +124,4 @@ var Plugins = map[string]PluginRegistry{}
 // Add - XXX
 func Add(name string, registry PluginRegistry) {
 	Plugins[name] = registry
-}
-
-// ServicePluginRegistry - XXX
-type ServicePluginRegistry func() ServicePlugin
-
-// Plugins - XXX
-var ServicePlugins = map[string]ServicePluginRegistry{}
-
-// AddService - XXX
-func AddService(name string, registry ServicePluginRegistry) {
-	ServicePlugins[name] = registry
 }

@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/amonapp/amonagent/collectors"
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
+	"github.com/amonapp/amonagent/internal/remote"
+	"github.com/amonapp/amonagent/internal/settings"
 	"github.com/amonapp/amonagent/plugins"
-	"github.com/amonapp/amonagent/remote"
-	"github.com/amonapp/amonagent/settings"
 )
 
 var agentLogger = logging.GetLogger("amonagent.log")
@@ -50,7 +50,7 @@ func (a *Agent) Test(config settings.Struct) error {
 		creator, _ := plugins.Plugins[p.Name]
 		plugin := creator()
 		start := time.Now()
-		PluginResult, err := plugin.Collect(p.Path)
+		PluginResult, err := plugin.Collect()
 		if err != nil {
 			agentLogger.Errorf("Can't get stats for plugin: %s", err)
 		}

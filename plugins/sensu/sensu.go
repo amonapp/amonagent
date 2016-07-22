@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/amonapp/amonagent/internal/util"
 	"github.com/amonapp/amonagent/plugins"
-	"github.com/amonapp/amonagent/util"
 )
 
 // Sensu - XXX
@@ -40,6 +40,15 @@ var sampleConfig = `
 // SampleConfig - XXX
 func (s *Sensu) SampleConfig() string {
 	return sampleConfig
+}
+
+// Start - XXX
+func (s *Sensu) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (s *Sensu) Stop() {
 }
 
 // Config - XXX

@@ -15,6 +15,12 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+// Start - XXX
+func (a *Apache) Start() error { return nil }
+
+// Stop - XXX
+func (a *Apache) Stop() {}
+
 // Description - XXX
 func (a *Apache) Description() string {
 	return "Read Apache status information (mod_status)"
@@ -39,10 +45,10 @@ func (a *Apache) SampleConfig() string {
 }
 
 // SetConfigDefaults - XXX
-func (a *Apache) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (a *Apache) SetConfigDefaults() error {
+	c, err := plugins.GetPluginConfig("apache")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 	var config Config
 	decodeError := mapstructure.Decode(c, &config)
@@ -93,9 +99,9 @@ type PerformanceStruct struct {
 }
 
 // Collect - XXX
-func (a *Apache) Collect(configPath string) (interface{}, error) {
+func (a *Apache) Collect() (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
-	a.SetConfigDefaults(configPath)
+	a.SetConfigDefaults()
 
 	addr, err := url.Parse(a.Config.StatusURL)
 	resp, err := client.Get(addr.String())

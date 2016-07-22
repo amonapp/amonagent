@@ -35,14 +35,15 @@ var prevInstance *Statsd
 
 // Config - XXX
 type Config struct {
-	Address string
+	Address                string
+	AllowedPendingMessages int
 }
 
 // SetConfigDefaults - XXX
-func (s *Statsd) SetConfigDefaults(configPath string) error {
-	c, err := plugins.ReadConfigPath(configPath)
+func (s *Statsd) SetConfigDefaults() error {
+	c, err := plugins.GetPluginConfig("statsd")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
+		fmt.Printf("Can't read config file: %s \n", err)
 	}
 	var config Config
 	decodeError := mapstructure.Decode(c, &config)
@@ -52,6 +53,10 @@ func (s *Statsd) SetConfigDefaults(configPath string) error {
 
 	if len(config.Address) == 0 {
 		config.Address = ":8125"
+	}
+
+	if config.AllowedPendingMessages == 0 {
+		config.AllowedPendingMessages = 10000
 	}
 
 	s.Config = config
@@ -171,7 +176,7 @@ func (_ *Statsd) SampleConfig() string {
 	return sampleConfig
 }
 
-func (s *Statsd) Collect(configPath string) (interface{}, error) {
+func (s *Statsd) Collect() (interface{}, error) {
 	PerformanceStruct := PerformanceStruct{}
 	s.Lock()
 	defer s.Unlock()
@@ -237,11 +242,11 @@ func (s *Statsd) Collect(configPath string) (interface{}, error) {
 	return PerformanceStruct, nil
 }
 
-func (s *Statsd) Start(configPath string) error {
-	s.SetConfigDefaults(configPath)
+func (s *Statsd) Start() error {
+	s.SetConfigDefaults()
 	// Make data structures
 	s.done = make(chan struct{})
-	s.in = make(chan []byte, s.AllowedPendingMessages)
+	s.in = make(chan []byte, s.Config.AllowedPendingMessages)
 
 	if prevInstance == nil {
 		s.gauges = make(map[string]cachedgauge)
@@ -590,7 +595,7 @@ func (s *Statsd) Stop() {
 }
 
 func init() {
-	plugins.AddService("statsd", func() plugins.ServicePlugin {
+	plugins.Add("statsd", func() plugins.Plugin {
 		return &Statsd{}
 	})
 }

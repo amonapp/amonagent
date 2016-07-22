@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 
@@ -94,6 +94,15 @@ var sampleConfig = `
 // SampleConfig - XXX
 func (r *Redis) SampleConfig() string {
 	return sampleConfig
+}
+
+// Start - XXX
+func (r *Redis) Start(configPath string) {
+	return nil
+}
+
+// Stop - XXX
+func (r *Redis) Stop() {
 }
 
 // SetConfigDefaults - XXX

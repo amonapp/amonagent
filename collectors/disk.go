@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/amonapp/amonagent/logging"
-	"github.com/amonapp/amonagent/util"
+	"github.com/amonapp/amonagent/internal/logging"
+	"github.com/amonapp/amonagent/internal/util"
 	"github.com/shirou/gopsutil/disk"
 )
 

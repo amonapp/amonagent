@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/amonapp/amonagent/logging"
+	"github.com/amonapp/amonagent/internal/logging"
+	"github.com/amonapp/amonagent/internal/settings"
 	"github.com/amonapp/amonagent/plugins"
-	"github.com/amonapp/amonagent/settings"
 )
 
 // CollectorLogger - XXX
@@ -79,7 +79,7 @@ func CollectPluginsData() (interface{}, interface{}) {
 		plugin := creator()
 
 		go func(p plugins.PluginConfig) {
-			PluginResult, err := plugin.Collect(p.Path)
+			PluginResult, err := plugin.Collect()
 			if err != nil {
 				CollectorLogger.Errorf("Can't get stats for plugin: %s", err)
 			}
