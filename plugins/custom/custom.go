@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -62,7 +61,7 @@ func ParseLine(s string) (Metric, error) {
 }
 
 // Start - XXX
-func (c *Custom) Start(configPath string) {
+func (c *Custom) Start() {
 	return nil
 }
 
@@ -129,15 +128,10 @@ type Config struct {
 }
 
 // SetConfigDefaults - XXX
-func (c *Custom) SetConfigDefaults(configPath string) error {
-	jsonFile, err := ioutil.ReadFile(configPath)
+func (c *Custom) SetConfigDefaults() error {
+	Commands, err := plugins.GetPluginConfigList("custom")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
-	}
-	var Commands []Command
-
-	if err := json.Unmarshal(jsonFile, &Commands); err != nil {
-		fmt.Printf("Can't decode JSON file: %v\n", err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 
 	c.Config.Commands = Commands
@@ -170,8 +164,8 @@ func (c *Custom) Description() string {
 }
 
 // Collect - XXX
-func (c *Custom) Collect(configPath string) (interface{}, error) {
-	c.SetConfigDefaults(configPath)
+func (c *Custom) Collect() (interface{}, error) {
+	c.SetConfigDefaults()
 	var wg sync.WaitGroup
 	results := make(PerformanceStructBlock, 0)
 

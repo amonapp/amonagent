@@ -2,8 +2,8 @@ package all
 
 import (
 	_ "github.com/amonapp/amonagent/plugins/apache"
-	// _ "github.com/amonapp/amonagent/plugins/checks"
-	// _ "github.com/amonapp/amonagent/plugins/custom"
+	_ "github.com/amonapp/amonagent/plugins/checks"
+	_ "github.com/amonapp/amonagent/plugins/custom"
 	// _ "github.com/amonapp/amonagent/plugins/haproxy"
 	// _ "github.com/amonapp/amonagent/plugins/mongodb"
 	// _ "github.com/amonapp/amonagent/plugins/mysql"

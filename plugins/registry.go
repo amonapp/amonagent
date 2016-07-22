@@ -33,13 +33,33 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 	return config, nil
 }
 
-// GetPluginConfig - Works only with flat config files, do something different for nested configs
-func GetPluginConfig(plugin string) (interface{}, error) {
+// GetPluginConfigKeyValue - {"status_url": url, "ip_address": 8000}
+func GetPluginConfigKeyValue(plugin string) (interface{}, error) {
 	c, err := GetConfigPath(plugin)
 	if err != nil {
 		fmt.Printf("Can't read config file: %s %v\n", c.Path, err)
 	}
 	var data map[string]interface{}
+	file, e := ioutil.ReadFile(c.Path)
+	if e != nil {
+		return data, e
+	}
+
+	if err := json.Unmarshal(file, &data); err != nil {
+		return data, err
+	}
+
+	return data, nil
+
+}
+
+// GetPluginConfigList - ["command", "another_command"]
+func GetPluginConfigList(plugin string) ([]string, error) {
+	c, err := GetConfigPath(plugin)
+	if err != nil {
+		fmt.Printf("Can't read config file: %s %v\n", c.Path, err)
+	}
+	var data []string
 	file, e := ioutil.ReadFile(c.Path)
 	if e != nil {
 		return data, e

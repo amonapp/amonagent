@@ -46,7 +46,7 @@ func (a *Apache) SampleConfig() string {
 
 // SetConfigDefaults - XXX
 func (a *Apache) SetConfigDefaults() error {
-	c, err := plugins.GetPluginConfig("apache")
+	c, err := plugins.GetPluginConfigKeyValue("apache")
 	if err != nil {
 		fmt.Printf("Can't read config file: %s\n", err)
 	}

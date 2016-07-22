@@ -41,7 +41,7 @@ type Config struct {
 
 // SetConfigDefaults - XXX
 func (s *Statsd) SetConfigDefaults() error {
-	c, err := plugins.GetPluginConfig("statsd")
+	c, err := plugins.GetPluginConfigKeyValue("statsd")
 	if err != nil {
 		fmt.Printf("Can't read config file: %s \n", err)
 	}

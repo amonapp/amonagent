@@ -55,7 +55,7 @@ func Debug() {
 			fmt.Printf("Can't start Statsd: %s", err)
 		}
 
-		time.Sleep(3000 * time.Millisecond)
+		time.Sleep(2000 * time.Millisecond)
 		statsd.Collect()
 
 		statsd.Stop()

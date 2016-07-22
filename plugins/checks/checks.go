@@ -1,9 +1,7 @@
 package checks
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"sync"
 
 	"github.com/amonapp/amonagent/internal/util"
@@ -16,13 +14,10 @@ type Checks struct {
 }
 
 // Start - XXX
-func (c *Checks) Start(configPath string) {
-	return nil
-}
+func (c *Checks) Start() error { return nil }
 
 // Stop - XXX
-func (c *Checks) Stop() {
-}
+func (c *Checks) Stop() {}
 
 // Description - XXX
 func (c *Checks) Description() string {
@@ -55,14 +50,10 @@ type Config struct {
 }
 
 // SetConfigDefaults - XXX
-func (c *Checks) SetConfigDefaults(configPath string) error {
-	jsonFile, err := ioutil.ReadFile(configPath)
+func (c *Checks) SetConfigDefaults() error {
+	Commands, err := plugins.GetPluginConfigList("checks")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s %v\n", configPath, err)
-	}
-	var Commands []string
-	if err := json.Unmarshal(jsonFile, &Commands); err != nil {
-		fmt.Printf("Can't decode JSON file: %v\n", err)
+		fmt.Printf("Can't read config file: %s\n", err)
 	}
 
 	c.Config.Commands = Commands
@@ -71,8 +62,8 @@ func (c *Checks) SetConfigDefaults(configPath string) error {
 }
 
 // Collect - XXX
-func (c *Checks) Collect(configPath string) (interface{}, error) {
-	c.SetConfigDefaults(configPath)
+func (c *Checks) Collect() (interface{}, error) {
+	c.SetConfigDefaults()
 	var wg sync.WaitGroup
 	var result []util.CommandResult
 
