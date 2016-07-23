@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/amonapp/amonagent/internal/util"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/gonuts/go-shellquote"
 )
@@ -168,44 +169,71 @@ func (c *Custom) Description() string {
 // Collect - XXX
 func (c *Custom) Collect() (interface{}, error) {
 	c.SetConfigDefaults()
+
 	var wg sync.WaitGroup
-	results := make(PerformanceStructBlock, 0)
+	var result []util.CommandResult
 
-	for _, command := range c.Config.Commands {
+	resultChan := make(chan util.CommandResult, len(c.Config.Commands))
+
+	for _, v := range c.Config.Commands {
 		wg.Add(1)
-		go func(command Command) {
+
+		go func(command string) {
+
+			CheckResult := util.ExecWithExitCode(command)
+
+			resultChan <- CheckResult
 			defer wg.Done()
-
-			PerformanceStruct := PerformanceStruct{}
-			result, err := Run(&command)
-
-			lines := strings.Split(result, "\n")
-			gauges := make(map[string]interface{})
-			counters := make(map[string]interface{})
-			for _, line := range lines {
-				metric, _ := ParseLine(line)
-				if metric.Type == "gauge" {
-					gauges[metric.Name] = metric.Value
-				}
-
-				if metric.Type == "counter" {
-					counters[metric.Name] = metric.Value
-				}
-			}
-
-			if err != nil {
-				fmt.Printf("Unable to execute command, %s", err)
-			}
-
-			pluginName := "custom." + command.Name
-			PerformanceStruct.Gauges = gauges
-			PerformanceStruct.Counters = counters
-			results[pluginName] = PerformanceStruct
-
-		}(command)
+		}(v)
 
 	}
 	wg.Wait()
+	close(resultChan)
+
+	for i := range resultChan {
+		result = append(result, i)
+	}
+
+	return result, nil
+
+	// var wg sync.WaitGroup
+	// results := make(PerformanceStructBlock, 0)
+
+	// for _, command := range c.Config.Commands {
+	// 	wg.Add(1)
+	// 	go func(command Command) {
+	// 		defer wg.Done()
+
+	// 		PerformanceStruct := PerformanceStruct{}
+	// 		result, err := Run(&command)
+
+	// 		lines := strings.Split(result, "\n")
+	// 		gauges := make(map[string]interface{})
+	// 		counters := make(map[string]interface{})
+	// 		for _, line := range lines {
+	// 			metric, _ := ParseLine(line)
+	// 			if metric.Type == "gauge" {
+	// 				gauges[metric.Name] = metric.Value
+	// 			}
+
+	// 			if metric.Type == "counter" {
+	// 				counters[metric.Name] = metric.Value
+	// 			}
+	// 		}
+
+	// 		if err != nil {
+	// 			fmt.Printf("Unable to execute command, %s", err)
+	// 		}
+
+	// 		pluginName := "custom." + command.Name
+	// 		PerformanceStruct.Gauges = gauges
+	// 		PerformanceStruct.Counters = counters
+	// 		results[pluginName] = PerformanceStruct
+
+	// 	}(command)
+
+	// }
+	// wg.Wait()
 
 	return results, nil
 }
