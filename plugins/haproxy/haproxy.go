@@ -8,12 +8,10 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/amonapp/amonagent/internal/logging"
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 )
-
-var pluginLogger = logging.GetLogger("amonagent.haproxy")
 
 var haproxyType = map[string]string{
 	"0": "frontend",
@@ -333,14 +331,15 @@ func (h *Haproxy) SampleConfig() string {
 
 // SetConfigDefaults - XXX
 func (h *Haproxy) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("haproxy")
+	configFile, err := plugins.UmarshalPluginConfig("haproxy")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "haproxy", "error": err.Error()}).Error("Can't read config file")
 	}
+
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		pluginLogger.Errorf("Can't decode config file %s", decodeError.Error())
+		log.WithFields(log.Fields{"plugin": "haproxy", "error": decodeError.Error()}).Error("Can't decode config file")
 	}
 	if len(config.Host) == 0 {
 		config.Host = "http://127.0.0.1:1936"
@@ -359,7 +358,10 @@ func (h *Haproxy) Collect() (interface{}, error) {
 
 	u, err := url.Parse(h.Config.Host)
 	if err != nil {
-		pluginLogger.Errorf("Unable parse server address '%s': %s", h.Config.Host, err)
+		log.WithFields(log.Fields{
+			"plugin":  "haproxy",
+			"error":   err.Error(),
+			"address": h.Config.Host}).Error("Unable parse server address")
 		return PerformanceStruct, err
 
 	}
@@ -372,13 +374,18 @@ func (h *Haproxy) Collect() (interface{}, error) {
 
 	res, err := client.Do(req)
 	if err != nil {
-		pluginLogger.Errorf("Unable to connect to haproxy server '%s': %s", h.Config.Host, err)
+		log.WithFields(log.Fields{
+			"plugin":  "haproxy",
+			"error":   err.Error(),
+			"address": h.Config.Host}).Error("Unable to connect to haproxy server")
 		return PerformanceStruct, err
 	}
 
 	if res.StatusCode != 200 {
-		pluginLogger.Errorf("Unable to get valid stat result from '%s': %s", h.Config.Host, err)
-
+		log.WithFields(log.Fields{
+			"plugin":  "haproxy",
+			"error":   err.Error(),
+			"address": h.Config.Host}).Error("Unable to get valid stat result")
 	}
 
 	ParseCSVResult(res.Body, u.Host, &PerformanceStruct)

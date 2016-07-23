@@ -11,6 +11,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// func TestUmarshalPluginConfig(t *testing.T) {
+// 	PluginConfigPath = path.Join("/tmp", "plugins-enabled")
+// 	PathReturn, _ := GetConfigPath("testplugin")
+
+// 	var pluginPath = path.Join(PluginConfigPath, strings.Join([]string{"testplugin", "conf"}, "."))
+
+// 	assert.Equal(t, PathReturn.Name, "testplugin")
+// 	assert.Equal(t, PathReturn.Path, pluginPath)
+
+// }
+
+// func TestReadPluginConfig(t *testing.T) {
+// 	PluginConfigPath = path.Join("/tmp", "plugins-enabled")
+// 	PathReturn, _ := GetConfigPath("testplugin")
+
+// 	var pluginPath = path.Join(PluginConfigPath, strings.Join([]string{"testplugin", "conf"}, "."))
+
+// 	assert.Equal(t, PathReturn.Name, "testplugin")
+// 	assert.Equal(t, PathReturn.Path, pluginPath)
+
+// }
+
 func TestGetConfigPath(t *testing.T) {
 	PluginConfigPath = path.Join("/tmp", "plugins-enabled")
 	PathReturn, _ := GetConfigPath("testplugin")
