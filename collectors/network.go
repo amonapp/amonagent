@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/shirou/gopsutil/net"
 )
-
-// {'docker0': {'inbound': '0.00', 'outbound': '0.00'}, 'eth0': {'inbound': '0.12', 'outbound': '0.00'}}
-var networkLogger = logging.GetLogger("amonagent.net")
 
 func stringInSlice(str string, list []string) bool {
 	for _, v := range list {

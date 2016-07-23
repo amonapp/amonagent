@@ -155,20 +155,18 @@ func main() {
 
 	log.WithFields(log.Fields{
 		"version": Version,
-	}).Info("Starting Amon Agent")
-
-	// log.Printf("Starting Amon Agent (version %s)\n", Version)
+	}).Infof("Starting Amon Agent")
 
 	if *fPidfile != "" {
 		// Ensure the required directory structure exists.
 		err := os.MkdirAll(filepath.Dir(*fPidfile), 0700)
 		if err != nil {
-			log.Fatal(3, "Failed to verify pid directory", err)
+			log.Fatalf(3, "Failed to verify pid directory", err)
 		}
 
 		f, err := os.Create(*fPidfile)
 		if err != nil {
-			log.Fatal("Unable to create pidfile", err)
+			log.Fatalf("Unable to create pidfile", err)
 		}
 
 		fmt.Fprintf(f, "%d\n", os.Getpid())

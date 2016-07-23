@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/amonapp/amonagent/internal/logging"
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/gonuts/go-shellquote"
 )
@@ -20,8 +20,6 @@ type Metric struct {
 	Value float64 `json:"value"`
 	Type  string  `json:"type"`
 }
-
-var pluginLogger = logging.GetLogger("amonagent.custom")
 
 // Run - XXX
 func Run(command *Command) (string, error) {
@@ -64,8 +62,7 @@ func ParseLine(s string) (Metric, error) {
 func (c *Custom) Start() error { return nil }
 
 // Stop - XXX
-func (c *Custom) Stop() {
-}
+func (c *Custom) Stop() {}
 
 var sampleConfig = `
 #   Available config options:
@@ -129,11 +126,14 @@ type Config struct {
 func (c *Custom) SetConfigDefaults() error {
 	configFile, err := plugins.ReadPluginConfig("custom")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{
+			"plugin": "custom",
+			"error":  err,
+		}).Error("Can't read config file")
 	}
 	var Commands []Command
 	if err := json.Unmarshal(configFile, &Commands); err != nil {
-		fmt.Printf("Can't decode JSON file: %v\n", err)
+		log.WithFields(log.Fields{"plugin": "custom", "error": err.Error()}).Error("Can't decode JSON file")
 	}
 
 	c.Config.Commands = Commands

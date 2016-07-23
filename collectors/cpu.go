@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/amonapp/amonagent/internal/logging"
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/shirou/gopsutil/cpu"
 )
-
-var cpuLogger = logging.GetLogger("amonagent.cpu")
 
 func (p CPUUsageStruct) String() string {
 	s, _ := json.Marshal(p)
@@ -37,7 +35,7 @@ func totalCPUTime(t cpu.TimesStat) float64 {
 func CPUUsage() CPUUsageStruct {
 	cpuTimes1, err := cpu.Times(false)
 	if err != nil {
-		cpuLogger.Errorf("error getting CPU info: %s", err)
+		log.Errorf("error getting CPU info: %s", err)
 	}
 
 	c := CPUUsageStruct{}

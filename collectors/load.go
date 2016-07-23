@@ -3,12 +3,9 @@ package collectors
 import (
 	"encoding/json"
 
-	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/load"
 )
-
-var loadLogger = logging.GetLogger("amonagent.load")
 
 //{'cores': 1, 'fifteen_minutes': '0.14', 'five_minutes': '0.11', 'minute': '0.01'}
 func (p LoadStruct) String() string {

@@ -7,12 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/amonapp/amonagent/internal/logging"
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/shirou/gopsutil/mem"
 )
-
-var processLogger = logging.GetLogger("amonagent.processes")
 
 func (p ProcessStruct) String() string {
 	s, _ := json.Marshal(p)
@@ -140,7 +138,7 @@ func Processes() (ProcessesList, error) {
 							}
 
 						} else {
-							processLogger.Info("Can't find mem/cpu data")
+							log.Error("Can't find mem/cpu data")
 						}
 
 					}

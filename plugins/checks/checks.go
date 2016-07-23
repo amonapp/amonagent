@@ -2,7 +2,6 @@ package checks
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -64,7 +63,7 @@ func (c *Checks) SetConfigDefaults() error {
 	var Commands []string
 
 	if e := json.Unmarshal(configFile, &Commands); e != nil {
-		fmt.Printf("Can't decode JSON file: %v\n", e)
+		log.WithFields(log.Fields{"plugin": "checks", "error": err.Error()}).Error("Can't decode JSON file")
 	}
 
 	c.Config.Commands = Commands

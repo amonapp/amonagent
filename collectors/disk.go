@@ -7,12 +7,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/amonapp/amonagent/internal/logging"
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/shirou/gopsutil/disk"
 )
-
-var diskLogger = logging.GetLogger("amonagent.disk")
 
 func (p DiskUsageStruct) String() string {
 	s, _ := json.Marshal(p)
@@ -79,7 +77,7 @@ func isPseudoFS(name string) (res bool) {
 		return nil
 	})
 	if err != nil {
-		diskLogger.Errorf("can not read '/proc/filesystems': %v", err)
+		log.Errorf("can not read '/proc/filesystems': %v", err)
 	}
 	return
 }
@@ -88,7 +86,7 @@ func isPseudoFS(name string) (res bool) {
 func DiskUsage() (DiskUsageList, error) {
 	parts, err := disk.Partitions(false)
 	if err != nil {
-		diskLogger.Errorf("Error getting disk usage info: %v", err)
+		log.Errorf("Error getting disk usage info: %v", err)
 	}
 
 	var usage DiskUsageList
@@ -97,7 +95,7 @@ func DiskUsage() (DiskUsageList, error) {
 		if _, err := os.Stat(p.Mountpoint); err == nil {
 			du, err := disk.Usage(p.Mountpoint)
 			if err != nil {
-				diskLogger.Errorf("Error getting disk usage for Mount: %v", err)
+				log.Errorf("Error getting disk usage for Mount: %v", err)
 			}
 
 			if !isPseudoFS(du.Fstype) && !removableFs(du.Path) {
