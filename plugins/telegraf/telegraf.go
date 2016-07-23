@@ -8,9 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/amonapp/amonagent/plugins"
+	log "github.com/Sirupsen/logrus"
 	"github.com/gonuts/go-shellquote"
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/amonapp/amonagent/plugins"
 )
 
 // Telegraf - XXX
@@ -70,14 +72,14 @@ type ParsedLine struct {
 
 // SetConfigDefaults - XXX
 func (t *Telegraf) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("telegraf")
+	configFile, err := plugins.UmarshalPluginConfig("telegraf")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "telegraf", "error": err.Error()}).Error("Can't read config file")
 	}
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		fmt.Print("Can't decode config file", decodeError.Error())
+		log.WithFields(log.Fields{"plugin": "telegraf", "error": decodeError.Error()}).Error("Can't decode config file")
 	}
 
 	t.Config = config
@@ -207,7 +209,7 @@ func (t *Telegraf) Collect() (interface{}, error) {
 	Command := fmt.Sprintf("/usr/bin/telegraf -test -config %s", t.Config.Config)
 	Commandresult, err := Run(Command)
 	if err != nil {
-		fmt.Println("Can't execute command: ", err)
+		log.Errorf("Can't execute command: ", err)
 	}
 
 	plugins := make(map[string]interface{})
@@ -246,16 +248,9 @@ func (t *Telegraf) Collect() (interface{}, error) {
 
 		GaugesWrapper["gauges"] = gauges
 
-		// if len(plugin) > 0 {
-		// 	plugins[p] = GaugesWrapper
-		// }
-
 		plugins[p] = GaugesWrapper
 
 	}
-
-	// s, _ := json.Marshal(plugins)
-	// fmt.Println(string(s))
 
 	return plugins, nil
 }

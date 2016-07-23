@@ -2,17 +2,14 @@ package redis
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
-	"github.com/amonapp/amonagent/internal/logging"
-	"github.com/amonapp/amonagent/plugins"
+	log "github.com/Sirupsen/logrus"
 	"github.com/mitchellh/mapstructure"
-
 	"gopkg.in/redis.v3"
-)
 
-var pluginLogger = logging.GetLogger("amonagent.redis")
+	"github.com/amonapp/amonagent/plugins"
+)
 
 func (p PerformanceStruct) String() string {
 	s, _ := json.Marshal(p)
@@ -107,14 +104,14 @@ func (r *Redis) Stop() {
 
 // SetConfigDefaults - XXX
 func (r *Redis) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("redis")
+	configFile, err := plugins.UmarshalPluginConfig("redis")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "redis", "error": err.Error()}).Error("Can't read config file")
 	}
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		fmt.Print("Can't decode config file", decodeError.Error())
+		log.WithFields(log.Fields{"plugin": "redis", "error": decodeError.Error()}).Error("Can't decode config file")
 	}
 
 	if len(config.Host) == 0 {
@@ -150,7 +147,7 @@ func (r *Redis) Collect() (interface{}, error) {
 
 	val, err := client.Info().Result()
 	if err != nil {
-		pluginLogger.Errorf("Can't get Redis INFO': %v", err)
+		log.Errorf("Can't get Redis INFO': %v", err)
 		return PerformanceStruct, err
 	}
 

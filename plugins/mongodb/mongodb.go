@@ -9,17 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amonapp/amonagent/internal/logging"
-	"github.com/amonapp/amonagent/plugins"
-
+	log "github.com/Sirupsen/logrus"
 	"github.com/mitchellh/mapstructure"
-
 	// MongoDB Driver
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+
+	"github.com/amonapp/amonagent/plugins"
 )
 
-var pluginLogger = logging.GetLogger("amonagent.mongodb")
 var localhost = &url.URL{Host: "127.0.0.1:27017"}
 
 // Server - XXX
@@ -149,12 +147,12 @@ func CollectCollectionSize(server *Server, perf *PerformanceStruct) error {
 		err := server.Session.DB(db).Run(bson.D{{"collstats", col}}, &result)
 
 		if err != nil {
-			pluginLogger.Errorf("Can't get stats for collection %s", err.Error())
+			log.WithFields(log.Fields{"plugin": "mongodb", "error": err.Error()}).Error("Can't get stats for collection")
 		}
 		var CollectionResult CollectionStats
 		decodeError := mapstructure.Decode(result, &CollectionResult)
 		if decodeError != nil {
-			pluginLogger.Errorf("Can't decode collection stats %s", decodeError.Error())
+			log.WithFields(log.Fields{"plugin": "mongodb", "error": decodeError.Error()}).Error("Can't decode collection stats")
 		}
 
 		TableSizeData.Data = append(TableSizeData.Data, CollectionResult)
@@ -183,7 +181,6 @@ func GetSession(server *Server) error {
 
 		session, connectionError := mgo.DialWithInfo(dialInfo)
 		if connectionError != nil {
-
 			return fmt.Errorf("Unable to connect to URL (%s), %s\n", server.URL.Host, connectionError.Error())
 		}
 		server.Session = session
@@ -285,14 +282,14 @@ func (m *MongoDB) SampleConfig() string {
 
 // SetConfigDefaults - XXX
 func (m *MongoDB) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("mongodb")
+	configFile, err := plugins.UmarshalPluginConfig("mongodb")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "mongodb", "error": err.Error()}).Error("Can't read config file")
 	}
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		pluginLogger.Errorf("Can't decode config file %s", decodeError.Error())
+		log.WithFields(log.Fields{"plugin": "mongodb", "error": decodeError.Error()}).Error("Can't decode config file")
 	}
 
 	m.Config = config
@@ -312,14 +309,14 @@ func (m *MongoDB) Collect() (interface{}, error) {
 
 	url, err := url.Parse(m.Config.URI)
 	if err != nil {
-		pluginLogger.Errorf("Can't parse Mongo URI': %v", err)
+		log.Errorf("Can't parse Mongo URI': %v", err)
 		return PerformanceStruct, err
 	}
 
 	server := Server{URL: url}
 	sessionError := GetSession(&server)
 	if sessionError != nil {
-		pluginLogger.Errorf("Can't connect to server': %v", sessionError)
+		log.Errorf("Can't connect to server': %v", sessionError)
 		return PerformanceStruct, err
 	}
 	CollectGauges(&server, &PerformanceStruct)

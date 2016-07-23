@@ -7,14 +7,14 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/amonapp/amonagent/internal/logging"
-	"github.com/amonapp/amonagent/plugins"
+	log "github.com/Sirupsen/logrus"
 	"github.com/mitchellh/mapstructure"
+
 	// Postgres Driver
 	_ "github.com/lib/pq"
-)
 
-var pluginLogger = logging.GetLogger("amonagent.postgresql")
+	"github.com/amonapp/amonagent/plugins"
+)
 
 // Counters - XXX
 var Counters = map[string]string{
@@ -194,14 +194,14 @@ func (p *PostgreSQL) SampleConfig() string {
 
 // SetConfigDefaults - XXX
 func (p *PostgreSQL) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("postgresql")
+	configFile, err := plugins.UmarshalPluginConfig("postgresql")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "postgresql", "error": err.Error()}).Error("Can't read config file")
 	}
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		fmt.Print("Can't decode config file", decodeError.Error())
+		log.WithFields(log.Fields{"plugin": "postgresql", "error": decodeError.Error()}).Error("Can't decode config file")
 	}
 
 	u, _ := url.Parse(config.Host)
@@ -238,7 +238,7 @@ func (p *PostgreSQL) Collect() (interface{}, error) {
 
 	db, err := sql.Open("postgres", p.Config.Host)
 	if err != nil {
-		pluginLogger.Errorf("Can't connect to database': %v", err)
+		log.Errorf("Can't connect to database': %v", err)
 		return PerformanceStruct, err
 	}
 
@@ -262,7 +262,7 @@ func (p *PostgreSQL) Collect() (interface{}, error) {
 		for CounterRows.Next() {
 			err = CounterRows.Scan(dest...)
 			if err != nil {
-				pluginLogger.Errorf("Can't get Counter stats': %v", err)
+				log.Errorf("Can't get Counter stats': %v", err)
 
 			}
 
@@ -284,7 +284,7 @@ func (p *PostgreSQL) Collect() (interface{}, error) {
 			var connections int
 			err = GaugeRows.Scan(&connections)
 			if err != nil {
-				pluginLogger.Errorf("Can't get Gauges': %v", err)
+				log.Errorf("Can't get Gauges': %v", err)
 
 			}
 			gauges["connections"] = connections
@@ -308,7 +308,7 @@ func (p *PostgreSQL) Collect() (interface{}, error) {
 
 			err = TableSizeRows.Scan(&name, &Type, &size)
 			if err != nil {
-				pluginLogger.Errorf("Can't get Table size rows': %v", err)
+				log.Errorf("Can't get Table size rows': %v", err)
 			}
 			fields := []interface{}{}
 			fields = append(fields, name)
@@ -343,7 +343,7 @@ func (p *PostgreSQL) Collect() (interface{}, error) {
 
 			err = IndexHitRows.Scan(&TableName, &Size, &Read, &CumulativeReads, &IndexHitRate, &CacheHitRate)
 			if err != nil {
-				pluginLogger.Errorf("Can't get Index Hit Rate tables': %v", err)
+				log.Errorf("Can't get Index Hit Rate tables': %v", err)
 
 			}
 			fields := []interface{}{}
@@ -376,7 +376,7 @@ func (p *PostgreSQL) Collect() (interface{}, error) {
 
 			err = SlowQueriesRows.Scan(&Calls, &Total, &PerCall, &Query)
 			if err != nil {
-				pluginLogger.Errorf("Can't get Slow Queries': %v", err)
+				log.Errorf("Can't get Slow Queries': %v", err)
 			}
 			fields := []interface{}{}
 			fields = append(fields, Calls)

@@ -2,11 +2,11 @@ package sensu
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/amonapp/amonagent/plugins"
 )
@@ -57,13 +57,13 @@ type Config struct {
 
 // SetConfigDefaults - XXX
 func (s *Sensu) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("checks")
+	configFile, err := plugins.ReadPluginConfig("sensu")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "sensu", "error": err.Error()}).Error("Can't read config file")
 	}
 	var Commands []string
 	if err := json.Unmarshal(configFile, &Commands); err != nil {
-		fmt.Printf("Can't decode JSON file: %v\n", err)
+		log.WithFields(log.Fields{"plugin": "sensu", "error": err.Error()}).Error("Can't decode JSON file")
 	}
 
 	s.Config.Commands = Commands

@@ -3,19 +3,17 @@ package mysql
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 
-	"github.com/amonapp/amonagent/internal/logging"
-	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 	// Mysql Driver
 	_ "github.com/go-sql-driver/mysql"
-)
 
-var pluginLogger = logging.GetLogger("amonagent.mysql")
+	log "github.com/Sirupsen/logrus"
+	"github.com/amonapp/amonagent/plugins"
+)
 
 // Config - XXX
 type Config struct {
@@ -47,14 +45,14 @@ func (m *MySQL) SampleConfig() string {
 
 // SetConfigDefaults - XXX
 func (m *MySQL) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("mysql")
+	configFile, err := plugins.UmarshalPluginConfig("mysql")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "mysql", "error": err.Error()}).Error("Can't read config file")
 	}
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		fmt.Print("Can't decode config file", decodeError.Error())
+		log.WithFields(log.Fields{"plugin": "mysql", "error": decodeError.Error()}).Error("Can't decode config file")
 	}
 
 	u, _ := url.Parse(config.Host)
@@ -186,7 +184,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 	rows, err := db.Query(`SHOW /*!50002 GLOBAL */ STATUS`)
 
 	if err != nil {
-		pluginLogger.Errorf("Can't get STATUS': %v", err)
+		log.Errorf("Can't get STATUS': %v", err)
 		return PerformanceStruct, err
 	}
 	defer rows.Close()
@@ -198,7 +196,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 
 		err = rows.Scan(&name, &val)
 		if err != nil {
-			pluginLogger.Errorf("Can't scan stat rows': %v", err)
+			log.Errorf("Can't scan stat rows': %v", err)
 			return PerformanceStruct, err
 		}
 
@@ -206,7 +204,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 			if name == RawKey {
 				i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
 				if err != nil {
-					pluginLogger.Errorf("Can't parse value': %v", err)
+					log.Errorf("Can't parse value': %v", err)
 				}
 				gauges[FormatedKey] = i
 			}
@@ -217,7 +215,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 			if name == RawKey {
 				i, err := strconv.ParseInt(string(val.([]byte)), 10, 64)
 				if err != nil {
-					pluginLogger.Errorf("Can't parse value': %v", err)
+					log.Errorf("Can't parse value': %v", err)
 				}
 				counters[FormatedKey] = i
 			}
@@ -234,7 +232,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 
 		err = ConnRows.Scan(&user, &connections)
 		if err != nil {
-			pluginLogger.Errorf("Can't retrieve active connection stats': %v", err)
+			log.Errorf("Can't retrieve active connection stats': %v", err)
 		}
 
 		gauges["connections.active_connections"] = connections
@@ -263,7 +261,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 
 		err = TableSizeRows.Scan(&table, &database, &rows, &fullName, &size, &indexes, &total, &indexFraction)
 		if err != nil {
-			pluginLogger.Errorf("Can't retrieve table size stats': %v", err)
+			log.Errorf("Can't retrieve table size stats': %v", err)
 		} else {
 			fields := []interface{}{}
 			fields = append(fields, table)
@@ -298,7 +296,7 @@ func (m *MySQL) Collect() (interface{}, error) {
 
 		err = SlowQueriesRows.Scan(&queryTime, &rowsSent, &rowsExamined, &lockTime, &db, &query, &startTime)
 		if err != nil {
-			pluginLogger.Errorf("Can't retrieve slow queries stats': %v", err)
+			log.Errorf("Can't retrieve slow queries stats': %v", err)
 		} else {
 
 			fields := []interface{}{}

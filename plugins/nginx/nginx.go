@@ -9,19 +9,17 @@ package nginx
 import (
 	"bufio"
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/amonapp/amonagent/internal/logging"
-	"github.com/amonapp/amonagent/plugins"
+	log "github.com/Sirupsen/logrus"
 	"github.com/mitchellh/mapstructure"
-)
 
-var pluginLogger = logging.GetLogger("amonagent.nginx")
+	"github.com/amonapp/amonagent/plugins"
+)
 
 var tr = &http.Transport{
 	ResponseHeaderTimeout: time.Duration(3 * time.Second),
@@ -64,14 +62,14 @@ func (n *Nginx) SampleConfig() string {
 
 // SetConfigDefaults - XXX
 func (n *Nginx) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("nginx")
+	configFile, err := plugins.UmarshalPluginConfig("nginx")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "nginx", "error": err.Error()}).Error("Can't read config file")
 	}
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		fmt.Print("Can't decode config file", decodeError.Error())
+		log.WithFields(log.Fields{"plugin": "nginx", "error": decodeError.Error()}).Error("Can't decode config file")
 	}
 
 	n.Config = config
@@ -100,18 +98,18 @@ func (n *Nginx) Collect() (interface{}, error) {
 
 	addr, err := url.Parse(n.Config.StatusURL)
 	if err != nil {
-		pluginLogger.Errorf("Unable to parse address '%s': %s", n.Config.StatusURL, err)
+		log.Errorf("Unable to parse address '%s': %s", n.Config.StatusURL, err)
 		return PerformanceStruct, err
 
 	}
 	resp, err := client.Get(addr.String())
 	if err != nil {
-		pluginLogger.Errorf("error making HTTP request to %s: %s", addr.String(), err)
+		log.Errorf("error making HTTP request to %s: %s", addr.String(), err)
 		return PerformanceStruct, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		pluginLogger.Errorf("%s returned HTTP status %s", addr.String(), resp.Status)
+		log.Errorf("%s returned HTTP status %s", addr.String(), resp.Status)
 		return PerformanceStruct, err
 	}
 	r := bufio.NewReader(resp.Body)
@@ -119,59 +117,59 @@ func (n *Nginx) Collect() (interface{}, error) {
 	// Active connections
 	_, err = r.ReadString(':')
 	if err != nil {
-		pluginLogger.Errorf("Can't parse active connections stats%s", err)
+		log.Errorf("Can't parse active connections stats%s", err)
 		return PerformanceStruct, err
 	}
 	line, err := r.ReadString('\n')
 	if err != nil {
-		pluginLogger.Errorf("Can't read stats page %s", err)
+		log.Errorf("Can't read stats page %s", err)
 		return PerformanceStruct, err
 	}
 	active, err := strconv.ParseUint(strings.TrimSpace(line), 10, 64)
 	if err != nil {
-		pluginLogger.Errorf("Can't read active connections stats%s", err)
+		log.Errorf("Can't read active connections stats%s", err)
 	}
 
 	// Server accepts handled requests
 	_, err = r.ReadString('\n')
 	if err != nil {
-		pluginLogger.Errorf("Can't read accepts, handled requests stats%s", err)
+		log.Errorf("Can't read accepts, handled requests stats%s", err)
 	}
 	line, err = r.ReadString('\n')
 	if err != nil {
-		pluginLogger.Errorf("Can't read stats page %s", err)
+		log.Errorf("Can't read stats page %s", err)
 	}
 	data := strings.SplitN(strings.TrimSpace(line), " ", 3)
 	accepts, err := strconv.ParseUint(data[0], 10, 64)
 	if err != nil {
-		pluginLogger.Errorf("Can't read accepts stats%s", err)
+		log.Errorf("Can't read accepts stats%s", err)
 	}
 	handled, err := strconv.ParseUint(data[1], 10, 64)
 	if err != nil {
-		pluginLogger.Errorf("Can't read handled stats%s", err)
+		log.Errorf("Can't read handled stats%s", err)
 	}
 	requests, err := strconv.ParseUint(data[2], 10, 64)
 	if err != nil {
-		pluginLogger.Errorf("Can't read requests stats%s", err)
+		log.Errorf("Can't read requests stats%s", err)
 	}
 
 	// Reading/Writing/Waiting
 	line, err = r.ReadString('\n')
 	if err != nil {
-		pluginLogger.Errorf("Can't read Reading/Writing/Waiting stats%s", err)
+		log.Errorf("Can't read Reading/Writing/Waiting stats%s", err)
 	}
 	data = strings.SplitN(strings.TrimSpace(line), " ", 6)
 	reading, err := strconv.ParseUint(data[1], 10, 64)
 	if err != nil {
-		pluginLogger.Errorf("Can't read Reading stats%s", err)
+		log.Errorf("Can't read Reading stats%s", err)
 	}
 	writing, err := strconv.ParseUint(data[3], 10, 64)
 	if err != nil {
-		pluginLogger.Errorf("Can't read Writing stats%s", err)
+		log.Errorf("Can't read Writing stats%s", err)
 	}
 	waiting, err := strconv.ParseUint(data[5], 10, 64)
 	if err != nil {
-		pluginLogger.Errorf("Can't read Waiting stats%s", err)
+		log.Errorf("Can't read Waiting stats%s", err)
 	}
 
 	requestPerSecond := requests / handled

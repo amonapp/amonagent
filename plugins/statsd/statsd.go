@@ -11,8 +11,9 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/amonapp/amonagent/plugins"
 )
 
 const defaultPercentileLimit = 1000
@@ -41,19 +42,15 @@ type Config struct {
 
 // SetConfigDefaults - XXX
 func (s *Statsd) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("statsd")
+	configFile, err := plugins.UmarshalPluginConfig("statsd")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"plugin": "statsd",
 			"error":  err.Error()}).Error("Can't read config file")
 	}
-	var config Config
-	var data map[string]interface{}
-	if err := json.Unmarshal(configFile, &data); err != nil {
-		fmt.Println("Can not unmarshal")
-	}
 
-	decodeError := mapstructure.Decode(data, &config)
+	var config Config
+	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
 		log.WithFields(log.Fields{
 			"plugin": "statsd",
