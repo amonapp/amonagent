@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/collectors"
-	"github.com/amonapp/amonagent/internal/logging"
 	"github.com/amonapp/amonagent/internal/remote"
 	"github.com/amonapp/amonagent/internal/settings"
 	"github.com/amonapp/amonagent/plugins"
 )
-
-var agentLogger = logging.GetLogger("amonagent.log")
 
 // Agent - XXX
 type Agent struct {
@@ -52,7 +50,7 @@ func (a *Agent) Test(config settings.Struct) error {
 		start := time.Now()
 		PluginResult, err := plugin.Collect()
 		if err != nil {
-			agentLogger.Errorf("Can't get stats for plugin: %s", err)
+			log.Errorf("Can't get stats for plugin: %s", err)
 		}
 
 		fmt.Println("\n------------------")
@@ -102,7 +100,7 @@ func (a *Agent) Test(config settings.Struct) error {
 // GatherAndSend - XXX
 func (a *Agent) GatherAndSend(debug bool) error {
 	allMetrics := collectors.CollectAllData()
-	agentLogger.Info("Metrics collected (Interval:%s)\n", a.Interval)
+	log.Info("Metrics collected (Interval:%s)\n", a.Interval)
 
 	err := remote.SendData(allMetrics, debug)
 	if err != nil {
@@ -124,14 +122,25 @@ func NewAgent(config settings.Struct) (*Agent, error) {
 // Run runs the agent daemon, gathering every Interval
 func (a *Agent) Run(shutdown chan struct{}, debug bool) error {
 
-	agentLogger.Info("Agent Config: Interval:%s\n", a.Interval)
+	log.Info("Agent Config: Interval:%s\n", a.Interval)
 
 	ticker := time.NewTicker(a.Interval)
 	defer ticker.Stop()
 
+	for _, p := range EnabledPlugins {
+		creator, _ := plugins.Plugins[p.Name]
+		plugin := creator()
+		if err := plugin.Start(); err != nil {
+			log.Printf("Service for input %s failed to start, exiting\n%s\n",
+				input.Name, err.Error())
+			return err
+		}
+		defer p.Stop()
+	}
+
 	for {
 		if err := a.GatherAndSend(debug); err != nil {
-			agentLogger.Info("Flusher routine failed, exiting: %s\n", err.Error())
+			log.Infof("Can not collect and send metrics, exiting: %s\n", err.Error())
 		}
 		select {
 		case <-shutdown:

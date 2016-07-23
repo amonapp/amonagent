@@ -63,8 +63,6 @@ func Debug() {
 }
 
 func main() {
-	Debug()
-	return
 	flag.Parse()
 
 	machineID := collectors.GetOrCreateMachineID()
