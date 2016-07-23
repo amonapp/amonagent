@@ -45,17 +45,19 @@ func (s *Statsd) SetConfigDefaults() error {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"plugin": "statsd",
-			"error":  err.Error(),
-		}).Error("Can't read config file")
+			"error":  err.Error()}).Error("Can't read config file")
 	}
 	var config Config
+	var data map[string]interface{}
+	if err := json.Unmarshal(configFile, &data); err != nil {
+		fmt.Println("Can not unmarshal")
+	}
 
-	decodeError := mapstructure.Decode(configFile, &config)
+	decodeError := mapstructure.Decode(data, &config)
 	if decodeError != nil {
 		log.WithFields(log.Fields{
 			"plugin": "statsd",
-			"error":  decodeError.Error(),
-		}).Error("Can't decode config file")
+			"error":  decodeError.Error()}).Error("Can't decode config file")
 	}
 
 	if len(config.Address) == 0 {

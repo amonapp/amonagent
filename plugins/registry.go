@@ -1,6 +1,7 @@
 package plugins
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -21,7 +22,7 @@ type PluginConfig struct {
 // PluginConfigPath - XXX
 var PluginConfigPath = path.Join(settings.ConfigPath, "plugins-enabled")
 
-// GetConfigPath - XXX
+// GetConfigPath - Simple function that generates the plugin config path for the current distro
 func GetConfigPath(plugin string) (PluginConfig, error) {
 	config := PluginConfig{}
 
@@ -33,7 +34,7 @@ func GetConfigPath(plugin string) (PluginConfig, error) {
 	return config, nil
 }
 
-// ReadPluginConfig - {"status_url": url, "ip_address": 8000}
+// ReadPluginConfig - Reads the file from the expected path and returns it as bytes
 func ReadPluginConfig(plugin string) ([]byte, error) {
 	c, err := GetConfigPath(plugin)
 	if err != nil {
@@ -50,6 +51,27 @@ func ReadPluginConfig(plugin string) ([]byte, error) {
 	}
 
 	return file, nil
+
+}
+
+// UmarshalPluginConfig - Converts bytes to interface
+func UmarshalPluginConfig(plugin string) (interface{}, error) {
+	configFile, err := ReadPluginConfig(plugin)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"plugin": plugin,
+			"error":  err,
+		}).Error("Can't read config file")
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(configFile, &data); err != nil {
+		log.WithFields(log.Fields{
+			"plugin": plugin,
+			"error":  err,
+		}).Error("Can't unmarshal config file")
+	}
+
+	return data, nil
 
 }
 

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/plugins"
 	"github.com/mitchellh/mapstructure"
 )
@@ -46,15 +47,15 @@ func (a *Apache) SampleConfig() string {
 
 // SetConfigDefaults - XXX
 func (a *Apache) SetConfigDefaults() error {
-	configFile, err := plugins.ReadPluginConfig("apache")
+	configFile, err := plugins.UmarshalPluginConfig("apache")
 	if err != nil {
-		fmt.Printf("Can't read config file: %s\n", err)
+		log.WithFields(log.Fields{"plugin": "apache", "error": err.Error()}).Error("Can't read config file")
 	}
 
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
-		fmt.Print("Can't decode config file", decodeError.Error())
+		log.WithFields(log.Fields{"plugin": "apache", "error": decodeError.Error()}).Error("Can't decode config file")
 	}
 
 	if len(config.StatusURL) == 0 {
