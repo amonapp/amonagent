@@ -9,11 +9,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/amonapp/amonagent/internal/logging"
+	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/settings"
 )
-
-var remoteLogger = logging.GetLogger("amonagent.remote")
 
 // DefaultTimeOut - 10 seconds
 var DefaultTimeOut = 10 * time.Second
@@ -52,7 +50,7 @@ func SendData(data interface{}, debug bool) error {
 	if err != nil {
 		return fmt.Errorf("Can't connect to the Amon API on %s\n", err.Error())
 	}
-	remoteLogger.Info("Sending data to %s\n", url)
+	log.Infof("Sending data to %s\n", url)
 
 	defer resp.Body.Close()
 

@@ -100,7 +100,7 @@ func (a *Agent) Test(config settings.Struct) error {
 // GatherAndSend - XXX
 func (a *Agent) GatherAndSend(debug bool) error {
 	allMetrics := collectors.CollectAllData()
-	log.Info("Metrics collected (Interval:%s)\n", a.Interval)
+	log.Infof("Metrics collected (Interval:%s)\n", a.Interval)
 
 	err := remote.SendData(allMetrics, debug)
 	if err != nil {
@@ -122,20 +122,21 @@ func NewAgent(config settings.Struct) (*Agent, error) {
 // Run runs the agent daemon, gathering every Interval
 func (a *Agent) Run(shutdown chan struct{}, debug bool) error {
 
-	log.Info("Agent Config: Interval:%s\n", a.Interval)
+	log.Infof("Agent Config: Interval:%s\n", a.Interval)
 
 	ticker := time.NewTicker(a.Interval)
 	defer ticker.Stop()
 
+	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 	for _, p := range EnabledPlugins {
 		creator, _ := plugins.Plugins[p.Name]
 		plugin := creator()
 		if err := plugin.Start(); err != nil {
-			log.Printf("Service for input %s failed to start, exiting\n%s\n",
-				input.Name, err.Error())
+			log.Printf("Service for plugin %s failed to start, exiting\n%s\n",
+				p.Name, err.Error())
 			return err
 		}
-		defer p.Stop()
+		defer plugin.Stop()
 	}
 
 	for {
