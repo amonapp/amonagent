@@ -47,11 +47,15 @@ func (c *Checks) SampleConfig() string {
 
 // Config - XXX
 type Config struct {
-	Commands []string `mapstructure:"commands"`
+	Commands []util.Command `json:"commands"`
 }
 
 // SetConfigDefaults - XXX
 func (c *Checks) SetConfigDefaults() error {
+	// Commands already set. For example - in the test suite
+	if len(c.Config.Commands) > 0 {
+		return nil
+	}
 	configFile, err := plugins.ReadPluginConfig("checks")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -60,7 +64,7 @@ func (c *Checks) SetConfigDefaults() error {
 		}).Error("Can't read config file")
 	}
 
-	var Commands []string
+	var Commands []util.Command
 
 	if e := json.Unmarshal(configFile, &Commands); e != nil {
 		log.WithFields(log.Fields{"plugin": "checks", "error": err.Error()}).Error("Can't decode JSON file")
@@ -82,7 +86,7 @@ func (c *Checks) Collect() (interface{}, error) {
 	for _, v := range c.Config.Commands {
 		wg.Add(1)
 
-		go func(command string) {
+		go func(command util.Command) {
 
 			CheckResult := util.ExecWithExitCode(command)
 
