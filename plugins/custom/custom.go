@@ -1,10 +1,8 @@
 package custom
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -12,7 +10,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/amonapp/amonagent/plugins"
-	"github.com/gonuts/go-shellquote"
 )
 
 // Metric - XXX
@@ -20,24 +17,6 @@ type Metric struct {
 	Name  string  `json:"name"`
 	Value float64 `json:"value"`
 	Type  string  `json:"type"`
-}
-
-// Run - XXX
-func Run(command *Command) (string, error) {
-	splitCmd, err := shellquote.Split(command.Command)
-	if err != nil || len(splitCmd) == 0 {
-		return "", fmt.Errorf("exec: unable to parse command, %s", err)
-	}
-
-	cmd := exec.Command(splitCmd[0], splitCmd[1:]...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("exec: %s for command '%s'", err, command.Command)
-	}
-
-	return out.String(), nil
 }
 
 // ParseLine - XXX
@@ -111,20 +90,17 @@ type Custom struct {
 	Config Config
 }
 
-//
-// Command - XXX
-type Command struct {
-	Command string `json:"command"`
-	Name    string `json:"name"`
-}
-
 // Config - XXX
 type Config struct {
-	Commands []Command `json:"commands"`
+	Commands []util.Command `json:"commands"`
 }
 
 // SetConfigDefaults - XXX
 func (c *Custom) SetConfigDefaults() error {
+	// Commands already set. For example - in the test suite
+	if len(c.Config.Commands) > 0 {
+		return nil
+	}
 	configFile, err := plugins.ReadPluginConfig("custom")
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -132,7 +108,7 @@ func (c *Custom) SetConfigDefaults() error {
 			"error":  err,
 		}).Error("Can't read config file")
 	}
-	var Commands []Command
+	var Commands []util.Command
 	if err := json.Unmarshal(configFile, &Commands); err != nil {
 		log.WithFields(log.Fields{"plugin": "custom", "error": err.Error()}).Error("Can't decode JSON file")
 	}
@@ -171,16 +147,16 @@ func (c *Custom) Collect() (interface{}, error) {
 	c.SetConfigDefaults()
 
 	var wg sync.WaitGroup
-	var result []util.CommandResult
+	results := make(PerformanceStructBlock, 0)
 
 	resultChan := make(chan util.CommandResult, len(c.Config.Commands))
 
 	for _, v := range c.Config.Commands {
 		wg.Add(1)
 
-		go func(command string) {
+		go func(v util.Command) {
 
-			CheckResult := util.ExecWithExitCode(command)
+			CheckResult := util.ExecWithExitCode(v)
 
 			resultChan <- CheckResult
 			defer wg.Done()
@@ -191,49 +167,39 @@ func (c *Custom) Collect() (interface{}, error) {
 	close(resultChan)
 
 	for i := range resultChan {
-		result = append(result, i)
+
+		PerformanceStruct := PerformanceStruct{}
+
+		lines := strings.Split(i.Output, "\n")
+		gauges := make(map[string]interface{})
+		counters := make(map[string]interface{})
+
+		for _, line := range lines {
+
+			metric, _ := ParseLine(line)
+			if metric.Type == "gauge" {
+				gauges[metric.Name] = metric.Value
+			}
+
+			if metric.Type == "counter" {
+				counters[metric.Name] = metric.Value
+			}
+
+			pluginName := i.Name
+			if len(gauges) > 0 {
+
+				PerformanceStruct.Gauges = gauges
+			}
+			if len(counters) > 0 {
+				fmt.Println("test")
+				PerformanceStruct.Counters = counters
+			}
+
+			results[pluginName] = PerformanceStruct
+
+		}
+
 	}
-
-	return result, nil
-
-	// var wg sync.WaitGroup
-	// results := make(PerformanceStructBlock, 0)
-
-	// for _, command := range c.Config.Commands {
-	// 	wg.Add(1)
-	// 	go func(command Command) {
-	// 		defer wg.Done()
-
-	// 		PerformanceStruct := PerformanceStruct{}
-	// 		result, err := Run(&command)
-
-	// 		lines := strings.Split(result, "\n")
-	// 		gauges := make(map[string]interface{})
-	// 		counters := make(map[string]interface{})
-	// 		for _, line := range lines {
-	// 			metric, _ := ParseLine(line)
-	// 			if metric.Type == "gauge" {
-	// 				gauges[metric.Name] = metric.Value
-	// 			}
-
-	// 			if metric.Type == "counter" {
-	// 				counters[metric.Name] = metric.Value
-	// 			}
-	// 		}
-
-	// 		if err != nil {
-	// 			fmt.Printf("Unable to execute command, %s", err)
-	// 		}
-
-	// 		pluginName := "custom." + command.Name
-	// 		PerformanceStruct.Gauges = gauges
-	// 		PerformanceStruct.Counters = counters
-	// 		results[pluginName] = PerformanceStruct
-
-	// 	}(command)
-
-	// }
-	// wg.Wait()
 
 	return results, nil
 }

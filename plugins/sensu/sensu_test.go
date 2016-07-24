@@ -1,4 +1,4 @@
-package custom
+package sensu
 
 import (
 	"path"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCustomCollect(t *testing.T) {
+func TestSensuCollect(t *testing.T) {
 
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
@@ -40,22 +40,5 @@ func TestCustomCollect(t *testing.T) {
 	expectedResults["connections"] = p
 
 	assert.Equal(t, result, expectedResults)
-
-}
-
-func TestCustomParseLine(t *testing.T) {
-
-	line := "connections.active:100|gauge"
-	result, err := ParseLine(line)
-	require.NoError(t, err)
-
-	assert.Equal(t, Metric{Name: "connections.active", Value: 100, Type: "gauge"}, result)
-
-	lineTwo := "ping.amoncx.lookup_time:300|gauge"
-
-	resultTwo, errTwo := ParseLine(lineTwo)
-	require.NoError(t, errTwo)
-
-	assert.Equal(t, Metric{Name: "ping.amoncx.lookup_time", Value: 300, Type: "gauge"}, resultTwo)
 
 }

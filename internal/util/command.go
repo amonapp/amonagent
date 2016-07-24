@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+// Command - XXX
+type Command struct {
+	Command string `json:"command"`
+	Name    string `json:"name"`
+}
+
 func (c CommandResult) String() string {
 	s, _ := json.Marshal(c)
 	return string(s)
@@ -16,20 +22,21 @@ func (c CommandResult) String() string {
 
 // CommandResult - XXX
 type CommandResult struct {
+	Name     string `json:"name"`
+	Command  string `json:"command"`
 	ExitCode int    `json:"exit_code"`
 	Output   string `json:"output"`
-	Command  string `json:"command"`
 	Error    string `json:"error"`
 }
 
 // ExecWithExitCode - XXX
 // Source: http://stackoverflow.com/questions/10385551/get-exit-code-go
-func ExecWithExitCode(command string) CommandResult {
-	parts := strings.Fields(command)
+func ExecWithExitCode(command Command) CommandResult {
+	parts := strings.Fields(command.Command)
 	head := parts[0]
 	parts = parts[1:]
 	cmd := exec.Command(head, parts...)
-	output := CommandResult{Command: command}
+	output := CommandResult{Command: command.Command, Name: command.Name}
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
