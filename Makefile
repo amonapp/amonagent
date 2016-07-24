@@ -2,7 +2,6 @@ BUILD=packaging/build
 PACKAGING=packaging
 AGENT=$(BUILD)/amonagent
 VERSION = $(shell sh -c 'git describe --always --tags')
-# VERSION = "0.2.1"
 INITD_SCRIPT=packaging/init.sh
 SYSTEMD_SCRIPT=packaging/amonagent.service
 TEMPFILE_CONF=packaging/tmpfilesd_amonagent.conf
@@ -21,6 +20,11 @@ FPM_BUILD=fpm --epoch 1 -s dir -e -C $(BUILD) \
 --description "`cat $(PACKAGING)/desc`"\
 -v $(VERSION) \
 --vendor Amon
+
+
+setup_test_env:
+	sudo apt-get install ruby-dev
+	sudo gem install sensu-plugins-disk-checks --no-ri --no-rdoc
 
 setup_dev_env:
 	sudo apt-get install ruby-dev gcc make reprepro createrepo -y --force-yes
