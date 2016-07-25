@@ -8,16 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type ExpectedResult struct {
-	Query   string `json:"query"`
-	Count   int    `json:"count"`
-	Objects []struct {
-		ItemID      string `json:"ITEM_ID"`
-		ProdClassID string `json:"PROD_CLASS_ID"`
-		Available   int    `json:"AVAILABLE"`
-	}
-}
-
 func TestSensuCollect(t *testing.T) {
 
 	config := Config{}

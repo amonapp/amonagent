@@ -13,6 +13,7 @@ RPM_REPO_PATH=$(PACKAGES_PATH)/centos/
 PACKAGE="amonagent"
 DEBIAN_PACKAGE_NAME="${PACKAGE}_${VERSION}_all.deb"
 CENTOS_PACKAGE_NAME="${PACKAGE}-${VERSION}-1.noarch.rpm"
+GO_SKIP_VENDOR=$(shell sh -c 'go list ./... | grep -v /vendor/')
 
 FPM_BUILD=fpm --epoch 1 -s dir -e -C $(BUILD) \
 -a all -m "Amon Packages <packages@amon.cx>" \
@@ -150,3 +151,15 @@ setup_travis:
 	sudo add-apt-repository ppa:masterminds/glide && sudo apt-get update
 	sudo apt-get install glide
 	glide i
+
+
+# Run full unit tests using docker containers (includes setup and teardown)
+test: vet
+	go test -race $(GO_SKIP_VENDOR)
+
+# Run "short" unit tests
+test-short: vet
+	go test -short $(GO_SKIP_VENDOR)
+
+vet:
+	go vet $(GO_SKIP_VENDOR)
