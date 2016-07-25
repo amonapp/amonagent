@@ -29,10 +29,11 @@ var sampleConfig = `
 #   Available config options:
 #
 #    [
-#        "metrics-es-node-graphite.rb",
-#        "metrics-net.rb",
-#        "metrics-redis-graphite.rb",
-#        "metrics-iostat-extended.rb"
+#       "check-dns.rb -d twitter.com",
+#		"check-netstat-tcp.rb",
+# 		"check-banner.rb",
+# 		"check-ports.rb",
+# 		"check-postgres-alive.rb"
 #    ]
 #
 #    List of preinstalled sensu plugins + params

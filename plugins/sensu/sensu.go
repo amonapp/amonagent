@@ -11,9 +11,13 @@ import (
 	"github.com/amonapp/amonagent/plugins"
 )
 
-// Sensu - XXX
-type Sensu struct {
-	Config Config
+// Start - XXX
+func (s *Sensu) Start() error {
+	return nil
+}
+
+// Stop - XXX
+func (s *Sensu) Stop() {
 }
 
 // Description - XXX
@@ -41,28 +45,33 @@ func (s *Sensu) SampleConfig() string {
 	return sampleConfig
 }
 
-// Start - XXX
-func (s *Sensu) Start() error {
-	return nil
-}
-
-// Stop - XXX
-func (s *Sensu) Stop() {
+// Sensu - XXX
+type Sensu struct {
+	Config Config
 }
 
 // Config - XXX
 type Config struct {
-	Commands []string `mapstructure:"commands"`
+	Commands []util.Command `json:"commands"`
 }
 
 // SetConfigDefaults - XXX
 func (s *Sensu) SetConfigDefaults() error {
+	// Commands already set. For example - in the test suite
+	if len(s.Config.Commands) > 0 {
+		return nil
+	}
 	configFile, err := plugins.ReadPluginConfig("sensu")
 	if err != nil {
-		log.WithFields(log.Fields{"plugin": "sensu", "error": err.Error()}).Error("Can't read config file")
+		log.WithFields(log.Fields{
+			"plugin": "sensu",
+			"error":  err,
+		}).Error("Can't read config file")
 	}
-	var Commands []string
-	if err := json.Unmarshal(configFile, &Commands); err != nil {
+
+	var Commands []util.Command
+
+	if e := json.Unmarshal(configFile, &Commands); e != nil {
 		log.WithFields(log.Fields{"plugin": "sensu", "error": err.Error()}).Error("Can't decode JSON file")
 	}
 
@@ -155,12 +164,6 @@ func ParseLine(s string) (Metric, error) {
 	return m, nil
 }
 
-// Command - XXX
-type Command struct {
-	Command string `json:"command"`
-	Name    string `json:"name"`
-}
-
 // Collect - XXX
 // This should return the following: sensu.plugin_name: {"gauges": {}}, sensu.another_plugin :{"gauges":{}}
 func (s *Sensu) Collect() (interface{}, error) {
@@ -172,7 +175,7 @@ func (s *Sensu) Collect() (interface{}, error) {
 	for _, command := range s.Config.Commands {
 		wg.Add(1)
 
-		go func(command string) {
+		go func(command util.Command) {
 
 			CheckResult := util.ExecWithExitCode(command)
 
@@ -187,8 +190,8 @@ func (s *Sensu) Collect() (interface{}, error) {
 
 	for command := range resultChan {
 		var result []Metric
-		gauges := make(map[string]interface{})
-		GaugesWrapper := make(map[string]interface{})
+		gauges := make(map[string]string)
+		GaugesWrapper := make(map[string]map[string]string)
 		plugin := ""
 		lines := strings.Split(command.Output, "\n")
 

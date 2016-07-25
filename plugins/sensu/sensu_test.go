@@ -1,44 +1,52 @@
 package sensu
 
 import (
-	"path"
-	"runtime"
+	"reflect"
 	"testing"
 
 	"github.com/amonapp/amonagent/internal/util"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+type ExpectedResult struct {
+	Query   string `json:"query"`
+	Count   int    `json:"count"`
+	Objects []struct {
+		ItemID      string `json:"ITEM_ID"`
+		ProdClassID string `json:"PROD_CLASS_ID"`
+		Available   int    `json:"AVAILABLE"`
+	}
+}
+
 func TestSensuCollect(t *testing.T) {
 
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		panic("testdata directory not found")
-	}
-
-	var pythonScript = path.Join("python ", path.Dir(filename), "testdata", "connections.py")
-
 	config := Config{}
-	configLine := util.Command{Name: "connections", Command: pythonScript}
+	configLine := util.Command{Command: "metrics-disk-capacity.rb"}
 
 	config.Commands = append(config.Commands, configLine)
 
-	c := Custom{}
+	c := Sensu{}
 	c.Config = config
 
 	result, err := c.Collect()
 	require.NoError(t, err)
 
-	fields := map[string]interface{}{
-		"connections.active": float64(100),
-		"connections.error":  float64(500),
+	resultReflect := reflect.ValueOf(result)
+	i := resultReflect.Interface()
+	pluginMap := i.(map[string]interface{})
+
+	require.NotZero(t, pluginMap["sensu.disk"])
+
+	gaugesMapReflect := reflect.ValueOf(pluginMap["sensu.disk"])
+	j := gaugesMapReflect.Interface()
+	gaugesMap := j.(map[string]map[string]string)
+
+	require.NotZero(t, gaugesMap["gauges"])
+
+	something := []string{"sda1.iused", "sda1.avail", "sda1.capacity", "sda1.used"}
+
+	for _, v := range something {
+		require.NotZero(t, gaugesMap["gauges"][v])
 	}
-
-	expectedResults := make(PerformanceStructBlock, 0)
-	p := PerformanceStruct{Gauges: fields}
-	expectedResults["connections"] = p
-
-	assert.Equal(t, result, expectedResults)
 
 }
