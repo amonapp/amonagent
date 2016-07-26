@@ -560,7 +560,7 @@ func TestParse_Timings(t *testing.T) {
 		}
 	}
 
-	s.Collect("/etc/opt/amonagent/plugins-enabled/statsd.conf")
+	s.Collect()
 
 	// valid := map[string]interface{}{
 	// 	"90_percentile": float64(11),
@@ -592,7 +592,7 @@ func TestParse_Gauges_Delete(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	s.Collect("/etc/opt/amonagent/plugins-enabled/statsd.conf")
+	s.Collect()
 
 	err = test_validate_gauge("current.users", 100, s.gauges)
 	if err == nil {
@@ -618,7 +618,7 @@ func TestParse_Sets_Delete(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	s.Collect("/etc/opt/amonagent/plugins-enabled/statsd.conf")
+	s.Collect()
 
 	err = test_validate_set("unique.user.ids", 1, s.sets)
 	if err == nil {
@@ -644,7 +644,7 @@ func TestParse_Counters_Delete(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	s.Collect("/etc/opt/amonagent/plugins-enabled/statsd.conf")
+	s.Collect()
 
 	err = test_validate_counter("total.users", 100, s.counters)
 	if err == nil {
