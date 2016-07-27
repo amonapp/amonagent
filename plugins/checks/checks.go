@@ -2,6 +2,7 @@ package checks
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -53,6 +54,7 @@ type Config struct {
 
 // SetConfigDefaults - XXX
 func (c *Checks) SetConfigDefaults() error {
+
 	// Commands already set. For example - in the test suite
 	if len(c.Config.Commands) > 0 {
 		return nil
@@ -69,12 +71,19 @@ func (c *Checks) SetConfigDefaults() error {
 	}
 
 	var Commands []util.Command
+	var CommandStrings []string
 
-	if e := json.Unmarshal(configFile, &Commands); e != nil {
+	if e := json.Unmarshal(configFile, &CommandStrings); e != nil {
 		log.WithFields(log.Fields{"plugin": "checks", "error": e.Error()}).Error("Can't decode JSON file")
-
 		return e
 	}
+
+	for _, str := range CommandStrings {
+		var command = util.Command{Command: str}
+		Commands = append(Commands, command)
+	}
+
+	fmt.Println(Commands)
 
 	c.Config.Commands = Commands
 

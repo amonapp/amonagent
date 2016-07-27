@@ -10,7 +10,6 @@ import (
 )
 
 func TestChecksConfigDefaults(t *testing.T) {
-
 	pluginhelper.WritePluginConfig("checks", "bogusstring")
 
 	c := Checks{}

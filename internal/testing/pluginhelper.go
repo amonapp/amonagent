@@ -11,21 +11,21 @@ import (
 // WritePluginConfig - XXX
 func WritePluginConfig(name string, value string) error {
 
-	var PluginGlobalConfigPath = path.Join("/tmp", "plugins-enabled")
+	var PluginConfigPath = path.Join("/tmp", "plugins-enabled")
 
-	PluginDirCleanupErr := os.RemoveAll(PluginGlobalConfigPath)
+	PluginDirCleanupErr := os.RemoveAll(PluginConfigPath)
 
 	if PluginDirCleanupErr != nil {
 		log.Fatalf("testing/pluginhelper.go line: 19 - Can't cleanup plugin dir: %v", PluginDirCleanupErr)
 	}
 
-	PluginDirErr := os.MkdirAll(PluginGlobalConfigPath, os.ModePerm)
+	PluginDirErr := os.MkdirAll(PluginConfigPath, os.ModePerm)
 
 	if PluginDirErr != nil {
 		log.Fatalf("testing/pluginhelper.go line: 25 -  Can't create config directory: %v", PluginDirErr)
 	}
 
-	var pluginConfig = path.Join(PluginGlobalConfigPath, strings.Join([]string{name, "conf"}, "."))
+	var pluginConfig = path.Join(PluginConfigPath, strings.Join([]string{name, "conf"}, "."))
 
 	configFile, err := os.OpenFile(pluginConfig, os.O_CREATE|os.O_WRONLY, 0666)
 

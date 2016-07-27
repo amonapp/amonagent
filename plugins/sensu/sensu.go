@@ -72,7 +72,7 @@ func (s *Sensu) SetConfigDefaults() error {
 	var Commands []util.Command
 
 	if e := json.Unmarshal(configFile, &Commands); e != nil {
-		log.WithFields(log.Fields{"plugin": "sensu", "error": err.Error()}).Error("Can't decode JSON file")
+		log.WithFields(log.Fields{"plugin": "sensu", "error": e.Error()}).Error("Can't decode JSON file")
 	}
 
 	s.Config.Commands = Commands
