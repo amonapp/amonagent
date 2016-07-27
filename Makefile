@@ -161,5 +161,8 @@ test: vet
 test-short: vet
 	go test -short $(GO_SKIP_VENDOR)
 
+race:
+	go run -race cmd/amonagent.go
+
 vet:
 	go vet $(GO_SKIP_VENDOR)

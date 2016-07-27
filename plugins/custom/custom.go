@@ -109,8 +109,8 @@ func (c *Custom) SetConfigDefaults() error {
 		}).Error("Can't read config file")
 	}
 	var Commands []util.Command
-	if err := json.Unmarshal(configFile, &Commands); err != nil {
-		log.WithFields(log.Fields{"plugin": "custom", "error": err.Error()}).Error("Can't decode JSON file")
+	if e := json.Unmarshal(configFile, &Commands); e != nil {
+		log.WithFields(log.Fields{"plugin": "custom", "error": e.Error()}).Error("Can't decode JSON file")
 	}
 
 	c.Config.Commands = Commands

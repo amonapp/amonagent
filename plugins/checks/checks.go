@@ -57,18 +57,23 @@ func (c *Checks) SetConfigDefaults() error {
 	if len(c.Config.Commands) > 0 {
 		return nil
 	}
+
 	configFile, err := plugins.ReadPluginConfig("checks")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"plugin": "checks",
 			"error":  err,
 		}).Error("Can't read config file")
+
+		return err
 	}
 
 	var Commands []util.Command
 
 	if e := json.Unmarshal(configFile, &Commands); e != nil {
-		log.WithFields(log.Fields{"plugin": "checks", "error": err.Error()}).Error("Can't decode JSON file")
+		log.WithFields(log.Fields{"plugin": "checks", "error": e.Error()}).Error("Can't decode JSON file")
+
+		return e
 	}
 
 	c.Config.Commands = Commands

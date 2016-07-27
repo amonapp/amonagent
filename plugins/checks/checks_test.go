@@ -3,10 +3,27 @@ package checks
 import (
 	"testing"
 
+	"github.com/amonapp/amonagent/internal/testing"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestChecksConfigDefaults(t *testing.T) {
+
+	pluginhelper.WritePluginConfig("checks", "bogusstring")
+
+	c := Checks{}
+	configErr := c.SetConfigDefaults()
+	require.Error(t, configErr)
+
+	pluginhelper.WritePluginConfig("checks", "[\"check-disk-usage.rb\", \"check-memory-usage.rb\"]")
+
+	c2 := Checks{}
+	configErr2 := c2.SetConfigDefaults()
+	require.NoError(t, configErr2)
+
+}
 
 func TestChecksCollect(t *testing.T) {
 
