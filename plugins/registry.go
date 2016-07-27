@@ -80,6 +80,7 @@ func GetAllEnabledPlugins() ([]PluginConfig, error) {
 	fileList := []PluginConfig{}
 
 	if _, err := os.Stat(PluginConfigPath); os.IsNotExist(err) {
+
 		if err != nil {
 			if os.IsNotExist(err) {
 				// Plugin config directory doesn't exist for some reason. Create
@@ -97,11 +98,12 @@ func GetAllEnabledPlugins() ([]PluginConfig, error) {
 
 	filepath.Walk(PluginConfigPath, func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() {
+
 			// Only files ending with .conf
 			fileName := strings.Split(f.Name(), ".conf")
-			if len(fileName) == 2 {
 
-				// Go over the list of available plugins and add the config only if it is for an existing plugin
+			if len(fileName) == 2 {
+				// Go over the list of all available(loaded) plugins and add the config only if it is for an existing plugin
 				for name := range Plugins {
 					if name == fileName[0] {
 						f := PluginConfig{Path: path, Name: fileName[0]}

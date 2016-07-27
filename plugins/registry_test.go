@@ -63,19 +63,22 @@ func TestGetAllEnabledPlugins(t *testing.T) {
 		log.Fatal(PluginDirErr)
 	}
 
-	for i := 1; i <= 5; i++ {
-		var pluginPath = path.Join(PluginConfigPath, fmt.Sprint("plugin", i, ".conf"))
+	validPLugins := []string{"apache", "checks", "haproxy", "redis", "sensu"}
+
+	for _, name := range validPLugins {
+		var pluginPath = path.Join(PluginConfigPath, fmt.Sprint(name, ".conf"))
+		fmt.Println(pluginPath)
 		_, err := os.Create(pluginPath)
 
 		if err != nil {
 			log.Fatal(err)
 		}
-
 	}
 
 	PluginList, PluginListErr := GetAllEnabledPlugins()
 
 	assert.Nil(t, PluginListErr)
+
 	assert.Len(t, PluginList, 5, "5 config files found")
 	var aString interface{} = "string"
 	for _, plugin := range PluginList {

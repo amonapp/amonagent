@@ -209,7 +209,7 @@ func (t *Telegraf) Collect() (interface{}, error) {
 	Command := fmt.Sprintf("/usr/bin/telegraf -test -config %s", t.Config.Config)
 	Commandresult, err := Run(Command)
 	if err != nil {
-		log.Errorf("Can't execute command: ", err)
+		log.Errorf("Can't execute command:  %v", err)
 	}
 
 	plugins := make(map[string]interface{})

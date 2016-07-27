@@ -159,12 +159,12 @@ func main() {
 		// Ensure the required directory structure exists.
 		err := os.MkdirAll(filepath.Dir(*fPidfile), 0700)
 		if err != nil {
-			log.Fatalf("Failed to verify pid directory", err)
+			log.Fatalf("Failed to verify pid directory  %v", err)
 		}
 
 		f, err := os.Create(*fPidfile)
 		if err != nil {
-			log.Fatalf("Unable to create pidfile", err)
+			log.Fatalf("Unable to create pidfile  %v", err)
 		}
 
 		fmt.Fprintf(f, "%d\n", os.Getpid())
