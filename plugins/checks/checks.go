@@ -2,7 +2,6 @@ package checks
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -82,8 +81,6 @@ func (c *Checks) SetConfigDefaults() error {
 		var command = util.Command{Command: str}
 		Commands = append(Commands, command)
 	}
-
-	fmt.Println(Commands)
 
 	c.Config.Commands = Commands
 

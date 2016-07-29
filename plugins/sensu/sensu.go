@@ -67,12 +67,22 @@ func (s *Sensu) SetConfigDefaults() error {
 			"plugin": "sensu",
 			"error":  err,
 		}).Error("Can't read config file")
+
+		return err
 	}
 
 	var Commands []util.Command
+	var CommandStrings []string
 
-	if e := json.Unmarshal(configFile, &Commands); e != nil {
+	if e := json.Unmarshal(configFile, &CommandStrings); e != nil {
 		log.WithFields(log.Fields{"plugin": "sensu", "error": e.Error()}).Error("Can't decode JSON file")
+
+		return e
+	}
+
+	for _, str := range CommandStrings {
+		var command = util.Command{Command: str}
+		Commands = append(Commands, command)
 	}
 
 	s.Config.Commands = Commands
@@ -100,7 +110,7 @@ type ParsedLine struct {
 }
 
 // ParseLine - XXX
-func ParseLine(s string) (Metric, error) {
+func (s *Sensu) ParseLine(lineToParse string) (Metric, error) {
 	// split by space
 	f := func(c rune) bool {
 		return c == ' '
@@ -114,7 +124,7 @@ func ParseLine(s string) (Metric, error) {
 		return c == '_'
 	}
 
-	fields := strings.FieldsFunc(s, f)
+	fields := strings.FieldsFunc(lineToParse, f)
 	line := ParsedLine{}
 	m := Metric{}
 	if len(fields) == 3 {
@@ -196,7 +206,7 @@ func (s *Sensu) Collect() (interface{}, error) {
 		lines := strings.Split(command.Output, "\n")
 
 		for _, line := range lines {
-			metric, _ := ParseLine(line)
+			metric, _ := s.ParseLine(line)
 			if len(metric.Gauge) > 0 {
 				result = append(result, metric)
 			}
