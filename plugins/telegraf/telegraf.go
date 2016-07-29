@@ -75,11 +75,16 @@ func (t *Telegraf) SetConfigDefaults() error {
 	configFile, err := plugins.UmarshalPluginConfig("telegraf")
 	if err != nil {
 		log.WithFields(log.Fields{"plugin": "telegraf", "error": err.Error()}).Error("Can't read config file")
+
+		return err
 	}
 	var config Config
-	decodeError := mapstructure.Decode(configFile, &config)
-	if decodeError != nil {
-		log.WithFields(log.Fields{"plugin": "telegraf", "error": decodeError.Error()}).Error("Can't decode config file")
+	e := mapstructure.Decode(configFile, &config)
+	if e != nil {
+
+		log.WithFields(log.Fields{"plugin": "telegraf", "error": e.Error()}).Error("Can't decode config file")
+
+		return e
 	}
 
 	t.Config = config
