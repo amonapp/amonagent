@@ -3,4 +3,4 @@
 package settings
 
 // ConfigPath - XXX
-var ConfigPath = "/etc/opt/amonagent/"
+const ConfigPath = "/etc/opt/amonagent/"
