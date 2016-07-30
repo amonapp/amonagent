@@ -1,18 +1,15 @@
 package telegraf
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/gonuts/go-shellquote"
-	"github.com/mitchellh/mapstructure"
-
+	"github.com/amonapp/amonagent/internal/util"
 	"github.com/amonapp/amonagent/plugins"
+	"github.com/mitchellh/mapstructure"
 )
 
 // Telegraf - XXX
@@ -190,35 +187,23 @@ func contains(slice []string, item string) bool {
 	return ok
 }
 
-// Run - XXX
-func Run(command string) (string, error) {
-	splitCmd, err := shellquote.Split(command)
-	if err != nil || len(splitCmd) == 0 {
-		return "", fmt.Errorf("exec: unable to parse command, %s", err)
-	}
-
-	cmd := exec.Command(splitCmd[0], splitCmd[1:]...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("exec: %s for command '%s'", err, command)
-	}
-
-	return out.String(), nil
-}
-
 // Collect - XXX
 func (t *Telegraf) Collect() (interface{}, error) {
 	t.SetConfigDefaults()
-	Command := fmt.Sprintf("/usr/bin/telegraf -test -config %s", t.Config.Config)
-	Commandresult, err := Run(Command)
-	if err != nil {
-		log.Errorf("Can't execute command:  %v", err)
-	}
+
+	CommandString := fmt.Sprintf("/usr/bin/telegraf -test -config %s", t.Config.Config)
+	fmt.Println(CommandString)
+	var command = util.Command{Command: CommandString}
+
+	Commandresult := util.ExecWithExitCode(command)
+	// if err != nil {
+	// 	log.Errorf("Can't execute command:  %v", err)
+	// }
+
+	fmt.Println(Commandresult)
 
 	plugins := make(map[string]interface{})
-	lines := strings.Split(Commandresult, "\n")
+	lines := strings.Split(Commandresult.Output, "\n")
 	var result []Metric
 	for _, line := range lines {
 		metrics, _ := ParseLine(line)
