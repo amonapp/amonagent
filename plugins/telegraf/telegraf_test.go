@@ -3,6 +3,7 @@ package telegraf
 import (
 	"fmt"
 	"path"
+	"reflect"
 	"runtime"
 	"testing"
 
@@ -49,17 +50,17 @@ func TestTelegraf(t *testing.T) {
 
 	fmt.Println(result)
 
-	// resultReflect := reflect.ValueOf(result)
-	// i := resultReflect.Interface()
-	// pluginMap := i.(map[string]interface{})
+	resultReflect := reflect.ValueOf(result)
+	i := resultReflect.Interface()
+	pluginMap := i.(map[string]interface{})
 
-	// require.NotZero(t, pluginMap["sensu.disk"])
+	require.NotZero(t, pluginMap["telegraf.mem"])
 
-	// gaugesMapReflect := reflect.ValueOf(pluginMap["sensu.disk"])
-	// j := gaugesMapReflect.Interface()
-	// gaugesMap := j.(map[string]map[string]string)
+	gaugesMapReflect := reflect.ValueOf(pluginMap["telegraf.mem"])
+	j := gaugesMapReflect.Interface()
+	gaugesMap := j.(map[string]map[string]string)
 
-	// require.NotZero(t, gaugesMap["gauges"])
+	require.NotZero(t, gaugesMap["gauges"])
 
 	// something := []string{"sda1.iused", "sda1.avail", "sda1.capacity", "sda1.used"}
 

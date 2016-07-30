@@ -90,7 +90,7 @@ func (t *Telegraf) SetConfigDefaults() error {
 }
 
 // ParseLine - XXX
-func ParseLine(s string) (ParsedLine, error) {
+func (t *Telegraf) ParseLine(s string) (ParsedLine, error) {
 	line := ParsedLine{}
 	// split by space
 	space := func(c rune) bool {
@@ -192,21 +192,15 @@ func (t *Telegraf) Collect() (interface{}, error) {
 	t.SetConfigDefaults()
 
 	CommandString := fmt.Sprintf("/usr/bin/telegraf -test -config %s", t.Config.Config)
-	fmt.Println(CommandString)
 	var command = util.Command{Command: CommandString}
 
 	Commandresult := util.ExecWithExitCode(command)
-	// if err != nil {
-	// 	log.Errorf("Can't execute command:  %v", err)
-	// }
-
-	fmt.Println(Commandresult)
 
 	plugins := make(map[string]interface{})
 	lines := strings.Split(Commandresult.Output, "\n")
 	var result []Metric
 	for _, line := range lines {
-		metrics, _ := ParseLine(line)
+		metrics, _ := t.ParseLine(line)
 
 		if len(metrics.Elements) > 0 {
 			for _, m := range metrics.Elements {
@@ -226,8 +220,8 @@ func (t *Telegraf) Collect() (interface{}, error) {
 	}
 	for _, p := range AllPlugins {
 		plugins[p] = make(map[string]interface{})
-		GaugesWrapper := make(map[string]interface{})
-		gauges := make(map[string]interface{})
+		GaugesWrapper := make(map[string]map[string]string)
+		gauges := make(map[string]string)
 		for _, r := range result {
 
 			if r.Plugin == p {
