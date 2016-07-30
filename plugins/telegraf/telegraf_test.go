@@ -5,6 +5,7 @@ import (
 	"path"
 	"reflect"
 	"runtime"
+	"sort"
 	"testing"
 
 	"github.com/amonapp/amonagent/internal/testing"
@@ -12,6 +13,41 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestTelegrafParseLine(t *testing.T) {
+
+	s := Telegraf{}
+	r, err := s.ParseLine("> mem,host=ubuntu available_percent=78.43483331332489,buffered=199602176i,used=1802661888i,used_percent=21.56516668667511 1469886743")
+	require.NoError(t, err)
+
+	assert.Len(t, r.Elements, 4)
+	for _, line := range r.Elements {
+		assert.Equal(t, line.Plugin, "telegraf.mem")
+
+		validGauges := []string{"mem_available.percent", "mem_buffered", "mem_used", "mem_used.percent"}
+		sort.Strings(validGauges)
+		i := sort.SearchStrings(validGauges, line.Gauge)
+		var gaugeFound = i < len(validGauges) && validGauges[i] == line.Gauge
+		assert.True(t, gaugeFound, "Valid Gauge Name")
+
+	}
+
+	r, err = s.ParseLine("> system,host=ubuntu load1=0.11,load15=0.06,load5=0.05,n_cpus=4i,n_users=2i,uptime=7252i 1469891972000000000")
+	require.NoError(t, err)
+	assert.Len(t, r.Elements, 6)
+
+	for _, line := range r.Elements {
+		assert.Equal(t, line.Plugin, "telegraf.system")
+
+		validGauges := []string{"system_load1", "system_load15", "system_load5", "system_n.cpus", "system_n.users", "system_uptime"}
+		sort.Strings(validGauges)
+		i := sort.SearchStrings(validGauges, line.Gauge)
+		var gaugeFound = i < len(validGauges) && validGauges[i] == line.Gauge
+		assert.True(t, gaugeFound, "Valid Gauge Name")
+
+	}
+
+}
 
 func TestTelegrafonfigDefaults(t *testing.T) {
 
@@ -48,8 +84,6 @@ func TestTelegraf(t *testing.T) {
 	result, err := c.Collect()
 	require.NoError(t, err)
 
-	fmt.Println(result)
-
 	resultReflect := reflect.ValueOf(result)
 	i := resultReflect.Interface()
 	pluginMap := i.(map[string]interface{})
@@ -61,11 +95,5 @@ func TestTelegraf(t *testing.T) {
 	gaugesMap := j.(map[string]map[string]string)
 
 	require.NotZero(t, gaugesMap["gauges"])
-
-	// something := []string{"sda1.iused", "sda1.avail", "sda1.capacity", "sda1.used"}
-
-	// for _, v := range something {
-	// 	require.NotZero(t, gaugesMap["gauges"][v])
-	// }
 
 }

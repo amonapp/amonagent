@@ -124,8 +124,21 @@ func (t *Telegraf) ParseLine(s string) (ParsedLine, error) {
 			if len(measurementLine) == 4 {
 				// ping,url=www.google.com
 				pluginMeta := strings.FieldsFunc(measurementLine[1], comma)
+
 				if len(pluginMeta) > 1 {
-					chartName := strings.Join(pluginMeta[1:], "|") // url=google.com
+
+					validTags := []string{}
+					// TODO - Extend to a list in the future
+					// Range over tags and ignore the host values
+					for _, v := range pluginMeta[1:] {
+
+						startsWith := strings.HasPrefix(v, "host")
+						if startsWith == false {
+							validTags = append(validTags, v)
+						}
+
+					}
+					chartName := strings.Join(validTags, "|") // url=google.com
 					chartName = strings.Replace(chartName, ".", "", -1)
 					chartName = strings.Replace(chartName, "=", ":", -1)
 
@@ -157,7 +170,7 @@ func (t *Telegraf) ParseLine(s string) (ParsedLine, error) {
 							}
 
 							m.Plugin = "telegraf." + pluginMeta[0] // ping
-							m.Gauge = chartName + "_" + cleanName
+							m.Gauge = pluginMeta[0] + chartName + "_" + cleanName
 							m.Value = value
 
 							line.Elements = append(line.Elements, m)
