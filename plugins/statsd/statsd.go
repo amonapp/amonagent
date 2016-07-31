@@ -58,9 +58,10 @@ func (s *Statsd) SetConfigDefaults() error {
 	}
 
 	if len(config.Address) == 0 {
-		config.Address = "127.0.0.1:8125"
+		config.Address = ":8125"
 	}
 
+	// Set default
 	if config.AllowedPendingMessages == 0 {
 		config.AllowedPendingMessages = 10000
 	}
@@ -138,7 +139,6 @@ type cachedgauge struct {
 type cachedcounter struct {
 	name   string
 	fields map[string]interface{}
-	tags   map[string]string
 }
 
 type cachedtimings struct {
@@ -183,14 +183,23 @@ func (_ *Statsd) SampleConfig() string {
 }
 
 func (s *Statsd) Collect() (interface{}, error) {
-
-	// results := make(PerformanceStructBlock, 0)
+	s.SetConfigDefaults()
 	PerformanceStruct := PerformanceStruct{}
 	s.Lock()
 	defer s.Unlock()
 
 	timings := make(map[string]interface{})
 	gauges := make(map[string]interface{})
+
+	fmt.Println("------------------------------------")
+	log.WithFields(log.Fields{
+		"plugin":   "statsd",
+		"timings":  s.timings,
+		"gauges":   s.gauges,
+		"counters": s.counters,
+		"config":   s.Config,
+	}).Info("Collecting Statsd Metrics")
+	fmt.Println("------------------------------------")
 
 	for _, metric := range s.timings {
 		// Defining a template to parse field names for timers allows us to split
@@ -339,6 +348,11 @@ func (s *Statsd) parser() error {
 func (s *Statsd) parseStatsdLine(line string) error {
 	s.Lock()
 	defer s.Unlock()
+
+	// log.WithFields(log.Fields{
+	// 	"plugin": "statsd",
+	// 	"line":   line,
+	// }).Info("Parsing Statsd Line")
 
 	lineTags := make(map[string]string)
 
@@ -515,7 +529,6 @@ func (s *Statsd) aggregate(m metric) {
 			cached = cachedtimings{
 				name:   m.name,
 				fields: make(map[string]RunningStats),
-				tags:   m.tags,
 			}
 		}
 		// Check if the field exists. If we've not enabled multiple fields per timer
@@ -542,7 +555,6 @@ func (s *Statsd) aggregate(m metric) {
 			s.counters[m.hash] = cachedcounter{
 				name:   m.name,
 				fields: make(map[string]interface{}),
-				tags:   m.tags,
 			}
 		}
 		// check if the field exists
@@ -559,7 +571,6 @@ func (s *Statsd) aggregate(m metric) {
 			s.gauges[m.hash] = cachedgauge{
 				name:   m.name,
 				fields: make(map[string]interface{}),
-				tags:   m.tags,
 			}
 		}
 		// check if the field exists
@@ -580,7 +591,6 @@ func (s *Statsd) aggregate(m metric) {
 			s.sets[m.hash] = cachedset{
 				name:   m.name,
 				fields: make(map[string]map[int64]bool),
-				tags:   m.tags,
 			}
 		}
 		// check if the field exists
@@ -590,6 +600,14 @@ func (s *Statsd) aggregate(m metric) {
 		}
 		s.sets[m.hash].fields[m.field][m.intvalue] = true
 	}
+
+	fmt.Println("-------------------")
+	log.WithFields(log.Fields{
+		"plugin": "statsd",
+		"gauges": s.gauges,
+	}).Info("Gauges")
+	fmt.Println("-------------------")
+
 }
 
 func (s *Statsd) Stop() {
