@@ -183,6 +183,8 @@ func (_ *Statsd) SampleConfig() string {
 }
 
 func (s *Statsd) Collect() (interface{}, error) {
+
+	// results := make(PerformanceStructBlock, 0)
 	PerformanceStruct := PerformanceStruct{}
 	s.Lock()
 	defer s.Unlock()

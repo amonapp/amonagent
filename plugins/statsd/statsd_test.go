@@ -3,7 +3,11 @@ package statsd
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func NewTestStatsd() *Statsd {
@@ -551,6 +555,8 @@ func TestParse_Timings(t *testing.T) {
 		"test.timing:1|ms",
 		"test.timing:1|ms",
 		"test.timing:1|ms",
+		"amon.response_timer:600|ms",
+		"amon.response_timer:450|ms",
 	}
 
 	for _, line := range valid_lines {
@@ -560,18 +566,35 @@ func TestParse_Timings(t *testing.T) {
 		}
 	}
 
-	s.Collect()
+	result, err := s.Collect()
+	require.NoError(t, err)
 
-	// valid := map[string]interface{}{
-	// 	"90_percentile": float64(11),
-	// 	"count":         int64(5),
-	// 	"lower":         float64(1),
-	// 	"mean":          float64(3),
-	// 	"stddev":        float64(4),
-	// 	"upper":         float64(11),
-	// }
+	resultReflect := reflect.ValueOf(result)
+	i := resultReflect.Interface()
+	pluginMap := i.(PerformanceStruct)
 
-	// acc.AssertContainsFields(t, "test_timing", valid)
+	require.NotZero(t, pluginMap.Gauges["test.timing"])
+	require.NotZero(t, pluginMap.Gauges["amon.response_timer"])
+
+	validValues := map[string]interface{}{
+		"90_percentile": float64(11),
+		"count":         int64(5),
+		"lower":         float64(1),
+		"mean":          float64(3),
+		"deviation":     float64(4),
+		"upper":         float64(11),
+	}
+	gaugesMapReflect := reflect.ValueOf(pluginMap.Gauges["test.timing"])
+	j := gaugesMapReflect.Interface()
+	gaugesMap := j.(map[string]interface{})
+
+	validKeys := []string{"mean", "deviation", "upper", "lower", "count", "90_percentile"}
+
+	for _, k := range validKeys {
+		require.NotZero(t, gaugesMap[k])
+	}
+	assert.Equal(t, gaugesMap, validValues)
+
 }
 
 // Tests the delete_gauges option

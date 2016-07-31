@@ -28,6 +28,14 @@ func TestSensuParseLine(t *testing.T) {
 	assert.Equal(t, r.Value, "0.02355488")
 	assert.Equal(t, r.Plugin, "sensu.dns")
 	assert.Equal(t, r.Gauge, "A_google_com.response_time")
+
+	// Error here, index out of range
+	r, err = s.ParseLine("response_time 2 1469794071")
+	require.NoError(t, err)
+
+	assert.Equal(t, r.Value, "2")
+	assert.Equal(t, r.Plugin, "sensu.response_time")
+	assert.Equal(t, r.Gauge, "response.time")
 }
 
 func TestSensuConfigDefaults(t *testing.T) {

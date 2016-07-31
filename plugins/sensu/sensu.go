@@ -134,12 +134,16 @@ func (s *Sensu) ParseLine(lineToParse string) (Metric, error) {
 		metricFields := strings.FieldsFunc(fields[0], dot)
 
 		var cleanName string
+		var pluginName string
 		// Eliminate host and plugin name here
 		// Example ubuntu.elasticsearch.thread_pool......
 		if len(metricFields) > 2 {
 			cleanName = strings.Join(metricFields[2:], ".")
+			pluginName = "sensu." + metricFields[1]
 		} else {
+			// Example response_time ......
 			cleanName = strings.Join(metricFields[:], ".")
+			pluginName = "sensu." + cleanName
 		}
 		CleanMetricFields := strings.FieldsFunc(cleanName, dot)
 		splitOnUnderscore := strings.FieldsFunc(cleanName, underscore)
@@ -166,9 +170,9 @@ func (s *Sensu) ParseLine(lineToParse string) (Metric, error) {
 			m.Gauge = chart + "." + line
 
 		}
-		m.Value = value
-		m.Plugin = "sensu." + metricFields[1]
 
+		m.Value = value
+		m.Plugin = pluginName
 	}
 
 	return m, nil

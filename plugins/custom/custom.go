@@ -2,7 +2,6 @@ package custom
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -191,7 +190,6 @@ func (c *Custom) Collect() (interface{}, error) {
 				PerformanceStruct.Gauges = gauges
 			}
 			if len(counters) > 0 {
-				fmt.Println("test")
 				PerformanceStruct.Counters = counters
 			}
 
