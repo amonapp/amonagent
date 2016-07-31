@@ -58,7 +58,7 @@ func (s *Statsd) SetConfigDefaults() error {
 	}
 
 	if len(config.Address) == 0 {
-		config.Address = ":8125"
+		config.Address = "127.0.0.1:8125"
 	}
 
 	if config.AllowedPendingMessages == 0 {
