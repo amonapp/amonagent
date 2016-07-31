@@ -197,7 +197,7 @@ func (s *Statsd) Collect() (interface{}, error) {
 		"timings":  s.timings,
 		"gauges":   s.gauges,
 		"counters": s.counters,
-		"config":   s.Config,
+		"statsd":   s,
 	}).Info("Collecting Statsd Metrics")
 	fmt.Println("------------------------------------")
 
@@ -264,6 +264,8 @@ func (s *Statsd) Start() error {
 	// Make data structures
 	s.done = make(chan struct{})
 	s.in = make(chan []byte, s.Config.AllowedPendingMessages)
+	s.AllowedPendingMessages = s.Config.AllowedPendingMessages
+	// s.Percentiles = [90]
 
 	if prevInstance == nil {
 		s.gauges = make(map[string]cachedgauge)
@@ -601,12 +603,12 @@ func (s *Statsd) aggregate(m metric) {
 		s.sets[m.hash].fields[m.field][m.intvalue] = true
 	}
 
-	fmt.Println("-------------------")
-	log.WithFields(log.Fields{
-		"plugin": "statsd",
-		"gauges": s.gauges,
-	}).Info("Gauges")
-	fmt.Println("-------------------")
+	// fmt.Println("-------------------")
+	// log.WithFields(log.Fields{
+	// 	"plugin": "statsd",
+	// 	"gauges": s.gauges,
+	// 	"statsd": s,
+	// }).Info("Gauges")
 
 }
 
