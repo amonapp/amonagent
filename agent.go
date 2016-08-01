@@ -11,10 +11,18 @@ import (
 	"github.com/amonapp/amonagent/plugins"
 )
 
+// ConfiguredPlugin - XXX
+type ConfiguredPlugin struct {
+	Name   string
+	Plugin plugins.Plugin
+}
+
 // Agent - XXX
 type Agent struct {
 	// Interval at which to gather information
 	Interval time.Duration
+
+	ConfiguredPlugins []ConfiguredPlugin
 }
 
 // Test - XXX
@@ -112,8 +120,22 @@ func (a *Agent) GatherAndSend(debug bool) error {
 
 // NewAgent - XXX
 func NewAgent(config settings.Struct) (*Agent, error) {
+
+	var configuredPlugins = []ConfiguredPlugin{}
+
+	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
+	for _, p := range EnabledPlugins {
+		creator, _ := plugins.Plugins[p.Name]
+		plugin := creator()
+
+		t := ConfiguredPlugin{Name: p.Name, Plugin: plugin}
+		configuredPlugins = append(configuredPlugins, t)
+
+	}
+
 	agent := &Agent{
-		Interval: time.Duration(config.Interval) * time.Second,
+		Interval:          time.Duration(config.Interval) * time.Second,
+		ConfiguredPlugins: configuredPlugins,
 	}
 
 	return agent, nil
@@ -127,16 +149,18 @@ func (a *Agent) Run(shutdown chan struct{}, debug bool) error {
 	ticker := time.NewTicker(a.Interval)
 	defer ticker.Stop()
 
-	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
-	for _, p := range EnabledPlugins {
-		creator, _ := plugins.Plugins[p.Name]
-		plugin := creator()
-		if err := plugin.Start(); err != nil {
-			log.Printf("Service for plugin %s failed to start, exiting\n%s\n",
-				p.Name, err.Error())
-			return err
+	for _, p := range a.ConfiguredPlugins {
+
+		if err := p.Plugin.Start(); err != nil {
+			log.WithFields(log.Fields{
+				"plugin": p.Name,
+				"error":  err.Error(),
+			}).Error("Service for plugin failed to start, exiting")
+
 		}
-		defer plugin.Stop()
+
+		defer p.Plugin.Stop()
+
 	}
 
 	for {
