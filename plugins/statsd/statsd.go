@@ -38,6 +38,9 @@ var prevInstance *Statsd
 type Config struct {
 	Address                string
 	AllowedPendingMessages int
+	DeleteTimings          bool
+	DeleteGauges           bool
+	DeleteCounters         bool
 }
 
 // SetConfigDefaults - XXX
@@ -174,6 +177,7 @@ const sampleConfig = `
 #   Available config options:
 	{
 		"address": ":8125" # Default
+		"delete_timings": true 
 	}
 # Config location: /etc/opt/amonagent/plugins-enabled/statsd.conf
 `
@@ -220,7 +224,7 @@ func (s *Statsd) Collect() (interface{}, error) {
 		}
 
 	}
-	if s.DeleteTimings {
+	if s.Config.DeleteTimings {
 		s.timings = make(map[string]cachedtimings)
 	}
 
@@ -232,7 +236,7 @@ func (s *Statsd) Collect() (interface{}, error) {
 		}
 
 	}
-	if s.DeleteGauges {
+	if s.Config.DeleteGauges {
 		s.gauges = make(map[string]cachedgauge)
 	}
 
@@ -243,7 +247,7 @@ func (s *Statsd) Collect() (interface{}, error) {
 			gauges[gaugeName] = value
 		}
 	}
-	if s.DeleteCounters {
+	if s.Config.DeleteCounters {
 		s.counters = make(map[string]cachedcounter)
 	}
 
@@ -355,11 +359,6 @@ func (s *Statsd) parser() error {
 func (s *Statsd) parseStatsdLine(line string) error {
 	s.Lock()
 	defer s.Unlock()
-
-	// log.WithFields(log.Fields{
-	// 	"plugin": "statsd",
-	// 	"line":   line,
-	// }).Info("Parsing Statsd Line")
 
 	lineTags := make(map[string]string)
 
