@@ -210,9 +210,15 @@ func (s *Statsd) Collect() (interface{}, error) {
 				name := fmt.Sprintf("%s%v_percentile", prefix, percentile)
 				fields[name] = stats.Percentile(percentile)
 			}
+
 		}
 
-		timings[metric.name] = fields
+		for name, value := range fields {
+			timingName := metric.name + "." + name
+			timings[timingName] = value
+		}
+
+		// timings[metric.name] = fields
 	}
 	if s.DeleteTimings {
 		s.timings = make(map[string]cachedtimings)
@@ -220,6 +226,7 @@ func (s *Statsd) Collect() (interface{}, error) {
 
 	for _, metric := range s.gauges {
 		gauges[metric.name] = metric.fields
+
 	}
 	if s.DeleteGauges {
 		s.gauges = make(map[string]cachedgauge)
