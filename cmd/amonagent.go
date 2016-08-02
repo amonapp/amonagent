@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent"
@@ -70,33 +69,6 @@ func main() {
 		return
 	}
 
-	if len(*fTestPlugin) > 0 {
-		pluginConfig, err := plugins.GetConfigPath(*fTestPlugin)
-
-		if err != nil {
-			fmt.Printf("Can't get config file for plugin: %s", err)
-		}
-
-		creator, ok := plugins.Plugins[pluginConfig.Name]
-		if ok {
-			plugin := creator()
-			start := time.Now()
-			PluginResult, err := plugin.Collect()
-			if err != nil {
-				fmt.Printf("Can't get stats for plugin: %s", err)
-			}
-			fmt.Println(PluginResult)
-
-			elapsed := time.Since(start)
-			fmt.Printf("\n Executed in %s", elapsed)
-		} else {
-			fmt.Printf("\033[91mNon existing plugin: %s or missing config file in /etc/opt/amonagent/plugins-enabled/%s.conf \033[0m", *fTestPlugin, *fTestPlugin)
-			ListPlugins()
-		}
-		return
-		// [0;31m
-	}
-
 	if *fVersion {
 		v := fmt.Sprintf("Amon - Version %s", Version)
 		fmt.Println(v)
@@ -122,6 +94,11 @@ func main() {
 
 	if *fMachineID {
 		fmt.Print(machineID)
+		return
+	}
+
+	if len(*fTestPlugin) > 0 {
+		ag.TestPlugin(*fTestPlugin)
 		return
 	}
 

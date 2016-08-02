@@ -19,6 +19,34 @@ type Agent struct {
 	ConfiguredPlugins []plugins.ConfiguredPlugin
 }
 
+// TestPlugin - XXX
+func (a *Agent) TestPlugin(pluginName string) error {
+
+	_, err := plugins.GetConfigPath(pluginName)
+
+	if err != nil {
+		fmt.Printf("Can't get config file for plugin: %s", err)
+	}
+
+	for _, p := range a.ConfiguredPlugins {
+		if pluginName == p.Name {
+			start := time.Now()
+
+			PluginResult, err := p.Plugin.Collect()
+			if err != nil {
+				fmt.Printf("Can't get stats for plugin: %s", err)
+			}
+			fmt.Println(PluginResult)
+
+			elapsed := time.Since(start)
+			fmt.Printf("\nExecuted in \033[92m%s\033[0m", elapsed)
+		}
+	}
+
+	return nil
+
+}
+
 // Test - XXX
 func (a *Agent) Test(config settings.Struct) error {
 
