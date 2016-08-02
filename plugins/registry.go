@@ -13,6 +13,12 @@ import (
 	"github.com/amonapp/amonagent/internal/settings"
 )
 
+// ConfiguredPlugin - XXX
+type ConfiguredPlugin struct {
+	Name   string
+	Plugin Plugin
+}
+
 // PluginConfig - XXX
 type PluginConfig struct {
 	Path string

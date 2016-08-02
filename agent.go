@@ -11,28 +11,21 @@ import (
 	"github.com/amonapp/amonagent/plugins"
 )
 
-// ConfiguredPlugin - XXX
-type ConfiguredPlugin struct {
-	Name   string
-	Plugin plugins.Plugin
-}
-
 // Agent - XXX
 type Agent struct {
 	// Interval at which to gather information
 	Interval time.Duration
 
-	ConfiguredPlugins []ConfiguredPlugin
+	ConfiguredPlugins []plugins.ConfiguredPlugin
 }
 
 // Test - XXX
 func (a *Agent) Test(config settings.Struct) error {
 
-	allMetrics := collectors.CollectAllData()
+	allMetrics := collectors.CollectAllData(a.ConfiguredPlugins)
 
 	ProcessesData := collectors.CollectProcessData()
 	SystemData := collectors.CollectSystemData()
-	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 	HostData := collectors.CollectHostData()
 
 	fmt.Println("\n------------------")
@@ -51,12 +44,9 @@ func (a *Agent) Test(config settings.Struct) error {
 	fmt.Println("\033[92mPlugins: \033[0m")
 	fmt.Println("")
 
-	for _, p := range EnabledPlugins {
-
-		creator, _ := plugins.Plugins[p.Name]
-		plugin := creator()
+	for _, p := range a.ConfiguredPlugins {
 		start := time.Now()
-		PluginResult, err := plugin.Collect()
+		PluginResult, err := p.Plugin.Collect()
 		if err != nil {
 			log.Errorf("Can't get stats for plugin: %s", err)
 		}
@@ -95,8 +85,6 @@ func (a *Agent) Test(config settings.Struct) error {
 
 	fmt.Println("\n------------------")
 
-	// url := remote.SystemURL()
-
 	err := remote.SendData(allMetrics, true)
 	if err != nil {
 		return fmt.Errorf("%s\n", err.Error())
@@ -107,7 +95,9 @@ func (a *Agent) Test(config settings.Struct) error {
 
 // GatherAndSend - XXX
 func (a *Agent) GatherAndSend(debug bool) error {
-	allMetrics := collectors.CollectAllData()
+
+	allMetrics := collectors.CollectAllData(a.ConfiguredPlugins)
+
 	log.Infof("Metrics collected (Interval:%s)\n", a.Interval)
 
 	err := remote.SendData(allMetrics, debug)
@@ -121,14 +111,14 @@ func (a *Agent) GatherAndSend(debug bool) error {
 // NewAgent - XXX
 func NewAgent(config settings.Struct) (*Agent, error) {
 
-	var configuredPlugins = []ConfiguredPlugin{}
+	var configuredPlugins = []plugins.ConfiguredPlugin{}
 
 	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 	for _, p := range EnabledPlugins {
 		creator, _ := plugins.Plugins[p.Name]
 		plugin := creator()
 
-		t := ConfiguredPlugin{Name: p.Name, Plugin: plugin}
+		t := plugins.ConfiguredPlugin{Name: p.Name, Plugin: plugin}
 		configuredPlugins = append(configuredPlugins, t)
 
 	}

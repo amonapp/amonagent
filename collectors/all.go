@@ -61,22 +61,18 @@ type PluginResultStruct struct {
 }
 
 // CollectPluginsData - XXX
-func CollectPluginsData() (interface{}, interface{}) {
+func CollectPluginsData(configuredPlugins []plugins.ConfiguredPlugin) (interface{}, interface{}) {
 	PluginResults := make(map[string]interface{})
 	var CheckResults interface{}
 	var wg sync.WaitGroup
-	EnabledPlugins, _ := plugins.GetAllEnabledPlugins()
 
-	resultChan := make(chan PluginResultStruct, len(EnabledPlugins))
+	resultChan := make(chan PluginResultStruct, len(configuredPlugins))
 
-	for _, p := range EnabledPlugins {
+	for _, p := range configuredPlugins {
 		wg.Add(1)
 
-		creator, _ := plugins.Plugins[p.Name]
-		plugin := creator()
-
-		go func(p plugins.PluginConfig) {
-			PluginResult, err := plugin.Collect()
+		go func(p plugins.ConfiguredPlugin) {
+			PluginResult, err := p.Plugin.Collect()
 			if err != nil {
 				log.Errorf("Can't get stats for plugin: %s", err)
 			}
@@ -206,11 +202,11 @@ func CollectProcessData() ProcessesList {
 }
 
 // CollectAllData - XXX
-func CollectAllData() AllMetricsStruct {
+func CollectAllData(configuredPlugins []plugins.ConfiguredPlugin) AllMetricsStruct {
 
 	ProcessesData := CollectProcessData()
 	SystemData := CollectSystemData()
-	Plugins, Checks := CollectPluginsData()
+	Plugins, Checks := CollectPluginsData(configuredPlugins)
 	HostData := CollectHostData()
 
 	allMetrics := AllMetricsStruct{
