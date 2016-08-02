@@ -213,19 +213,23 @@ func (s *Statsd) Collect() (interface{}, error) {
 
 		}
 
+		// Flatten gauges
 		for name, value := range fields {
 			timingName := metric.name + "." + name
 			timings[timingName] = value
 		}
 
-		// timings[metric.name] = fields
 	}
 	if s.DeleteTimings {
 		s.timings = make(map[string]cachedtimings)
 	}
 
 	for _, metric := range s.gauges {
-		gauges[metric.name] = metric.fields
+
+		for field, value := range metric.fields {
+			gaugeName := metric.name + "." + field
+			gauges[gaugeName] = value
+		}
 
 	}
 	if s.DeleteGauges {
@@ -233,7 +237,11 @@ func (s *Statsd) Collect() (interface{}, error) {
 	}
 
 	for _, metric := range s.counters {
-		gauges[metric.name] = metric.fields
+
+		for field, value := range metric.fields {
+			gaugeName := metric.name + "." + field
+			gauges[gaugeName] = value
+		}
 	}
 	if s.DeleteCounters {
 		s.counters = make(map[string]cachedcounter)

@@ -44,22 +44,6 @@ func ListPlugins() {
 // Debug - XXX
 func Debug() {
 
-	creator, ok := plugins.Plugins["statsd"]
-	if ok {
-		statsd := creator()
-
-		err := statsd.Start()
-		if err != nil {
-			fmt.Printf("Can't start Statsd: %s", err)
-		}
-
-		time.Sleep(2000 * time.Millisecond)
-		statsd.Collect()
-
-		statsd.Stop()
-
-	}
-
 }
 
 func main() {
