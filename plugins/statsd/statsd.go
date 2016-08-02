@@ -191,16 +191,6 @@ func (s *Statsd) Collect() (interface{}, error) {
 	timings := make(map[string]interface{})
 	gauges := make(map[string]interface{})
 
-	fmt.Println("------------------------------------")
-	log.WithFields(log.Fields{
-		"plugin":   "statsd",
-		"timings":  s.timings,
-		"gauges":   s.gauges,
-		"counters": s.counters,
-		"statsd":   s,
-	}).Info("Collecting Statsd Metrics")
-	fmt.Println("------------------------------------")
-
 	for _, metric := range s.timings {
 		// Defining a template to parse field names for timers allows us to split
 		// out multiple fields per timer. In this case we prefix each stat with the
@@ -602,13 +592,6 @@ func (s *Statsd) aggregate(m metric) {
 		}
 		s.sets[m.hash].fields[m.field][m.intvalue] = true
 	}
-
-	// fmt.Println("-------------------")
-	// log.WithFields(log.Fields{
-	// 	"plugin": "statsd",
-	// 	"gauges": s.gauges,
-	// 	"statsd": s,
-	// }).Info("Gauges")
 
 }
 
