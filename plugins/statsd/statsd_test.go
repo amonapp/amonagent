@@ -3,9 +3,13 @@ package statsd
 import (
 	"errors"
 	"fmt"
+	"path"
 	"reflect"
 	"testing"
 
+	log "github.com/Sirupsen/logrus"
+	"github.com/amonapp/amonagent/internal/testing"
+	"github.com/amonapp/amonagent/plugins"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,6 +28,27 @@ func NewTestStatsd() *Statsd {
 	// s.MetricSeparator = "_"
 
 	return &s
+}
+
+func TestStatsdConfigDefaults(t *testing.T) {
+	log.SetLevel(log.WarnLevel)
+	plugins.PluginConfigPath = path.Join("/tmp", "plugins-enabled")
+	pluginhelper.WritePluginConfig("statsd", "ogusstring")
+
+	s := Statsd{}
+	configErr := s.SetConfigDefaults()
+	require.NoError(t, configErr)
+
+	assert.True(t, s.Config.DeleteTimings, "Delete Timings is true by default")
+
+	pluginhelper.WritePluginConfig("statsd", "{\"address\": \":8125\"}")
+
+	s2 := Statsd{}
+	configErr2 := s2.SetConfigDefaults()
+	require.NoError(t, configErr2)
+
+	assert.True(t, s2.Config.DeleteTimings, "Delete Timings, set to true")
+
 }
 
 // Invalid lines should return an error
@@ -555,8 +580,6 @@ func TestParse_Timings(t *testing.T) {
 		"test.timing:1|ms",
 		"test.timing:1|ms",
 		"test.timing:1|ms",
-		// "amon.response_timer:600|ms",
-		// "amon.response_timer:450|ms",
 	}
 
 	for _, line := range valid_lines {
@@ -595,7 +618,8 @@ func TestParse_Timings(t *testing.T) {
 // Tests the delete_gauges option
 func TestParse_Gauges_Delete(t *testing.T) {
 	s := NewTestStatsd()
-	s.DeleteGauges = true
+	config := Config{Address: ":8125", DeleteGauges: true}
+	s.Config = config
 
 	var err error
 
@@ -621,7 +645,8 @@ func TestParse_Gauges_Delete(t *testing.T) {
 // Tests the delete_sets option
 func TestParse_Sets_Delete(t *testing.T) {
 	s := NewTestStatsd()
-	s.DeleteSets = true
+	config := Config{Address: ":8125", DeleteSets: true}
+	s.Config = config
 
 	var err error
 
@@ -647,7 +672,8 @@ func TestParse_Sets_Delete(t *testing.T) {
 // Tests the delete_counters option
 func TestParse_Counters_Delete(t *testing.T) {
 	s := NewTestStatsd()
-	s.DeleteCounters = true
+	config := Config{Address: ":8125", DeleteCounters: true}
+	s.Config = config
 
 	var err error
 

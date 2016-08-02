@@ -41,33 +41,50 @@ type Config struct {
 	DeleteTimings          bool
 	DeleteGauges           bool
 	DeleteCounters         bool
+	DeleteSets             bool
 }
 
 // SetConfigDefaults - XXX
 func (s *Statsd) SetConfigDefaults() error {
+	// Config already set. For example - in the test suite
+	if len(s.Config.Address) > 0 {
+		return nil
+	}
+
 	configFile, err := plugins.UmarshalPluginConfig("statsd")
 	if err != nil {
+
 		log.WithFields(log.Fields{
 			"plugin": "statsd",
 			"error":  err.Error()}).Error("Can't read config file")
+
+		return err
 	}
 
 	var config Config
 	decodeError := mapstructure.Decode(configFile, &config)
 	if decodeError != nil {
+
 		log.WithFields(log.Fields{
 			"plugin": "statsd",
 			"error":  decodeError.Error()}).Error("Can't decode config file")
+
+		return decodeError
 	}
 
+	// Config file is empty, set defaults
 	if len(config.Address) == 0 {
 		config.Address = ":8125"
+		config.AllowedPendingMessages = 10000
+		config.DeleteTimings = true
 	}
 
 	// Set default
 	if config.AllowedPendingMessages == 0 {
 		config.AllowedPendingMessages = 10000
 	}
+
+	config.DeleteTimings = true
 
 	s.Config = config
 
@@ -86,11 +103,6 @@ type Statsd struct {
 	// and histogram stats.
 	Percentiles     []int
 	PercentileLimit int
-
-	DeleteGauges   bool
-	DeleteCounters bool
-	DeleteSets     bool
-	DeleteTimings  bool
 
 	// MetricSeparator is the separator between parts of the metric name.
 	MetricSeparator string
@@ -188,6 +200,7 @@ func (_ *Statsd) SampleConfig() string {
 
 func (s *Statsd) Collect() (interface{}, error) {
 	s.SetConfigDefaults()
+
 	PerformanceStruct := PerformanceStruct{}
 	s.Lock()
 	defer s.Unlock()
@@ -236,6 +249,7 @@ func (s *Statsd) Collect() (interface{}, error) {
 		}
 
 	}
+
 	if s.Config.DeleteGauges {
 		s.gauges = make(map[string]cachedgauge)
 	}
@@ -261,7 +275,7 @@ func (s *Statsd) Collect() (interface{}, error) {
 	// 	}
 	// 	// fmt.Println(metric.name, fields)
 	// }
-	if s.DeleteSets {
+	if s.Config.DeleteSets {
 		s.sets = make(map[string]cachedset)
 	}
 
@@ -273,7 +287,7 @@ func (s *Statsd) Start() error {
 	// Make data structures
 	s.done = make(chan struct{})
 	s.in = make(chan []byte, s.Config.AllowedPendingMessages)
-	s.AllowedPendingMessages = s.Config.AllowedPendingMessages
+	// s.AllowedPendingMessages = s.Config.AllowedPendingMessages
 	// s.Percentiles = [90]
 
 	if prevInstance == nil {
