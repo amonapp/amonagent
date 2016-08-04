@@ -64,6 +64,20 @@ if [ ! -d /etc/opt/amonagent ]; then
     mkdir -p /etc/opt/amonagent
 fi
 
+
+# Make sure the plugin config directory exists
+if [ ! -d /etc/opt/amonagent/plugins-enabled ]; then
+    mkdir -p /etc/opt/amonagent/plugins-enabled
+fi
+
+
+# Add StatsD config file, if it doesn't exist
+if [[ ! -f /etc/opt/amonagent/plugins-enabled/statsd.conf ]]; then
+    cp -f $SCRIPT_DIR/statsd.conf /etc/opt/amonagent/plugins-enabled/statsd.conf
+fi
+
+
+
 # Make sure the pid directory exists
 if [ ! -d /var/run/amonagent ]; then
     mkdir -p /var/run/amonagent

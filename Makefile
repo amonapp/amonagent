@@ -63,6 +63,7 @@ install_base: build
 
 	mkdir -p $(BUILD)/opt/amonagent/scripts
 	cp $(INITD_SCRIPT) $(BUILD)/opt/amonagent/scripts/init.sh
+	cp packaging/statsd.conf $(BUILD)/opt/amonagent/scripts/statsd.conf
 	cp $(SYSTEMD_SCRIPT) $(BUILD)/opt/amonagent/scripts/amonagent.service
 
 	@echo $(VERSION)

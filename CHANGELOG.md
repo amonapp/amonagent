@@ -1,7 +1,8 @@
-0.7 - WIP
+0.7 - 04.08.2016
 ==============
 
-* Statsd daemon
+* Statsd plugin
+* Refactoring, speed and stability improvements
 
 0.6.5 - 10.07.2016
 ==============
