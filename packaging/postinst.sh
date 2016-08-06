@@ -71,12 +71,6 @@ if [ ! -d /etc/opt/amonagent/plugins-enabled ]; then
 fi
 
 
-# Add StatsD config file, if it doesn't exist
-if [[ ! -f /etc/opt/amonagent/plugins-enabled/statsd.conf ]]; then
-    cp -f $SCRIPT_DIR/statsd.conf /etc/opt/amonagent/plugins-enabled/statsd.conf
-fi
-
-
 
 # Make sure the pid directory exists
 if [ ! -d /var/run/amonagent ]; then
