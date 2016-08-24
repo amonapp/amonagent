@@ -42,6 +42,12 @@ build:
 		./cmd/amonagent.go
 
 
+build_32bit:
+	CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -o amonagent32 -ldflags \
+		"-X main.Version=$(VERSION)" \
+		./cmd/amonagent.go
+
+
 # Layout all of the files common to both versions of the Agent in
 # the build directory.
 install_base: build

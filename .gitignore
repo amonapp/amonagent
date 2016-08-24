@@ -26,6 +26,7 @@ _testmain.go
 *.deb
 *.rpm
 amonagent
+amonagent32
 packaging/build/
 vendor/
 .vagrant/
