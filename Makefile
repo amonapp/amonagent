@@ -37,7 +37,7 @@ clean:
 
 
 build:
-	go build -o amonagent -ldflags \
+	CGO_ENABLED=0 go build -o amonagent -ldflags \
 		"-X main.Version=$(VERSION)" \
 		./cmd/amonagent.go
 
