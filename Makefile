@@ -43,14 +43,14 @@ build:
 
 
 build_32bit:
-	CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -o amonagent32 -ldflags \
+	CGO_ENABLED=0 GOARCH=386 go build -o amonagent32 -ldflags \
 		"-X main.Version=$(VERSION)" \
 		./cmd/amonagent.go
 
 
 # Layout all of the files common to both versions of the Agent in
 # the build directory.
-install_base: build
+install_base: build build_32bit
 	mkdir -p $(BUILD)
 	mkdir -p $(BUILD)/etc/opt/amonagent
 	mkdir -p $(BUILD)/etc/opt/amonagent/plugins-enabled
@@ -59,6 +59,9 @@ install_base: build
 
 	cp amonagent $(BUILD)/opt/amonagent/amonagent
 	cp amonagent $(BUILD)/usr/bin/amonagent
+
+	# Add the 32bit binary
+	cp amonagent32 $(BUILD)/usr/bin/amonagent32
 
 	mkdir -p $(BUILD)/var/log/amonagent
 	chmod 755 $(BUILD)/var/log/amonagent
