@@ -64,11 +64,6 @@ if [ ! -d /etc/opt/amonagent ]; then
     mkdir -p /etc/opt/amonagent
 fi
 
-# Add a default config file
-if [[ ! -f /etc/opt/amonagent/amonagent.conf ]]; then
-    touch /etc/opt/amonagent/amonagent.conf
-fi
-
 
 # Make sure the plugin config directory exists
 if [ ! -d /etc/opt/amonagent/plugins-enabled ]; then
