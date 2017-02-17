@@ -21,7 +21,7 @@ The Amon agent reports metrics to our service.
 Create the /etc/apt/sources.list.d/amonagent.list list file using the following command:
 
 
-		echo 'deb http://packages.amon.cx/repo amon contrib' | sudo tee /etc/apt/sources.list.d/amonagent.list
+		echo 'deb https://packages.amon.cx/repo amon contrib' | sudo tee /etc/apt/sources.list.d/amonagent.list
 
 
 3. **Reload local package database and install** <br>
@@ -39,7 +39,7 @@ Create a /etc/yum.repos.d/amonagent.repo file to hold the following configuratio
 
 	[amonagent]
 	name=Amonagent Repository
-	baseurl=http://packages.amon.cx/rpm/
+	baseurl=https://packages.amon.cx/rpm/
 	gpgcheck=0
 	enabled=1
 	priority=1
