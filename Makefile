@@ -47,6 +47,10 @@ build_32bit:
 		"-X main.Version=$(VERSION)" \
 		./cmd/amonagent.go
 
+build_arm:
+	CGO_ENABLED=0 GOARCH=arm go build -o amonagent-arm -ldflags \
+		"-X main.Version=$(VERSION)" \
+		./cmd/amonagent.go
 
 # Layout all of the files common to both versions of the Agent in
 # the build directory.
