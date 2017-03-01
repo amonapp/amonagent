@@ -12,7 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/mitchellh/mapstructure"
 	// MongoDB Driver
-	"gopkg.in/mgo.v2"
+
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/amonapp/amonagent/plugins"
@@ -170,7 +170,7 @@ func GetSession(server *Server) error {
 
 		dialInfo := &mgo.DialInfo{
 			Addrs:    []string{server.URL.Host},
-			Database: server.URL.Path,
+			Database: strings.Replace(server.URL.Path, "/", "", -1),
 		}
 		dialInfo.Timeout = 5 * time.Second
 		if server.URL.User != nil {
