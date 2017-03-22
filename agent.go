@@ -165,7 +165,6 @@ func (a *Agent) Run(shutdown chan struct{}, debug bool) error {
 	log.Infof("Agent Config: Interval:%s\n", a.Interval)
 
 	ticker := time.NewTicker(a.Interval)
-	defer ticker.Stop()
 
 	for _, p := range a.ConfiguredPlugins {
 
@@ -182,14 +181,16 @@ func (a *Agent) Run(shutdown chan struct{}, debug bool) error {
 	}
 
 	for {
-		if err := a.GatherAndSend(debug); err != nil {
-			log.Infof("Can not collect and send metrics, exiting: %s\n", err.Error())
-		}
 		select {
 		case <-shutdown:
+			log.Info("Shutting down Amon Agent")
+			ticker.Stop()
+
 			return nil
 		case <-ticker.C:
-			continue
+			if err := a.GatherAndSend(debug); err != nil {
+				log.Infof("Can not collect and send metrics, exiting: %s\n", err.Error())
+			}
 		}
 	}
 }
