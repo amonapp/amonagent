@@ -48,8 +48,14 @@ func SendData(data interface{}, debug bool) error {
 		out.WriteTo(os.Stdout)
 	}
 
+	cancel := make(chan struct{})
+	time.AfterFunc(DefaultTimeOut, func() {
+		close(cancel)
+	})
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(JSONBytes))
 	req.Header.Set("Content-Type", "application/json")
+	req.Cancel = cancel
 
 	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
