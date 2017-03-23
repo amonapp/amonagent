@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -17,6 +18,11 @@ import (
 var DefaultTimeOut = 10 * time.Second
 
 var tr = &http.Transport{
+	Dial: (&net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).Dial,
+	TLSHandshakeTimeout:   DefaultTimeOut,
 	ResponseHeaderTimeout: DefaultTimeOut,
 	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // for self-signed certificates
 }
