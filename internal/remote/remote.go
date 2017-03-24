@@ -54,6 +54,10 @@ func SendData(data interface{}, debug bool) error {
 	})
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(JSONBytes))
+	if err != nil {
+		return fmt.Errorf("Can't create request to Amon API %s\n", err.Error())
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Cancel = cancel
 
