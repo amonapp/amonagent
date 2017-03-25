@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -17,6 +18,11 @@ import (
 var DefaultTimeOut = 10 * time.Second
 
 var tr = &http.Transport{
+	Dial: (&net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).Dial,
+	TLSHandshakeTimeout:   DefaultTimeOut,
 	ResponseHeaderTimeout: DefaultTimeOut,
 	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true}, // for self-signed certificates
 }
@@ -42,8 +48,18 @@ func SendData(data interface{}, debug bool) error {
 		out.WriteTo(os.Stdout)
 	}
 
+	cancel := make(chan struct{})
+	time.AfterFunc(DefaultTimeOut, func() {
+		close(cancel)
+	})
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(JSONBytes))
+	if err != nil {
+		return fmt.Errorf("Can't create request to Amon API %s\n", err.Error())
+	}
+
 	req.Header.Set("Content-Type", "application/json")
+	req.Cancel = cancel
 
 	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)

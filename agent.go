@@ -185,8 +185,10 @@ func (a *Agent) Run(shutdown chan struct{}, debug bool) error {
 		if err := a.GatherAndSend(debug); err != nil {
 			log.Infof("Can not collect and send metrics, exiting: %s\n", err.Error())
 		}
+
 		select {
 		case <-shutdown:
+			log.Info("Shutting down Amon Agent")
 			return nil
 		case <-ticker.C:
 			continue
