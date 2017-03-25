@@ -1,3 +1,9 @@
+0.7.4 - 17.02.2017
+==============
+
+* Agent not sending data issue fix https://github.com/amonapp/amonagent/issues/17
+
+
 0.7.3 - 17.02.2017
 ==============
 
