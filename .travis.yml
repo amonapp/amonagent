@@ -9,6 +9,9 @@ branches:
   only:
   - master
 install:
- - make setup_travis
+ - sudo add-apt-repository ppa:masterminds/glide - y
+ - sudo apt-get update
+ - sudo apt-get install glide -y
+ - glide i
 script:
  - make test
