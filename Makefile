@@ -6,7 +6,7 @@ INITD_SCRIPT=packaging/init.sh
 SYSTEMD_SCRIPT=packaging/amonagent.service
 TEMPFILE_CONF=packaging/tmpfilesd_amonagent.conf
 
-PACKAGES_PATH=/home/martin/amon-packages
+PACKAGES_PATH=/home/martin/amon/amon-packages
 DEBIAN_REPO_PATH=$(PACKAGES_PATH)/debian/
 RPM_REPO_PATH=$(PACKAGES_PATH)/centos/
 
@@ -130,8 +130,8 @@ deploy: update_debian_repo update_rpm_repo
 
 upload:
 	sudo ntpdate -u pool.ntp.org
-	aws s3 sync $(PACKAGES_PATH)/debian s3://packages.amon.cx/repo/ --region=eu-west-1
-	aws s3 sync $(PACKAGES_PATH)/centos s3://packages.amon.cx/rpm/ --region=eu-west-1
+	aws s3 sync $(PACKAGES_PATH)/debian s3://packages.amon.cx/repo/ --region=eu-west-1 --profile=personal
+	aws s3 sync $(PACKAGES_PATH)/centos s3://packages.amon.cx/rpm/ --region=eu-west-1 --profile=personal
 
 
 build_and_deploy: build_all deploy

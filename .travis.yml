@@ -1,0 +1,14 @@
+language: go
+dist: trusty
+go:
+  - '1.8'
+cache:
+  timeout: 7200
+  apt: true
+branches:
+  only:
+  - master
+install:
+ - make setup_travis
+script:
+ - make test
