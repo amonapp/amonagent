@@ -54,7 +54,7 @@ build_arm:
 
 # Layout all of the files common to both versions of the Agent in
 # the build directory.
-install_base: build build_32bit
+install_base: build build_32bit build_arm
 	mkdir -p $(BUILD)
 	mkdir -p $(BUILD)/etc/opt/amonagent
 	mkdir -p $(BUILD)/etc/opt/amonagent/plugins-enabled
