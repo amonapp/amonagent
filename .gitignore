@@ -31,3 +31,4 @@ amonagent-arm
 packaging/build/
 vendor/
 .vagrant/
+dist/

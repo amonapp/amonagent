@@ -1,5 +1,6 @@
 builds:
-  -
+  - main: cmd/amonagent.go
+    binary: amonagent
     env:
       - CGO_ENABLED=0
     goos:
@@ -16,6 +17,7 @@ fpm:
   description: Amon Monitoring Agent
   maintainer: Martin Rusev <martin@amon.cx>
   license: MIT
+  vendor: Amon
   formats:
     - deb
     - rpm
