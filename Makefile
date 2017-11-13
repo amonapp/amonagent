@@ -11,6 +11,7 @@ DEBIAN_REPO_PATH=$(PACKAGES_PATH)/debian/
 RPM_REPO_PATH=$(PACKAGES_PATH)/centos/
 
 PACKAGE="amonagent"
+CURRENT_ARCH=""
 DEBIAN_PACKAGE_NAME="${PACKAGE}_${VERSION}_all.deb"
 CENTOS_PACKAGE_NAME="${PACKAGE}-${VERSION}-1.noarch.rpm"
 GO_SKIP_VENDOR=$(shell sh -c 'go list ./... | grep -v /vendor/')
@@ -23,7 +24,7 @@ FPM_BUILD=fpm --epoch 1 -s dir -e -C $(BUILD) \
 --vendor Amon
 
 
-ARCHS=amd64
+ARCHS=i386 amd64 armhf
 
 
 setup_test_env:
@@ -58,6 +59,7 @@ build_arm:
 # Layout all of the files common to both versions of the Agent in
 # the build directory.
 install_base: build build_32bit build_arm
+	echo $(CURRENT_ARCH)
 	mkdir -p $(BUILD)
 	mkdir -p $(BUILD)/etc/opt/amonagent
 	mkdir -p $(BUILD)/etc/opt/amonagent/plugins-enabled
@@ -66,9 +68,6 @@ install_base: build build_32bit build_arm
 
 	cp amonagent $(BUILD)/opt/amonagent/amonagent
 	cp amonagent $(BUILD)/usr/bin/amonagent
-
-	# Add the 32bit binary
-	cp amonagent32 $(BUILD)/usr/bin/amonagent32
 
 	mkdir -p $(BUILD)/var/log/amonagent
 	chmod 755 $(BUILD)/var/log/amonagent
