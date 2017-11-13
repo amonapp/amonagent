@@ -21,3 +21,6 @@ fpm:
     - rpm
   dependencies:
     - sysstat
+
+snapshot:
+  name_template: SNAPSHOT-{{.Commit}}
