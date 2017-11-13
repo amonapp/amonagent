@@ -23,6 +23,9 @@ FPM_BUILD=fpm --epoch 1 -s dir -e -C $(BUILD) \
 --vendor Amon
 
 
+ARCHS=amd64
+
+
 setup_test_env:
 	sudo apt-get install ruby-dev
 	sudo gem install sensu-plugins-disk-checks --no-ri --no-rdoc
