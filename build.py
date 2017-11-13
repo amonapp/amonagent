@@ -82,8 +82,9 @@ def create_package_fs():
     )
 
 
-def fpm_build()
+def fpm_build():
     build_directory = os.path.join(ROOT, BUILD)
+    packaging_directory = os.path.join(ROOT, PACKAGING)
     
     command = [
         "fpm --epoch 1",
@@ -92,10 +93,23 @@ def fpm_build()
         '--url "http://amon.cx/"',
         '--description "Amon monitoring agent"',
         '-v {0}'.format(get_version()),
-        '--vendor Amon'
+        '--conflicts "amonagent < {0}"'.format(get_version()), 
+        '--vendor Amon',
+        '-t deb',
+        '-n amonagent',
+        '-d "adduser"',
+        '-d "sysstat"',
+        '--post-install {0}'.format(os.path.join(packaging_directory, 'postinst.sh')),
+        '--post-uninstall {0}'.format(os.path.join(packaging_directory, 'postrm.sh')),
+        '--pre-uninstall {0}'.format(os.path.join(packaging_directory, 'prerm.sh')),
     ]
 
-    print(command)
+    command_string = " ".join(command)
+
+    # run(command_string, shell=True)
+
+
+    print(command_string)
 
 
 def run(command, allow_failure=False, shell=False, printOutput=False):
