@@ -11,7 +11,6 @@ DEBIAN_REPO_PATH=$(PACKAGES_PATH)/debian/
 RPM_REPO_PATH=$(PACKAGES_PATH)/centos/
 
 PACKAGE="amonagent"
-CURRENT_ARCH=""
 DEBIAN_PACKAGE_NAME="${PACKAGE}_${VERSION}_all.deb"
 CENTOS_PACKAGE_NAME="${PACKAGE}-${VERSION}-1.noarch.rpm"
 GO_SKIP_VENDOR=$(shell sh -c 'go list ./... | grep -v /vendor/')
@@ -59,7 +58,6 @@ build_arm:
 # Layout all of the files common to both versions of the Agent in
 # the build directory.
 install_base: build build_32bit build_arm
-	echo $(CURRENT_ARCH)
 	mkdir -p $(BUILD)
 	mkdir -p $(BUILD)/etc/opt/amonagent
 	mkdir -p $(BUILD)/etc/opt/amonagent/plugins-enabled

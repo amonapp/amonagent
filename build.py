@@ -82,6 +82,21 @@ def create_package_fs():
     )
 
 
+def fpm_build()
+    build_directory = os.path.join(ROOT, BUILD)
+    
+    command = [
+        "fpm --epoch 1",
+        "-s dir -e -C {0}".format(build_directory),
+        '-a all -m "Amon Packages <packages@amon.cx>"',
+        '--url "http://amon.cx/"',
+        '--description "Amon monitoring agent"',
+        '-v {0}'.format(get_version()),
+        '--vendor Amon'
+    ]
+
+    print(command)
+
 
 def run(command, allow_failure=False, shell=False, printOutput=False):
     """
@@ -127,4 +142,5 @@ if __name__ == '__main__':
         LOG_LEVEL = logging.DEBUG
     log_format = '[%(levelname)s] %(funcName)s: %(message)s'
     logging.basicConfig(level=LOG_LEVEL, format=log_format)
-    create_package_fs()
+    # create_package_fs()
+    fpm_build()
