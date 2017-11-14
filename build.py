@@ -26,13 +26,14 @@ def compile_binary(arch=None):
     logging.info("amonagent version: {0}".format(version))
     logging.info("Compiling binary for: {0}".format(arch))
 
-    additional_params = []
+    additional_env_params = []
     if arch == "i386":
         arch = "386"
     if arch == "armhf":
-        additional_params.append("GOARM=6")
+        arch = 'arm'
+        additional_env_params.append("GOARM=6")
     if arch == "arm64":
-        additional_params.append("GOARM=7")
+        additional_env_params.append("GOARM=7")
 
     command = [
         "CGO_ENABLED=0", 
@@ -43,7 +44,7 @@ def compile_binary(arch=None):
         "./cmd/amonagent.go"
     ]
 
-    command.extend(additional_params)
+    command = additional_env_params + command
     compile_string = " ".join(command)
 
     start_time = datetime.utcnow()
@@ -175,4 +176,3 @@ if __name__ == '__main__':
         create_package_fs()
         fpm_build(arch=arch, output='rpm')
         fpm_build(arch=arch, output='deb')
-        # print(arch)
