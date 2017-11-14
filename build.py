@@ -12,6 +12,7 @@ BUILD="packaging/build"
 PACKAGING="packaging"
 AGENT="{0}/amonagent".format(BUILD)
 
+
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 def get_version():
@@ -23,17 +24,28 @@ def get_version():
 def compile_binary(arch=None):
     version = get_version()
     logging.info("amonagent version: {0}".format(version))
+    logging.info("Compiling binary for: {0}".format(arch))
+
+    additional_params = []
+    if arch == "i386":
+        arch = "386"
+    if arch == "armhf":
+        additional_params.append("GOARM=6")
+    if arch == "arm64":
+        additional_params.append("GOARM=7")
 
     command = [
         "CGO_ENABLED=0", 
         "GOARCH={0}".format(arch),
         "go build -o amonagent",
         "-ldflags",
-        "\"-X main.Version={0}\"".format(version),
+        '"-X main.Version={0}"'.format(version),
         "./cmd/amonagent.go"
     ]
 
+    command.extend(additional_params)
     compile_string = " ".join(command)
+
     start_time = datetime.utcnow()
     run(compile_string, shell=True)
     end_time = datetime.utcnow()
@@ -82,34 +94,35 @@ def create_package_fs():
     )
 
 
-def fpm_build():
+def fpm_build(arch=None, output=None):
+    logging.info("Building package for: {0} / {1}".format(arch, output))
     build_directory = os.path.join(ROOT, BUILD)
     packaging_directory = os.path.join(ROOT, PACKAGING)
     
     command = [
-        "fpm --epoch 1",
-        "-s dir -e -C {0}".format(build_directory),
-        '-a all -m "Amon Packages <packages@amon.cx>"',
+        'fpm',
+        '--epoch 1',
+        '--force',
+        '--input-type dir',
+        '--output-type {0}'.format(output),
+        '--chdir {0}'.format(build_directory),
+        '--maintainer "Amon Packages <packages@amon.cx>"',
         '--url "http://amon.cx/"',
         '--description "Amon monitoring agent"',
-        '-v {0}'.format(get_version()),
+        '--version {0}'.format(get_version()),
         '--conflicts "amonagent < {0}"'.format(get_version()), 
         '--vendor Amon',
-        '-t deb',
-        '-n amonagent',
-        '-d "adduser"',
-        '-d "sysstat"',
+        '--name amonagent',
+        '--depends "adduser"',
+        '--depends "sysstat"',
+        '--architecture "{0}"'.format(arch),
         '--post-install {0}'.format(os.path.join(packaging_directory, 'postinst.sh')),
         '--post-uninstall {0}'.format(os.path.join(packaging_directory, 'postrm.sh')),
         '--pre-uninstall {0}'.format(os.path.join(packaging_directory, 'prerm.sh')),
     ]
 
     command_string = " ".join(command)
-
-    # run(command_string, shell=True)
-
-
-    print(command_string)
+    run(command_string, shell=True)
 
 
 def run(command, allow_failure=False, shell=False, printOutput=False):
@@ -156,5 +169,10 @@ if __name__ == '__main__':
         LOG_LEVEL = logging.DEBUG
     log_format = '[%(levelname)s] %(funcName)s: %(message)s'
     logging.basicConfig(level=LOG_LEVEL, format=log_format)
-    # create_package_fs()
-    fpm_build()
+
+    for arch in supported_archs:
+        compile_binary(arch=arch)
+        create_package_fs()
+        fpm_build(arch=arch, output='rpm')
+        fpm_build(arch=arch, output='deb')
+        # print(arch)
