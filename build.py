@@ -4,6 +4,7 @@ import subprocess
 import time
 from datetime import datetime
 import shutil
+import glob
 import tempfile
 import logging
 
@@ -12,6 +13,12 @@ BUILD="packaging/build"
 PACKAGING="packaging"
 AGENT="{0}/amonagent".format(BUILD)
 
+DEV_DEPENDECIES = ['reprepro', 'createrepo']
+
+
+PACKAGES_PATH="/home/martin/amon/amon-packages"
+DEBIAN_REPO_PATH="{0}/debian/".format(PACKAGES_PATH)
+RPM_REPO_PATH="{0}/centos/".format(PACKAGES_PATH)
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -22,6 +29,7 @@ def get_version():
 
 
 def compile_binary(arch=None):
+    os.remove(os.path.join(ROOT, 'amonagent'))
     version = get_version()
     logging.info("amonagent version: {0}".format(version))
     logging.info("Compiling binary for: {0}".format(arch))
@@ -164,6 +172,72 @@ def run(command, allow_failure=False, shell=False, printOutput=False):
     else:
         return out
 
+def update_repositories():
+    for file in glob.glob("*.deb"):
+        logging.info("Copying {0} to {1}".format(file, DEBIAN_REPO_PATH))
+        shutil.copy(file, DEBIAN_REPO_PATH)
+
+    command = [
+        'find',
+        '{0}'.format(DEBIAN_REPO_PATH),
+        '-name "*.deb"',
+        '-exec reprepro',
+        '--ask-passphrase',
+        '-Vb',
+        '{0}repo'.format(DEBIAN_REPO_PATH),
+        'includedeb amon {} \;',
+    ]
+
+    command_string = " ".join(command)
+    run(command_string, shell=True)
+
+    for file in glob.glob("*.rpm"):
+        logging.info("Copying {0} to {1}".format(file, RPM_REPO_PATH))
+        shutil.copy(file, RPM_REPO_PATH)
+
+
+    command = [
+        'createrepo',
+        '--update {0}'.format(RPM_REPO_PATH),
+    ]
+
+    command_string = " ".join(command)
+    run(command_string, shell=True)
+
+def upload():
+    run("sudo ntpdate -u pool.ntp.org", shell=True)
+
+    command = [
+        "aws s3 sync",
+        "{0}/debian/repo".format(PACKAGES_PATH),
+        "s3://packages.amon.cx/repo/",
+        "--region=eu-west-1",
+        "--profile=personal",
+    ]
+
+    command_string = " ".join(command)
+    run(command_string, shell=True)  
+    
+    command = [
+        "aws s3 sync",
+        "{0}/centos".format(PACKAGES_PATH),
+        "s3://packages.amon.cx/rpm/",
+        "--region=eu-west-1",
+        "--profile=personal",
+    ]
+    
+    command_string = " ".join(command)
+    run(command_string, shell=True)  
+
+def cleanup():
+    for file in glob.glob("*.rpm"):
+        logging.info("Cleaning up {0}".format(file))
+        os.remove(file)
+    
+    for file in glob.glob("*.deb"):
+        logging.info("Cleaning up {0}".format(file))
+        os.remove(file)
+
 if __name__ == '__main__':
     LOG_LEVEL = logging.INFO
     if '--debug' in sys.argv[1:]:
@@ -171,8 +245,13 @@ if __name__ == '__main__':
     log_format = '[%(levelname)s] %(funcName)s: %(message)s'
     logging.basicConfig(level=LOG_LEVEL, format=log_format)
 
+
     for arch in supported_archs:
         compile_binary(arch=arch)
         create_package_fs()
         fpm_build(arch=arch, output='rpm')
         fpm_build(arch=arch, output='deb')
+
+    update_repositories()
+    upload()
+    cleanup()
