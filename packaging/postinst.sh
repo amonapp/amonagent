@@ -81,6 +81,11 @@ chown -R -L amonagent:amonagent  /var/run/amonagent
 chmod 775 /var/run/amonagent
 
 
+# Make sure the binary is executable
+chmod +x /usr/bin/amonagent
+chmod +x /opt/amonagent/amonagent
+
+
 # Distribution-specific logic
 if [[ -f /etc/redhat-release ]]; then
     # RHEL-variant logic

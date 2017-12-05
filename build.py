@@ -2,6 +2,7 @@ import sys
 import os
 import subprocess
 import time
+import stat
 from datetime import datetime
 import shutil
 import glob
@@ -74,6 +75,9 @@ def create_package_fs():
     os.makedirs(os.path.join(build_directory, "usr", 'bin'))
 
     binary = os.path.join(ROOT, 'amonagent')
+
+    st = os.stat(binary)
+    os.chmod(binary, st.st_mode | stat.S_IEXEC)
 
     shutil.copyfile(binary, os.path.join(build_directory, 'opt', 'amonagent', 'amonagent'))
     shutil.copyfile(binary, os.path.join(build_directory, 'usr', 'bin', 'amonagent'))
@@ -216,7 +220,8 @@ def upload():
     ]
 
     command_string = " ".join(command)
-    run(command_string, shell=True)  
+    print(command_string)
+    # run(command_string, shell=True)  
     
     command = [
         "aws s3 sync",
@@ -227,7 +232,7 @@ def upload():
     ]
     
     command_string = " ".join(command)
-    run(command_string, shell=True)  
+    # run(command_string, shell=True)  
 
 def cleanup():
     for file in glob.glob("*.rpm"):
