@@ -192,7 +192,9 @@ def update_repositories():
         'includedeb amon {} \;',
     ]
 
+
     command_string = " ".join(command)
+    logging.info(command_string)
     run(command_string, shell=True)
 
     for file in glob.glob("*.rpm"):
@@ -206,6 +208,7 @@ def update_repositories():
     ]
 
     command_string = " ".join(command)
+    logging.info(command_string)
     run(command_string, shell=True)
 
 def upload():
@@ -220,8 +223,8 @@ def upload():
     ]
 
     command_string = " ".join(command)
-    print(command_string)
-    # run(command_string, shell=True)  
+    logging.info(command_string)
+    run(command_string, shell=True)  
     
     command = [
         "aws s3 sync",
@@ -232,7 +235,8 @@ def upload():
     ]
     
     command_string = " ".join(command)
-    # run(command_string, shell=True)  
+    logging.info(command_string)
+    run(command_string, shell=True)  
 
 def cleanup():
     for file in glob.glob("*.rpm"):
