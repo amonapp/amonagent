@@ -98,7 +98,7 @@ def create_package_fs():
     os.makedirs(os.path.join(build_directory, "opt", 'amonagent', 'scripts'))
     shutil.copyfile(
         os.path.join(packaging_directory, 'init.sh'),
-        os.path.join(build_directory, 'opt', 'amonagent', 'scripts', 'amonagent.service')
+        os.path.join(build_directory, 'opt', 'amonagent', 'scripts', 'init.sh')
     )
 
     shutil.copyfile(
