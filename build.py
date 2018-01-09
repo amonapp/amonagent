@@ -1,12 +1,10 @@
 import sys
 import os
 import subprocess
-import time
 import stat
 from datetime import datetime
 import shutil
 import glob
-import tempfile
 import logging
 
 supported_archs = ["amd64", "i386", "armhf", "arm64"]
@@ -126,13 +124,15 @@ def fpm_build(arch=None, output=None):
         '--conflicts "amonagent < {0}"'.format(get_version()), 
         '--vendor Amon',
         '--name amonagent',
-        '--depends "adduser"',
         '--depends "sysstat"',
         '--architecture "{0}"'.format(arch),
         '--post-install {0}'.format(os.path.join(packaging_directory, 'postinst.sh')),
         '--post-uninstall {0}'.format(os.path.join(packaging_directory, 'postrm.sh')),
         '--pre-uninstall {0}'.format(os.path.join(packaging_directory, 'prerm.sh')),
     ]
+
+    if output == 'deb':
+        command.extend(['--depends "adduser"'])
 
     command_string = " ".join(command)
     run(command_string, shell=True)
@@ -212,8 +212,6 @@ def update_repositories():
     run(command_string, shell=True)
 
 def upload():
-    run("sudo ntpdate -u pool.ntp.org", shell=True)
-
     command = [
         "aws s3 sync",
         "{0}/debian/repo".format(PACKAGES_PATH),
@@ -256,11 +254,11 @@ if __name__ == '__main__':
 
 
     for arch in supported_archs:
-        compile_binary(arch=arch)
-        create_package_fs()
+        # compile_binary(arch=arch)
+        # create_package_fs()
         fpm_build(arch=arch, output='rpm')
         fpm_build(arch=arch, output='deb')
 
-    update_repositories()
-    upload()
-    cleanup()
+    # update_repositories()
+    # upload()
+    # cleanup()
