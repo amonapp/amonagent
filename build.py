@@ -254,11 +254,11 @@ if __name__ == '__main__':
 
 
     for arch in supported_archs:
-        # compile_binary(arch=arch)
-        # create_package_fs()
+        compile_binary(arch=arch)
+        create_package_fs()
         fpm_build(arch=arch, output='rpm')
         fpm_build(arch=arch, output='deb')
 
-    # update_repositories()
-    # upload()
-    # cleanup()
+    update_repositories()
+    upload()
+    cleanup()
