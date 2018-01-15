@@ -21,7 +21,7 @@ function install_systemd {
     systemctl daemon-reload || true
     echo "### You can start amonagent by executing"
     echo ""
-    echo "sudo systemctl amonagent start"
+    echo "sudo systemctl start amonagent.service"
     echo ""
     echo "###"
 }
