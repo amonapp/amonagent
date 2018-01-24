@@ -12,4 +12,4 @@ install:
  - sudo apt-get install glide -y
  - glide i
 script:
- - go test amonagent
+ - go test -v ./...
