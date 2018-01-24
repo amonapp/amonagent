@@ -31,7 +31,7 @@ func Settings() Struct {
 	jsonParser := json.NewDecoder(configFile)
 
 	if err = jsonParser.Decode(&settings); err != nil {
-		fmt.Println("Error while parsing /etc/opt/amonagent/amonagent.conf", err.Error())
+		fmt.Println("Error while parsing " + SettingsPath, err.Error())
 	}
 
 	// Set defaults
