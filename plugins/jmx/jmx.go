@@ -63,6 +63,13 @@ type Endpoint struct {
 type MJBJson struct {
 	ThreadCount int64 `json:"java.lang:type=Threading ThreadCount"`
 	DaemonThreadCount int64 `json:"java.lang:type=Threading DaemonThreadCount"`
+	HeapMemoryUsageMax int64 `json:"java.lang:type=Memory HeapMemoryUsage max"`
+	HeapMemoryUsageInit int64 `json:"java.lang:type=Memory HeapMemoryUsage init"`
+	HeapMemoryUsageCommitted int64 `json:"java.lang:type=Memory HeapMemoryUsage committed"`
+	HeapMemoryUsageUsed int64 `json:"java.lang:type=Memory HeapMemoryUsage used"`
+	NonHeapMemoryUsageInit int64 `json:"java.lang:type=Memory NonHeapMemoryUsage init"`
+	NonHeapMemoryUsageCommitted int64 `json:"java.lang:type=Memory NonHeapMemoryUsage committed"`
+	NonHeapMemoryUsageUsed int64 `json:"java.lang:type=Memory NonHeapMemoryUsage used"`
 }
 
 // Config - XXX
@@ -119,9 +126,15 @@ func (c *JMX) Collect() (interface{}, error) {
 			log.WithFields(log.Fields{"plugin": "jmx", "error": e.Error()}).Error("Can't decode jmx response")
 			continue
 		}
-		gauges[v.Name + "_jmx.threadCount"] = data.ThreadCount
-		gauges[v.Name + "_jmx.daemonThreadCount"] = data.DaemonThreadCount
-
+		gauges[v.Name + "_jmx_threads.threadCount"] = data.ThreadCount
+		gauges[v.Name + "_jmx_threads.daemonThreadCount"] = data.DaemonThreadCount
+		gauges[v.Name + "_jmx_heapMemory.committed"] = data.HeapMemoryUsageCommitted
+		gauges[v.Name + "_jmx_heapMemory.init"] = data.HeapMemoryUsageInit
+		gauges[v.Name + "_jmx_heapMemory.max"] = data.HeapMemoryUsageMax
+		gauges[v.Name + "_jmx_heapMemory.used"] = data.HeapMemoryUsageUsed
+		gauges[v.Name + "_jmx_nonHeapMemory.committed"] = data.NonHeapMemoryUsageCommitted
+		gauges[v.Name + "_jmx_nonHeapMemory.init"] = data.NonHeapMemoryUsageInit
+		gauges[v.Name + "_jmx_nonHeapMemory.used"] = data.NonHeapMemoryUsageUsed
 	}
 
 	PerformanceStruct.Gauges = gauges
