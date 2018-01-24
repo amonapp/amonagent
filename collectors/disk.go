@@ -10,6 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/internal/util"
 	"github.com/shirou/gopsutil/disk"
+	"runtime"
 )
 
 func (p DiskUsageStruct) String() string {
@@ -69,6 +70,11 @@ func removableFs(name string) bool {
 
 // isPseudoFS checks if it is a valid volume
 func isPseudoFS(name string) (res bool) {
+	// skip check on windows as there are no pseudo fs
+	if runtime.GOOS == "windows" {
+		res = false
+		return
+	}
 	err := util.ReadLine("/proc/filesystems", func(s string) error {
 		ss := strings.Split(s, "\t")
 		if len(ss) == 2 && ss[1] == name && ss[0] == "nodev" {
@@ -97,7 +103,6 @@ func DiskUsage() (DiskUsageList, error) {
 			if err != nil {
 				log.Errorf("Error getting disk usage for Mount: %v", err)
 			}
-
 			if !isPseudoFS(du.Fstype) && !removableFs(du.Path) {
 
 				TotalMB, _ := util.ConvertBytesTo(du.Total, "mb", 0)

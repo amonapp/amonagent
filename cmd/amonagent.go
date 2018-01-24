@@ -103,7 +103,7 @@ func main() {
 	}
 
 	if len(machineID) == 0 && len(serverKey) == 0 {
-		log.Fatal("Can't detect Machine ID. Please define `server_key` in /etc/opt/amonagent/amonagent.conf ")
+		log.Fatal("Can't detect Machine ID. Please define `server_key` in " + settings.ConfigPath + "/amonagent.conf ")
 	}
 
 	shutdown := make(chan struct{})
