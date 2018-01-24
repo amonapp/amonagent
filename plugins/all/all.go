@@ -13,4 +13,5 @@ import (
 	_ "github.com/amonapp/amonagent/plugins/sensu"
 	_ "github.com/amonapp/amonagent/plugins/statsd"
 	_ "github.com/amonapp/amonagent/plugins/telegraf"
+	_ "github.com/amonapp/amonagent/plugins/jmx"
 )
