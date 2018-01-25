@@ -3,4 +3,4 @@
 package jmx
 
 // JarFile - XXX
-var JarFile = "tmp/amonagent/mjb.jar"
+var JarFile = "/tmp/amonagent/mjb.jar"
