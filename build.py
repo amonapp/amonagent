@@ -89,7 +89,7 @@ def create_package_fs():
     os.makedirs(os.path.join(build_directory, "usr", 'lib', 'tmpfiles.d'))
     shutil.copyfile(
         os.path.join(packaging_directory, 'tmpfilesd_amonagent.conf'),
-        os.path.join(build_directory, 'usr', 'lib', 'tmpfiles.d', 'amonagent')
+        os.path.join(build_directory, 'usr', 'lib', 'tmpfiles.d', 'amonagent.conf')
     )
 
 
