@@ -1,8 +1,8 @@
 package jmx
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/amonapp/amonagent/plugins"
@@ -126,12 +126,15 @@ func (c *JMX) Collect() (interface{}, error) {
 		go func(endpoint Endpoint) {
 			var rawJson, err = runJar(endpoint.HostName, endpoint.Port)
 			if err != nil {
+				log.WithFields(log.Fields{"plugin": "jmx", "error": e.Error()}).Error("Could not run command")
+				defer wg.Done()
 				return
 			}
 			var data MJBJson
 
 			if e := json.Unmarshal([]byte(rawJson), &data); e != nil {
 				log.WithFields(log.Fields{"plugin": "jmx", "error": e.Error()}).Error("Can't decode jmx response")
+				defer wg.Done()
 				return
 			}
 
@@ -196,8 +199,8 @@ func ensureJarExists() error {
 		if err != nil {
 			return err
 		}
-		os.Mkdir(filepath.Dir(JarFile), os.FileMode(755))
-		err = ioutil.WriteFile(JarFile, data, os.FileMode(644))
+		os.Mkdir(filepath.Dir(JarFile), os.FileMode(0755))
+		err = ioutil.WriteFile(JarFile, data, os.FileMode(0644))
 		if err != nil {
 			return err
 		}
