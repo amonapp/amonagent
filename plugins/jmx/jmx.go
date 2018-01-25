@@ -42,7 +42,7 @@ var sampleConfig = `
 #       {
 #         "name": "Application",
 #         "hostName": "localhost",
-#         "port": 1234"
+#         "port": 1234
 #       }
 #    ]
 #
@@ -196,9 +196,8 @@ func ensureJarExists() error {
 		if err != nil {
 			return err
 		}
-		permissions := os.FileMode(644)
-		os.Mkdir(filepath.Dir(JarFile), permissions)
-		err = ioutil.WriteFile(JarFile, data, permissions)
+		os.Mkdir(filepath.Dir(JarFile), os.FileMode(755))
+		err = ioutil.WriteFile(JarFile, data, os.FileMode(644))
 		if err != nil {
 			return err
 		}
