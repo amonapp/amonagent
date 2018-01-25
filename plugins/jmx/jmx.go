@@ -12,6 +12,8 @@ import (
 	"os/exec"
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 )
 
 // JMX - XXX
@@ -148,34 +150,40 @@ func init() {
 	})
 }
 
-// RunJar runs the embedded mjb.jar returning the output from STDOUT
+// RunJar runs the embedded jar returning the output from STDOUT
 func runJar(host string, port int) (string, error) {
+	e := ensureJarExists()
+	if e != nil {
+		return "", e
+	}
 	nport := strconv.Itoa(port)
 
-	_, err := os.Stat("mjb.jar")
-
-	if err != nil {
-		return "", err
-	}
-
-	// Check that /usr/bin/java exists
-	//_, err = os.Stat("java")
-
-	//if err != nil {
-	//	return "", err
-	//}
-
-	cmd := exec.Command("java", "-jar", "mjb.jar", host, nport)
+	cmd := exec.Command("java", "-jar", JarFile, host, nport)
 	var out bytes.Buffer
-	var erro bytes.Buffer
 	cmd.Stdout = &out
-	cmd.Stderr = &erro
 
-	err = cmd.Run()
+	err := cmd.Run()
 
 	if err != nil {
 		return "", fmt.Errorf("%s %s", err.Error(), out.String())
 	}
 
 	return out.String(), nil
+}
+
+func ensureJarExists() (error) {
+	_, err := os.Stat(JarFile)
+	if err != nil {
+		data, err := Asset("data/mjb.jar")
+		if err != nil {
+			return err
+		}
+		permissions := os.FileMode(644)
+		os.Mkdir(filepath.Dir(JarFile), permissions)
+		err = ioutil.WriteFile(JarFile, data, permissions)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
