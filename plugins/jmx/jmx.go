@@ -2,18 +2,16 @@ package jmx
 
 import (
 	"encoding/json"
-	//"sync"
-
-	log "github.com/Sirupsen/logrus"
-	//"github.com/amonapp/amonagent/internal/util"
-	"github.com/amonapp/amonagent/plugins"
-	"strconv"
-	"os"
-	"os/exec"
 	"bytes"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"github.com/amonapp/amonagent/plugins"
 	"io/ioutil"
+	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
+	"sync"
 )
 
 // JMX - XXX
@@ -57,21 +55,21 @@ func (c *JMX) SampleConfig() string {
 }
 
 type Endpoint struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
 	HostName string `json:"hostName"`
-	Port int `json:"port"`
+	Port     int    `json:"port"`
 }
 
 type MJBJson struct {
-	ThreadCount int64 `json:"java.lang:type=Threading ThreadCount"`
-	DaemonThreadCount int64 `json:"java.lang:type=Threading DaemonThreadCount"`
-	HeapMemoryUsageMax int64 `json:"java.lang:type=Memory HeapMemoryUsage max"`
-	HeapMemoryUsageInit int64 `json:"java.lang:type=Memory HeapMemoryUsage init"`
-	HeapMemoryUsageCommitted int64 `json:"java.lang:type=Memory HeapMemoryUsage committed"`
-	HeapMemoryUsageUsed int64 `json:"java.lang:type=Memory HeapMemoryUsage used"`
-	NonHeapMemoryUsageInit int64 `json:"java.lang:type=Memory NonHeapMemoryUsage init"`
+	ThreadCount                 int64 `json:"java.lang:type=Threading ThreadCount"`
+	DaemonThreadCount           int64 `json:"java.lang:type=Threading DaemonThreadCount"`
+	HeapMemoryUsageMax          int64 `json:"java.lang:type=Memory HeapMemoryUsage max"`
+	HeapMemoryUsageInit         int64 `json:"java.lang:type=Memory HeapMemoryUsage init"`
+	HeapMemoryUsageCommitted    int64 `json:"java.lang:type=Memory HeapMemoryUsage committed"`
+	HeapMemoryUsageUsed         int64 `json:"java.lang:type=Memory HeapMemoryUsage used"`
+	NonHeapMemoryUsageInit      int64 `json:"java.lang:type=Memory NonHeapMemoryUsage init"`
 	NonHeapMemoryUsageCommitted int64 `json:"java.lang:type=Memory NonHeapMemoryUsage committed"`
-	NonHeapMemoryUsageUsed int64 `json:"java.lang:type=Memory NonHeapMemoryUsage used"`
+	NonHeapMemoryUsageUsed      int64 `json:"java.lang:type=Memory NonHeapMemoryUsage used"`
 }
 
 // Config - XXX
@@ -111,32 +109,56 @@ func (c *JMX) SetConfigDefaults() error {
 
 // Collect - XXX
 func (c *JMX) Collect() (interface{}, error) {
+	e := ensureJarExists()
+	if e != nil {
+		return "", e
+	}
 	c.SetConfigDefaults()
 	PerformanceStruct := PerformanceStruct{}
-	gauges := map[string]interface{}{
+	gauges := map[string]interface{}{}
+	var wg sync.WaitGroup
 
-	}
+	resultChan := make(chan map[string]interface{}, len(c.Config.Endpoints))
 
 	for _, v := range c.Config.Endpoints {
-		var rawJson, err= runJar(v.HostName, v.Port)
-		if err != nil {
-			continue
-		}
-		var data MJBJson
+		wg.Add(1)
 
-		if e := json.Unmarshal([]byte(rawJson), &data); e != nil {
-			log.WithFields(log.Fields{"plugin": "jmx", "error": e.Error()}).Error("Can't decode jmx response")
-			continue
+		go func(endpoint Endpoint) {
+			var rawJson, err = runJar(endpoint.HostName, endpoint.Port)
+			if err != nil {
+				return
+			}
+			var data MJBJson
+
+			if e := json.Unmarshal([]byte(rawJson), &data); e != nil {
+				log.WithFields(log.Fields{"plugin": "jmx", "error": e.Error()}).Error("Can't decode jmx response")
+				return
+			}
+
+			m := map[string]interface{}{}
+
+			m[endpoint.Name+"_jmx_threads.threadCount"] = data.ThreadCount
+			m[endpoint.Name+"_jmx_threads.daemonThreadCount"] = data.DaemonThreadCount
+			m[endpoint.Name+"_jmx_heapMemory.committed"] = data.HeapMemoryUsageCommitted
+			m[endpoint.Name+"_jmx_heapMemory.init"] = data.HeapMemoryUsageInit
+			m[endpoint.Name+"_jmx_heapMemory.max"] = data.HeapMemoryUsageMax
+			m[endpoint.Name+"_jmx_heapMemory.used"] = data.HeapMemoryUsageUsed
+			m[endpoint.Name+"_jmx_nonHeapMemory.committed"] = data.NonHeapMemoryUsageCommitted
+			m[endpoint.Name+"_jmx_nonHeapMemory.init"] = data.NonHeapMemoryUsageInit
+			m[endpoint.Name+"_jmx_nonHeapMemory.used"] = data.NonHeapMemoryUsageUsed
+
+			resultChan <- m
+
+			defer wg.Done()
+		}(v)
+	}
+	wg.Wait()
+	close(resultChan)
+
+	for m := range resultChan {
+		for k, v := range m {
+			gauges[k] = v
 		}
-		gauges[v.Name + "_jmx_threads.threadCount"] = data.ThreadCount
-		gauges[v.Name + "_jmx_threads.daemonThreadCount"] = data.DaemonThreadCount
-		gauges[v.Name + "_jmx_heapMemory.committed"] = data.HeapMemoryUsageCommitted
-		gauges[v.Name + "_jmx_heapMemory.init"] = data.HeapMemoryUsageInit
-		gauges[v.Name + "_jmx_heapMemory.max"] = data.HeapMemoryUsageMax
-		gauges[v.Name + "_jmx_heapMemory.used"] = data.HeapMemoryUsageUsed
-		gauges[v.Name + "_jmx_nonHeapMemory.committed"] = data.NonHeapMemoryUsageCommitted
-		gauges[v.Name + "_jmx_nonHeapMemory.init"] = data.NonHeapMemoryUsageInit
-		gauges[v.Name + "_jmx_nonHeapMemory.used"] = data.NonHeapMemoryUsageUsed
 	}
 
 	PerformanceStruct.Gauges = gauges
@@ -152,10 +174,6 @@ func init() {
 
 // RunJar runs the embedded jar returning the output from STDOUT
 func runJar(host string, port int) (string, error) {
-	e := ensureJarExists()
-	if e != nil {
-		return "", e
-	}
 	nport := strconv.Itoa(port)
 
 	cmd := exec.Command("java", "-jar", JarFile, host, nport)
@@ -171,7 +189,7 @@ func runJar(host string, port int) (string, error) {
 	return out.String(), nil
 }
 
-func ensureJarExists() (error) {
+func ensureJarExists() error {
 	_, err := os.Stat(JarFile)
 	if err != nil {
 		data, err := Asset("data/mjb.jar")
