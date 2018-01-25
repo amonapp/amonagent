@@ -1,15 +1,17 @@
 language: go
 dist: trusty
 go:
-  - '1.9'
+  - '1.8'
 cache:
   timeout: 7200
   apt: true
-
+branches:
+  only:
+  - master
 install:
  - sudo add-apt-repository ppa:masterminds/glide -y
  - sudo apt-get update
  - sudo apt-get install glide -y
  - glide i
 script:
- - go test -v ./...
+ - make test
