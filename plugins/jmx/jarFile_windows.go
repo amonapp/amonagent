@@ -4,5 +4,5 @@ package jmx
 
 import "os"
 
-// JarFile - XXX
-var JarFile = os.Getenv("TMP") + "\\amonagent\\mjb.jar"
+// TmpJarFile - XXX
+var TmpJarFile = os.Getenv("TMP") + "\\amonagent\\mjb.jar"

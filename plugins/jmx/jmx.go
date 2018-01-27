@@ -117,9 +117,8 @@ func (c *JMX) Collect() (interface{}, error) {
 	c.SetConfigDefaults()
 	PerformanceStruct := PerformanceStruct{}
 	gauges := map[string]interface{}{}
-	var wg sync.WaitGroup
-
 	resultChan := make(chan map[string]interface{}, len(c.Config.Endpoints))
+	var wg sync.WaitGroup
 
 	for _, v := range c.Config.Endpoints {
 		wg.Add(1)
@@ -178,11 +177,11 @@ func init() {
 	})
 }
 
-// RunJar runs the embedded jar returning the output from STDOUT
+// runJar runs the embedded jar returning the output from STDOUT
 func runJar(host string, port int) (string, error) {
 	nport := strconv.Itoa(port)
 
-	cmd := exec.Command("java", "-jar", JarFile, host, nport)
+	cmd := exec.Command("java", "-jar", TmpJarFile, host, nport)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 
@@ -195,15 +194,16 @@ func runJar(host string, port int) (string, error) {
 	return out.String(), nil
 }
 
+// ensureJarExists creates the jar file on the file system
 func ensureJarExists() error {
-	_, err := os.Stat(JarFile)
+	_, err := os.Stat(TmpJarFile)
 	if err != nil {
 		data, err := Asset("data/mjb.jar")
 		if err != nil {
 			return err
 		}
-		os.Mkdir(filepath.Dir(JarFile), os.FileMode(0755))
-		err = ioutil.WriteFile(JarFile, data, os.FileMode(0644))
+		os.Mkdir(filepath.Dir(TmpJarFile), os.FileMode(0755))
+		err = ioutil.WriteFile(TmpJarFile, data, os.FileMode(0644))
 		if err != nil {
 			return err
 		}
