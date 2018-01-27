@@ -67,9 +67,10 @@ type MJBJson struct {
 	HeapMemoryUsageInit         int64 `json:"java.lang:type=Memory HeapMemoryUsage init"`
 	HeapMemoryUsageCommitted    int64 `json:"java.lang:type=Memory HeapMemoryUsage committed"`
 	HeapMemoryUsageUsed         int64 `json:"java.lang:type=Memory HeapMemoryUsage used"`
-	NonHeapMemoryUsageInit      int64 `json:"java.lang:type=Memory NonHeapMemoryUsage init"`
-	NonHeapMemoryUsageCommitted int64 `json:"java.lang:type=Memory NonHeapMemoryUsage committed"`
-	NonHeapMemoryUsageUsed      int64 `json:"java.lang:type=Memory NonHeapMemoryUsage used"`
+	NonHeapMemoryUsageMax       int64 `json:"java.lang:type=Memory NonHeapMemoryUsage max"`
+	NonHeapMemoryUsageInit      int64 `json:"java.lang:type=Memory NonHeapMemoryUsage init" `
+	NonHeapMemoryUsageCommitted int64 `json:"java.lang:type=Memory NonHeapMemoryUsage committed" `
+	NonHeapMemoryUsageUsed      int64 `json:"java.lang:type=Memory NonHeapMemoryUsage used" `
 }
 
 // Config - XXX
@@ -140,15 +141,17 @@ func (c *JMX) Collect() (interface{}, error) {
 
 			m := map[string]interface{}{}
 
-			m[endpoint.Name+"_jmx_threads.threadCount"] = data.ThreadCount
-			m[endpoint.Name+"_jmx_threads.daemonThreadCount"] = data.DaemonThreadCount
-			m[endpoint.Name+"_jmx_heapMemory.committed"] = data.HeapMemoryUsageCommitted
-			m[endpoint.Name+"_jmx_heapMemory.init"] = data.HeapMemoryUsageInit
-			m[endpoint.Name+"_jmx_heapMemory.max"] = data.HeapMemoryUsageMax
-			m[endpoint.Name+"_jmx_heapMemory.used"] = data.HeapMemoryUsageUsed
-			m[endpoint.Name+"_jmx_nonHeapMemory.committed"] = data.NonHeapMemoryUsageCommitted
-			m[endpoint.Name+"_jmx_nonHeapMemory.init"] = data.NonHeapMemoryUsageInit
-			m[endpoint.Name+"_jmx_nonHeapMemory.used"] = data.NonHeapMemoryUsageUsed
+			m[endpoint.Name+"_threads.count"] = data.ThreadCount
+			m[endpoint.Name+"_threads.daemonCount"] = data.DaemonThreadCount
+			m[endpoint.Name+"_heapMemory.committed"] = data.HeapMemoryUsageCommitted
+			m[endpoint.Name+"_heapMemory.init"] = data.HeapMemoryUsageInit
+			m[endpoint.Name+"_heapMemory.max"] = data.HeapMemoryUsageMax
+			m[endpoint.Name+"_heapMemory.used"] = data.HeapMemoryUsageUsed
+			m[endpoint.Name+"_heapMemoryPercentUsed"] = float64(data.HeapMemoryUsageUsed) / float64(data.HeapMemoryUsageMax)
+			m[endpoint.Name+"_nonHeapMemory.committed"] = data.NonHeapMemoryUsageCommitted
+			m[endpoint.Name+"_nonHeapMemory.init"] = data.NonHeapMemoryUsageInit
+			m[endpoint.Name+"_nonHeapMemory.max"] = data.NonHeapMemoryUsageMax
+			m[endpoint.Name+"_nonHeapMemory.used"] = data.NonHeapMemoryUsageUsed
 
 			resultChan <- m
 
