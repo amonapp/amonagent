@@ -6,7 +6,8 @@ After=network.target
 [Service]
 EnvironmentFile=-/etc/default/amonagent
 User=amonagent
-ExecStart=/usr/bin/amonagent -pidfile /var/run/amonagent/amonagent.pid
+ExecStart=/usr/bin/amonagent
+PIDFile=/var/run/amonagent/amonagent.pid
 Restart=on-failure
 KillMode=process
 
