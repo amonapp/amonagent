@@ -6,6 +6,9 @@ After=network.target
 [Service]
 EnvironmentFile=-/etc/default/amonagent
 User=amonagent
+PermissionsStartOnly=True
+RuntimeDirectory=amonagent
+RuntimeDirectoryMode=0775
 ExecStart=/usr/bin/amonagent
 PIDFile=/var/run/amonagent/amonagent.pid
 Restart=on-failure
